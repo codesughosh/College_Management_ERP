@@ -643,3 +643,26 @@ Implemented workflows:
 Firebase collections:
 
 - `systemSettings`
+
+## Firebase Reset And Seed
+
+The frontend is wired to Firebase through `.env` and `src/firebase/config.js`.
+
+To clear all known ERP module collections and seed every module:
+
+1. Open Firebase Console > Project settings > Service accounts.
+2. Generate a new private key.
+3. Save it as `serviceAccountKey.json` in the project root.
+4. Run:
+
+```bash
+npm run firebase:reset-seed
+```
+
+To seed without clearing existing records:
+
+```bash
+npm run firebase:seed
+```
+
+The reset command clears only the known ERP collections listed in `scripts/resetAndSeedFirebase.js`, then recreates `__schema` docs and module seed records.

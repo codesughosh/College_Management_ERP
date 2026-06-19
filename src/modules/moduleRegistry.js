@@ -18,6 +18,7 @@ export const moduleRegistry = [
     group: 'Academic Management',
     icon: LayoutDashboard,
     status: 'active',
+    permission: 'students.view',
   },
   {
     id: 'academics',
@@ -25,7 +26,8 @@ export const moduleRegistry = [
     path: '/modules/academics',
     group: 'Academic Management',
     icon: GraduationCap,
-    status: 'demo',
+    status: 'active',
+    permission: 'academics.view',
   },
   {
     id: 'faculty-staff',
@@ -34,6 +36,7 @@ export const moduleRegistry = [
     group: 'Academic Management',
     icon: Users,
     status: 'active',
+    permission: 'staff.view',
   },
   {
     id: 'attendance',
@@ -42,6 +45,7 @@ export const moduleRegistry = [
     group: 'Academic Management',
     icon: Bell,
     status: 'active',
+    permission: 'attendance.view',
   },
   {
     id: 'timetable',
@@ -50,6 +54,7 @@ export const moduleRegistry = [
     group: 'Academic Management',
     icon: BookOpen,
     status: 'active',
+    permission: 'timetable.view',
   },
   {
     id: 'examination-results',
@@ -58,6 +63,7 @@ export const moduleRegistry = [
     group: 'Academic Management',
     icon: TrendingUp,
     status: 'active',
+    permission: 'exams.view',
   },
   {
     id: 'user-roles',
@@ -66,6 +72,7 @@ export const moduleRegistry = [
     group: 'Administration & Operations',
     icon: Settings,
     status: 'active',
+    permission: 'users.view',
   },
   {
     id: 'notice-board',
@@ -74,6 +81,7 @@ export const moduleRegistry = [
     group: 'Administration & Operations',
     icon: Bell,
     status: 'active',
+    permission: 'notices.view',
   },
   {
     id: 'document-management',
@@ -82,6 +90,7 @@ export const moduleRegistry = [
     group: 'Administration & Operations',
     icon: FileText,
     status: 'active',
+    permission: 'documents.view',
   },
   {
     id: 'fees',
@@ -90,6 +99,7 @@ export const moduleRegistry = [
     group: 'Finance Management',
     icon: Wallet,
     status: 'active',
+    permission: 'fees.view',
   },
   {
     id: 'financial-reports',
@@ -98,6 +108,7 @@ export const moduleRegistry = [
     group: 'Finance Management',
     icon: TrendingUp,
     status: 'active',
+    permission: 'financialReports.view',
   },
   {
     id: 'parent-portal',
@@ -106,6 +117,7 @@ export const moduleRegistry = [
     group: 'Parent Portal',
     icon: Users,
     status: 'active',
+    permission: 'parentPortal.view',
   },
   {
     id: 'settings',
@@ -113,11 +125,16 @@ export const moduleRegistry = [
     path: '/modules/settings',
     group: 'Administration & Operations',
     icon: Settings,
-    status: 'demo',
+    status: 'active',
+    permission: 'settings.view',
   },
 ];
 
 export function getEnabledModules() {
   return moduleRegistry.filter((module) => module.status !== 'disabled');
+}
+
+export function getModuleById(id) {
+  return moduleRegistry.find((module) => module.id === id) || null;
 }
 

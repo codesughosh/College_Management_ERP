@@ -186,6 +186,26 @@ const collections = {
     purpose: 'Optional parent-to-student relationship map for portal filtering',
     fields: ['parentUserId', 'parentEmail', 'studentRecordId', 'studentId', 'relationship', 'status'],
   },
+  academicPrograms: {
+    purpose: 'Academic program and curriculum master records',
+    fields: ['name', 'code', 'academicYear', 'status', 'createdAtText', 'updatedAtText'],
+  },
+  academicSubjects: {
+    purpose: 'Subject master records mapped to programs',
+    fields: ['subjectName', 'subjectCode', 'programName', 'creditHours', 'status', 'createdAtText', 'updatedAtText'],
+  },
+  academicBatches: {
+    purpose: 'Class, section, capacity, and class teacher setup',
+    fields: ['className', 'section', 'programName', 'classTeacher', 'capacity', 'status', 'createdAtText', 'updatedAtText'],
+  },
+  academicCalendarEvents: {
+    purpose: 'Academic calendar event records',
+    fields: ['title', 'eventType', 'eventDate', 'audience', 'status', 'createdAtText', 'updatedAtText'],
+  },
+  systemSettings: {
+    purpose: 'Institute profile, academic year, ID formats, and module defaults',
+    fields: ['id', 'name', 'email', 'phone', 'address', 'city', 'startsOn', 'endsOn', 'student', 'admission', 'employee', 'receipt', 'studentAdmissions', 'staffLeave', 'timetablePublishing', 'parentPortal', 'onlinePayments', 'receiptGeneration', 'communicationModule', 'updatedAtText'],
+  },
 };
 
 const app = initializeApp(firebaseConfig);

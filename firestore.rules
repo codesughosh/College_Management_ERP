@@ -162,6 +162,31 @@ service cloud.firestore {
       allow read, create, update: if isSignedIn();
       allow delete: if false;
     }
+
+    match /academicPrograms/{documentId} {
+      allow read, create, update: if isSignedIn();
+      allow delete: if false;
+    }
+
+    match /academicSubjects/{documentId} {
+      allow read, create, update: if isSignedIn();
+      allow delete: if false;
+    }
+
+    match /academicBatches/{documentId} {
+      allow read, create, update: if isSignedIn();
+      allow delete: if false;
+    }
+
+    match /academicCalendarEvents/{documentId} {
+      allow read, create, update: if isSignedIn();
+      allow delete: if false;
+    }
+
+    match /systemSettings/{documentId} {
+      allow read, create, update: if isSignedIn();
+      allow delete: if false;
+    }
   }
 }
 

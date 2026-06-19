@@ -30,6 +30,7 @@ import {
 } from '../../firebase/db';
 import { isFirebaseConfigured } from '../../firebase/config';
 import { uploadStudentDocumentFile } from '../../firebase/storage';
+import { getModuleById } from '../moduleRegistry';
 import { demoStudents } from './demoStudents';
 import DemoModulePage from './components/DemoModulePage';
 import Sidebar from './components/Sidebar';
@@ -50,6 +51,9 @@ import FinancialReports from '../financialReports/FinancialReports';
 import NoticeBoardManagement from '../notices/NoticeBoardManagement';
 import DocumentManagement from '../documents/DocumentManagement';
 import ParentPortal from '../parentPortal/ParentPortal';
+import { canAccess, defaultRoles } from '../userRoles/rolePermissions';
+import AcademicsManagement from '../academics/AcademicsManagement';
+import SettingsManagement from '../settings/SettingsManagement';
 
 const tabs = [
   { id: 'admissions', label: 'Admissions', icon: <Plus size={15} /> },
@@ -77,6 +81,9 @@ export default function StudentInformationManagement({ user, onLogout }) {
   const [documentUploading, setDocumentUploading] = useState(false);
   const [promotionDraft, setPromotionDraft] = useState({ toClass: '', reason: '' });
   const documentInputRef = useRef(null);
+  const currentRoleId = user?.roleId || 'admin';
+  const activeModule = getModuleById(activePage);
+  const canOpenActiveModule = !activeModule?.permission || canAccess(defaultRoles, currentRoleId, activeModule.permission);
 
   useEffect(() => {
     const loadStudentInformation = async () => {
@@ -425,13 +432,17 @@ export default function StudentInformationManagement({ user, onLogout }) {
   return (
     <div className="min-h-screen bg-white text-slate-900">
         <div className="flex min-h-screen">
-          <Sidebar activePage={activePage} onNavigate={setActivePage} />
+          <Sidebar activePage={activePage} currentUser={user} onNavigate={setActivePage} />
           <main className="flex-1 min-w-0 bg-[#f0f1f3] flex flex-col">
             <TopHeader user={user} onLogout={onLogout} />
 
             <div className="flex-1 p-4 lg:p-5">
               <section className="bg-white min-h-full p-5 lg:p-7">
-                {activePage === 'dashboard' ? (
+                {!canOpenActiveModule ? (
+                  <div className="rounded-lg bg-[#f5f5f6] p-6 text-sm text-slate-600">
+                    You do not have permission to open this module.
+                  </div>
+                ) : activePage === 'dashboard' ? (
                 <>
                 <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-4 pb-6 border-b border-slate-100">
                   <div>
@@ -647,6 +658,8 @@ export default function StudentInformationManagement({ user, onLogout }) {
                 </>
                 ) : activePage === 'faculty-staff' ? (
                   <FacultyStaffManagement currentUser={user} />
+                ) : activePage === 'academics' ? (
+                  <AcademicsManagement currentUser={user} />
                 ) : activePage === 'attendance' ? (
                   <AttendanceManagement currentUser={user} />
                 ) : activePage === 'timetable' ? (
@@ -665,6 +678,8 @@ export default function StudentInformationManagement({ user, onLogout }) {
                   <ParentPortal currentUser={user} />
                 ) : activePage === 'user-roles' ? (
                   <UserRoleManagement currentUser={user} />
+                ) : activePage === 'settings' ? (
+                  <SettingsManagement currentUser={user} />
                 ) : (
                   <DemoModulePage page={activePage} onOpenStudents={() => setActivePage('dashboard')} />
                 )}

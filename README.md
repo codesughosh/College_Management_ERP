@@ -591,3 +591,55 @@ Firebase collections read:
 Role permissions:
 
 - `parentPortal.view`
+
+## Module Consolidation Status
+
+Implemented improvements:
+
+- Active sidebar modules are now filtered by role permissions.
+- Direct module rendering is guarded by each module permission.
+- Every registry entry has an explicit permission key.
+- Demo modules are labelled in the sidebar.
+- Completed modules no longer fall through to placeholder pages.
+- Regression tests cover module visibility by role.
+
+Current module status:
+
+- Completed real modules: Students, Faculty & Staff, Attendance, Timetable, Exams & Results, Users & Roles, Notice Board, Documents, Fees, Financial Reports, Parent Portal.
+- Completed final modules: Academics, Settings.
+- Demo modules left: none.
+- Excluded modules/features: Communication Module, online payment support, receipt generation.
+
+## Academics Status
+
+Implemented workflows:
+
+- Academic program setup.
+- Subject master setup.
+- Batch, class, and section setup.
+- Academic calendar event setup.
+- Permission-aware academic management controls.
+- Demo fallback data when Firebase is not configured.
+
+Firebase collections:
+
+- `academicPrograms`
+- `academicSubjects`
+- `academicBatches`
+- `academicCalendarEvents`
+
+## Settings Status
+
+Implemented workflows:
+
+- Institute profile settings.
+- Academic year settings.
+- Student, admission, employee, and receipt ID format settings.
+- Module default switches.
+- Excluded features remain disabled in defaults: communication module, online payments, receipt generation.
+- Permission-aware settings save controls.
+- Demo fallback data when Firebase is not configured.
+
+Firebase collections:
+
+- `systemSettings`

@@ -490,3 +490,57 @@ export async function getParentPortalData() {
 
   return { students, studentAttendance, marksEntries, studentResults, feeAssignments, noticeItems, managedDocuments };
 }
+
+export async function getAcademicsData() {
+  const [academicPrograms, academicSubjects, academicBatches, academicCalendarEvents] = await Promise.all([
+    listCollection('academicPrograms'),
+    listCollection('academicSubjects'),
+    listCollection('academicBatches'),
+    listCollection('academicCalendarEvents'),
+  ]);
+
+  return { academicPrograms, academicSubjects, academicBatches, academicCalendarEvents };
+}
+
+export async function createAcademicProgram(data) {
+  return createCollectionDocument('academicPrograms', data);
+}
+
+export async function createAcademicSubject(data) {
+  return createCollectionDocument('academicSubjects', data);
+}
+
+export async function createAcademicBatch(data) {
+  return createCollectionDocument('academicBatches', data);
+}
+
+export async function createAcademicCalendarEvent(data) {
+  return createCollectionDocument('academicCalendarEvents', data);
+}
+
+export async function getSettingsData() {
+  const [settings] = await Promise.all([
+    listCollection('systemSettings'),
+  ]);
+  const byId = settings.reduce((map, item) => {
+    map[item.id] = item;
+    return map;
+  }, {});
+
+  return {
+    institute: byId.institute || null,
+    academicYear: byId.academicYear || null,
+    idFormats: byId.idFormats || null,
+    moduleDefaults: byId.moduleDefaults || null,
+  };
+}
+
+export async function saveSystemSetting(id, data) {
+  if (!db || !id) return null;
+  await setDoc(doc(db, 'systemSettings', id), {
+    ...data,
+    id,
+    updatedAt: serverTimestamp(),
+  }, { merge: true });
+  return id;
+}

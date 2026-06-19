@@ -1,20 +1,24 @@
 import { CalendarDays, ChevronDown, ChevronRight, GraduationCap } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { getEnabledModules } from '../../moduleRegistry';
+import { canAccess, defaultRoles } from '../../userRoles/rolePermissions';
 
-const navItems = getEnabledModules().map((module) => {
-  const Icon = module.icon;
-  return {
-    id: module.id,
-    label: module.label,
-    group: module.group,
-    status: module.status,
-    icon: <Icon size={18} />,
-    hasChildren: module.group === 'Academic Management' && module.id !== 'dashboard',
-  };
-});
+export default function Sidebar({ activePage, currentUser, onNavigate }) {
+  const currentRoleId = currentUser?.roleId || 'admin';
+  const navItems = getEnabledModules()
+    .filter((module) => !module.permission || canAccess(defaultRoles, currentRoleId, module.permission))
+    .map((module) => {
+      const Icon = module.icon;
+      return {
+        id: module.id,
+        label: module.label,
+        group: module.group,
+        status: module.status,
+        icon: <Icon size={18} />,
+        hasChildren: module.group === 'Academic Management' && module.id !== 'dashboard',
+      };
+    });
 
-export default function Sidebar({ activePage, onNavigate }) {
   return (
     <aside className="w-[276px] bg-white border-r border-slate-200 shrink-0 hidden lg:flex flex-col">
       <div className="px-9 pt-5 pb-4">
@@ -62,6 +66,7 @@ export default function Sidebar({ activePage, onNavigate }) {
                 {icon}
                 {label}
                 {status === 'planned' && <span className="ml-auto text-[9px] uppercase text-slate-400">Soon</span>}
+                {status === 'demo' && <span className="ml-auto text-[9px] uppercase text-slate-400">Demo</span>}
               </span>
               {hasChildren && <ChevronDown size={14} />}
             </button>

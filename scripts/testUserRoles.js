@@ -42,6 +42,12 @@ assert.equal(canAccess(defaultRoles, 'faculty', 'documents.view'), true);
 assert.equal(canAccess(defaultRoles, 'faculty', 'documents.upload'), false);
 assert.equal(canAccess(defaultRoles, 'admin', 'parentPortal.view'), true);
 assert.equal(canAccess(defaultRoles, 'parent', 'parentPortal.view'), true);
+assert.equal(canAccess(defaultRoles, 'admin', 'academics.view'), true);
+assert.equal(canAccess(defaultRoles, 'admin', 'academics.manage'), true);
+assert.equal(canAccess(defaultRoles, 'admin', 'settings.view'), true);
+assert.equal(canAccess(defaultRoles, 'admin', 'settings.manage'), true);
+assert.equal(canAccess(defaultRoles, 'faculty', 'academics.view'), true);
+assert.equal(canAccess(defaultRoles, 'faculty', 'settings.view'), false);
 assert.equal(canAccess(defaultRoles, 'parent', 'attendance.view'), false);
 assert.equal(canAccess(defaultRoles, 'parent', 'fees.view'), false);
 

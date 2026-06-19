@@ -40,6 +40,8 @@ export const permissionGroups = [
     label: 'Module Access',
     permissions: [
       ['attendance.view', 'Attendance module'],
+      ['academics.view', 'Academics module'],
+      ['academics.manage', 'Manage academics'],
       ['attendance.markStudents', 'Mark student attendance'],
       ['attendance.markStaff', 'Mark staff attendance'],
       ['attendance.reports', 'View attendance reports'],
@@ -73,6 +75,8 @@ export const permissionGroups = [
       ['documents.verify', 'Verify documents'],
       ['documents.archive', 'Archive documents'],
       ['parentPortal.view', 'Parent portal'],
+      ['settings.view', 'Settings module'],
+      ['settings.manage', 'Manage settings'],
     ],
   },
 ];
@@ -109,6 +113,8 @@ export const defaultRoles = [
       'users.edit',
       'roles.view',
       'attendance.view',
+      'academics.view',
+      'academics.manage',
       'attendance.markStudents',
       'attendance.markStaff',
       'attendance.reports',
@@ -142,6 +148,8 @@ export const defaultRoles = [
       'documents.verify',
       'documents.archive',
       'parentPortal.view',
+      'settings.view',
+      'settings.manage',
     ],
   },
   {
@@ -159,6 +167,7 @@ export const defaultRoles = [
       'attendance.markStudents',
       'attendance.markStaff',
       'attendance.reports',
+      'academics.view',
       'timetable.view',
       'exams.view',
       'exams.marks',

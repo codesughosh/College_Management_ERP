@@ -83,5 +83,45 @@ service cloud.firestore {
       allow read, create, update: if isSignedIn();
       allow delete: if false;
     }
+    match /classrooms/{documentId} {
+      allow read, create, update: if isSignedIn();
+      allow delete: if false;
+    }
+
+    match /timetableEntries/{documentId} {
+      allow read, create, update: if isSignedIn();
+      allow delete: if false;
+    }
+
+    match /timetablePublications/{documentId} {
+      allow read, create, update: if isSignedIn();
+      allow delete: if false;
+    }
+
+    match /examSchedules/{documentId} {
+      allow read, create, update: if isSignedIn();
+      allow delete: if false;
+    }
+
+    match /internalAssessments/{documentId} {
+      allow read, create, update: if isSignedIn();
+      allow delete: if false;
+    }
+
+    match /marksEntries/{documentId} {
+      allow read, create, update: if isSignedIn();
+      allow delete: if false;
+    }
+
+    match /studentResults/{documentId} {
+      allow read, create, update: if isSignedIn();
+      allow delete: if false;
+    }
+
+    match /reportCards/{documentId} {
+      allow read, create, update: if isSignedIn();
+      allow delete: if false;
+    }
   }
 }
+

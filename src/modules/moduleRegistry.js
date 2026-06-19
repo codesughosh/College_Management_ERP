@@ -49,7 +49,7 @@ export const moduleRegistry = [
     path: '/modules/timetable',
     group: 'Academic Management',
     icon: BookOpen,
-    status: 'planned',
+    status: 'active',
   },
   {
     id: 'examination-results',
@@ -57,7 +57,7 @@ export const moduleRegistry = [
     path: '/modules/examination-results',
     group: 'Academic Management',
     icon: TrendingUp,
-    status: 'planned',
+    status: 'active',
   },
   {
     id: 'user-roles',
@@ -120,3 +120,4 @@ export const moduleRegistry = [
 export function getEnabledModules() {
   return moduleRegistry.filter((module) => module.status !== 'disabled');
 }
+

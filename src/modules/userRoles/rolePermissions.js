@@ -45,7 +45,16 @@ export const permissionGroups = [
       ['attendance.reports', 'View attendance reports'],
       ['attendance.notifyParents', 'Parent notifications'],
       ['timetable.view', 'Timetable module'],
+      ['timetable.create', 'Create timetable'],
+      ['timetable.edit', 'Edit timetable'],
+      ['timetable.publish', 'Publish timetable'],
+      ['timetable.classrooms', 'Manage classrooms'],
       ['exams.view', 'Exams module'],
+      ['exams.schedule', 'Schedule exams'],
+      ['exams.assessments', 'Manage assessments'],
+      ['exams.marks', 'Enter marks'],
+      ['exams.results', 'Generate results'],
+      ['exams.reportCards', 'Generate report cards'],
       ['fees.view', 'Fees module'],
       ['parentPortal.view', 'Parent portal'],
     ],
@@ -89,7 +98,16 @@ export const defaultRoles = [
       'attendance.reports',
       'attendance.notifyParents',
       'timetable.view',
+      'timetable.create',
+      'timetable.edit',
+      'timetable.publish',
+      'timetable.classrooms',
       'exams.view',
+      'exams.schedule',
+      'exams.assessments',
+      'exams.marks',
+      'exams.results',
+      'exams.reportCards',
       'fees.view',
     ],
   },
@@ -110,6 +128,7 @@ export const defaultRoles = [
       'attendance.reports',
       'timetable.view',
       'exams.view',
+      'exams.marks',
     ],
   },
   {
@@ -160,3 +179,5 @@ export function validateUserUpdate(form) {
   if (!form.status) return 'Status is required.';
   return '';
 }
+
+

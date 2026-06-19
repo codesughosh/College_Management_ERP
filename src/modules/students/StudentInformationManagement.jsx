@@ -43,6 +43,8 @@ import { formatDisplayDate, getNextClassName, latestRecord, relationMatches, val
 import UserRoleManagement from '../userRoles/UserRoleManagement';
 import FacultyStaffManagement from '../facultyStaff/FacultyStaffManagement';
 import AttendanceManagement from '../attendance/AttendanceManagement';
+import TimetableManagement from '../timetable/TimetableManagement';
+import ExaminationResultManagement from '../exams/ExaminationResultManagement';
 
 const tabs = [
   { id: 'admissions', label: 'Admissions', icon: <Plus size={15} /> },
@@ -642,6 +644,10 @@ export default function StudentInformationManagement({ user, onLogout }) {
                   <FacultyStaffManagement currentUser={user} />
                 ) : activePage === 'attendance' ? (
                   <AttendanceManagement currentUser={user} />
+                ) : activePage === 'timetable' ? (
+                  <TimetableManagement currentUser={user} />
+                ) : activePage === 'examination-results' ? (
+                  <ExaminationResultManagement currentUser={user} />
                 ) : activePage === 'user-roles' ? (
                   <UserRoleManagement currentUser={user} />
                 ) : (
@@ -674,5 +680,6 @@ export default function StudentInformationManagement({ user, onLogout }) {
     </div>
   );
 }
+
 
 

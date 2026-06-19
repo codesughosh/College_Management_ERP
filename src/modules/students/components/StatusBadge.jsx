@@ -18,6 +18,20 @@ export default function StatusBadge({ value }) {
     'On Leave': 'bg-amber-50 text-amber-700 border-amber-200',
     Leave: 'bg-amber-50 text-amber-700 border-amber-200',
     Queued: 'bg-sky-50 text-sky-700 border-sky-200',
+    Draft: 'bg-amber-50 text-amber-700 border-amber-200',
+    Published: 'bg-emerald-50 text-emerald-700 border-emerald-200',
+    Scheduled: 'bg-sky-50 text-sky-700 border-sky-200',
+    Entered: 'bg-sky-50 text-sky-700 border-sky-200',
+    Generated: 'bg-emerald-50 text-emerald-700 border-emerald-200',
+    Pass: 'bg-emerald-50 text-emerald-700 border-emerald-200',
+    'Needs Improvement': 'bg-rose-50 text-rose-700 border-rose-200',
+    'A+': 'bg-emerald-50 text-emerald-700 border-emerald-200',
+    A: 'bg-emerald-50 text-emerald-700 border-emerald-200',
+    'B+': 'bg-sky-50 text-sky-700 border-sky-200',
+    B: 'bg-sky-50 text-sky-700 border-sky-200',
+    C: 'bg-amber-50 text-amber-700 border-amber-200',
+    D: 'bg-orange-50 text-orange-700 border-orange-200',
+    F: 'bg-rose-50 text-rose-700 border-rose-200',
     'Not Marked': 'bg-slate-50 text-slate-600 border-slate-200',
   };
 
@@ -27,3 +41,4 @@ export default function StatusBadge({ value }) {
     </span>
   );
 }
+

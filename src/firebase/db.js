@@ -262,3 +262,95 @@ export async function updateStudentAttendanceRecord(id, data) {
 export async function createAttendanceNotification(data) {
   return createCollectionDocument('attendanceNotifications', data);
 }
+
+export async function getTimetableManagementData() {
+  const [students, staff, classrooms, timetableEntries, publications] = await Promise.all([
+    listCollection('students'),
+    listCollection('staffMembers'),
+    listCollection('classrooms'),
+    listCollection('timetableEntries'),
+    listCollection('timetablePublications'),
+  ]);
+
+  return { students, staff, classrooms, timetableEntries, publications };
+}
+
+export async function createClassroom(data) {
+  return createCollectionDocument('classrooms', data);
+}
+
+export async function createTimetableEntry(data) {
+  return createCollectionDocument('timetableEntries', data);
+}
+
+export async function updateTimetableEntry(id, data) {
+  if (!db || !id || id.startsWith('demo-') || id.startsWith('local-')) return;
+  await updateDoc(doc(db, 'timetableEntries', id), {
+    ...data,
+    updatedAt: serverTimestamp(),
+  });
+}
+
+export async function archiveTimetableEntry(id, data = {}) {
+  if (!db || !id || id.startsWith('demo-') || id.startsWith('local-')) return;
+  await updateDoc(doc(db, 'timetableEntries', id), {
+    ...data,
+    status: 'Archived',
+    archivedAt: serverTimestamp(),
+    updatedAt: serverTimestamp(),
+  });
+}
+
+export async function createTimetablePublication(data) {
+  return createCollectionDocument('timetablePublications', data);
+}
+
+export async function getExaminationResultData() {
+  const [students, staff, examSchedules, assessments, marks, results, reportCards] = await Promise.all([
+    listCollection('students'),
+    listCollection('staffMembers'),
+    listCollection('examSchedules'),
+    listCollection('internalAssessments'),
+    listCollection('marksEntries'),
+    listCollection('studentResults'),
+    listCollection('reportCards'),
+  ]);
+
+  return { students, staff, examSchedules, assessments, marks, results, reportCards };
+}
+
+export async function createExamSchedule(data) {
+  return createCollectionDocument('examSchedules', data);
+}
+
+export async function updateExamSchedule(id, data) {
+  if (!db || !id || id.startsWith('demo-') || id.startsWith('local-')) return;
+  await updateDoc(doc(db, 'examSchedules', id), {
+    ...data,
+    updatedAt: serverTimestamp(),
+  });
+}
+
+export async function createInternalAssessment(data) {
+  return createCollectionDocument('internalAssessments', data);
+}
+
+export async function createMarksEntry(data) {
+  return createCollectionDocument('marksEntries', data);
+}
+
+export async function updateMarksEntry(id, data) {
+  if (!db || !id || id.startsWith('demo-') || id.startsWith('local-')) return;
+  await updateDoc(doc(db, 'marksEntries', id), {
+    ...data,
+    updatedAt: serverTimestamp(),
+  });
+}
+
+export async function createStudentResult(data) {
+  return createCollectionDocument('studentResults', data);
+}
+
+export async function createReportCard(data) {
+  return createCollectionDocument('reportCards', data);
+}

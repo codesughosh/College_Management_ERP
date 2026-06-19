@@ -20,6 +20,12 @@ assert.equal(canAccess(defaultRoles, 'faculty', 'attendance.view'), true);
 assert.equal(canAccess(defaultRoles, 'faculty', 'staff.attendance'), true);
 assert.equal(canAccess(defaultRoles, 'faculty', 'attendance.markStudents'), true);
 assert.equal(canAccess(defaultRoles, 'admin', 'attendance.notifyParents'), true);
+assert.equal(canAccess(defaultRoles, 'admin', 'timetable.publish'), true);
+assert.equal(canAccess(defaultRoles, 'faculty', 'timetable.create'), false);
+assert.equal(canAccess(defaultRoles, 'admin', 'exams.reportCards'), true);
+assert.equal(canAccess(defaultRoles, 'faculty', 'exams.marks'), true);
+assert.equal(canAccess(defaultRoles, 'faculty', 'exams.results'), false);
+assert.equal(canAccess(defaultRoles, 'parent', 'exams.view'), false);
 assert.equal(canAccess(defaultRoles, 'parent', 'attendance.view'), false);
 assert.equal(canAccess(defaultRoles, 'parent', 'fees.view'), false);
 
@@ -61,3 +67,4 @@ assert.equal(validateUserUpdate({ name: 'Admin', roleId: 'admin', status: 'Activ
 assert.equal(validateUserUpdate({ name: 'Admin', roleId: '', status: 'Active' }), 'Role is required.');
 
 console.log('User role tests passed.');
+

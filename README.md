@@ -304,3 +304,79 @@ The following items are excluded from the scope for now:
 ## Open Questions
 
 No open questions right now.
+
+## Timetable Management Status
+
+Implemented workflows:
+
+- Class timetable creation.
+- Faculty timetable visibility.
+- Classroom allocation.
+- Conflict detection for class, faculty, and classroom in the same slot.
+- Timetable publishing metadata.
+- Classroom sync from default setup.
+- Permission-aware controls for creation, editing, publishing, and classroom management.
+- Demo fallback data when Firebase is not configured.
+
+Current structure:
+
+- `src/modules/timetable/TimetableManagement.jsx`
+- `src/modules/timetable/timetableUtils.js`
+- `src/modules/timetable/demoTimetable.js`
+- `src/modules/timetable/components/TimetableEntryModal.jsx`
+- `src/modules/timetable/components/TimetableGrid.jsx`
+- `src/modules/timetable/components/TimetableSidePanel.jsx`
+
+Firebase collections:
+
+- `classrooms`
+- `timetableEntries`
+- `timetablePublications`
+
+Role permissions:
+
+- `timetable.view`
+- `timetable.create`
+- `timetable.edit`
+- `timetable.publish`
+- `timetable.classrooms`
+
+## Examination & Result Management Status
+
+Implemented workflows:
+
+- Examination scheduling.
+- Internal assessment creation.
+- Marks entry.
+- Grade calculation.
+- Result generation.
+- Report card generation metadata.
+- Permission-aware controls for schedules, assessments, marks, results, and report cards.
+- Demo fallback data when Firebase is not configured.
+
+Current structure:
+
+- `src/modules/exams/ExaminationResultManagement.jsx`
+- `src/modules/exams/examUtils.js`
+- `src/modules/exams/demoExams.js`
+- `src/modules/exams/components/ExamScheduleModal.jsx`
+- `src/modules/exams/components/ExamScheduleTable.jsx`
+- `src/modules/exams/components/MarksEntryModal.jsx`
+- `src/modules/exams/components/ResultsPanel.jsx`
+
+Firebase collections:
+
+- `examSchedules`
+- `internalAssessments`
+- `marksEntries`
+- `studentResults`
+- `reportCards`
+
+Role permissions:
+
+- `exams.view`
+- `exams.schedule`
+- `exams.assessments`
+- `exams.marks`
+- `exams.results`
+- `exams.reportCards`

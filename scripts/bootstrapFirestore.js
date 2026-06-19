@@ -122,6 +122,38 @@ const collections = {
     purpose: 'Parent notification queue metadata for attendance events',
     fields: ['studentRecordId', 'studentId', 'studentName', 'channel', 'reason', 'status', 'attendanceRecordId', 'createdAtText'],
   },
+  classrooms: {
+    purpose: 'Classroom master data for timetable allocation',
+    fields: ['roomNo', 'building', 'capacity', 'status'],
+  },
+  timetableEntries: {
+    purpose: 'Class and faculty timetable entries',
+    fields: ['classKey', 'subject', 'facultyId', 'facultyName', 'classroomId', 'classroomName', 'day', 'timeSlot', 'status', 'createdAtText', 'updatedAtText', 'archivedAtText'],
+  },
+  timetablePublications: {
+    purpose: 'Timetable publishing metadata',
+    fields: ['classKey', 'status', 'publishedAtText', 'entryCount'],
+  },
+  examSchedules: {
+    purpose: 'Exam schedule records',
+    fields: ['examName', 'classKey', 'subject', 'examDate', 'maxMarks', 'facultyId', 'facultyName', 'status', 'createdAtText', 'updatedAtText'],
+  },
+  internalAssessments: {
+    purpose: 'Internal assessment setup records',
+    fields: ['title', 'classKey', 'subject', 'maxMarks', 'status', 'createdAtText'],
+  },
+  marksEntries: {
+    purpose: 'Student marks entry records',
+    fields: ['examScheduleId', 'studentRecordId', 'studentId', 'studentName', 'classKey', 'subject', 'marksObtained', 'maxMarks', 'percentage', 'grade', 'status', 'enteredAtText'],
+  },
+  studentResults: {
+    purpose: 'Generated student result summaries',
+    fields: ['studentRecordId', 'studentId', 'studentName', 'classKey', 'examName', 'totalObtained', 'totalMax', 'percentage', 'grade', 'status', 'generatedAtText'],
+  },
+  reportCards: {
+    purpose: 'Report card generation metadata',
+    fields: ['studentRecordId', 'studentId', 'examName', 'status', 'generatedAtText'],
+  },
 };
 
 const app = initializeApp(firebaseConfig);
@@ -139,3 +171,4 @@ for (const [collectionName, schema] of Object.entries(collections)) {
 }
 
 console.log('Student Information Management collections are ready.');
+

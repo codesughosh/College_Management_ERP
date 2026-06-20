@@ -1,6 +1,7 @@
 import {
   Bell,
   BookOpen,
+  CalendarDays,
   FileText,
   GraduationCap,
   LayoutDashboard,
@@ -19,6 +20,15 @@ export const moduleRegistry = [
     icon: LayoutDashboard,
     status: 'active',
     permission: 'students.view',
+  },
+  {
+    id: 'calendar',
+    label: 'Academic Curriculum',
+    path: '/modules/calendar',
+    group: 'Academic Management',
+    icon: CalendarDays,
+    status: 'active',
+    permission: 'academics.view',
   },
   {
     id: 'academics',

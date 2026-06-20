@@ -243,7 +243,7 @@ export default function StudentInformationManagement({ user, onLogout }) {
   const recordBelongsToYear = (record) => !record.academicYear || record.academicYear === academicYear;
   const yearStudents = useMemo(() => students.filter(studentBelongsToYear), [academicYear, students]);
 
-  const selectedStudent = yearStudents.find((student) => student.id === selectedId) || yearStudents[0] || students[0];
+  const selectedStudent = yearStudents.find((student) => student.id === selectedId) || yearStudents[0] || null;
   const suggestedPromotionClass = getNextClassName(selectedStudent?.className || '');
   const selectedAdmissions = admissions.filter((record) => relationMatches(record, selectedStudent) && recordBelongsToYear(record));
   const selectedDocuments = studentDocuments.filter((record) => relationMatches(record, selectedStudent) && recordBelongsToYear(record));
@@ -254,7 +254,7 @@ export default function StudentInformationManagement({ user, onLogout }) {
   const latestTransfer = latestRecord(selectedTransfers);
   const selectedDocumentLabels = selectedDocuments.length
     ? selectedDocuments
-    : selectedStudent.documents || [];
+    : selectedStudent?.documents || [];
 
   const filteredStudents = useMemo(() => {
     const term = search.trim().toLowerCase();
@@ -502,6 +502,10 @@ export default function StudentInformationManagement({ user, onLogout }) {
   };
 
   const promoteStudent = async () => {
+    if (!selectedStudent) {
+      toast.error('Select a student before promotion.');
+      return;
+    }
     const fromClass = selectedStudent.className;
     const toClass = promotionDraft.toClass.trim() || suggestedPromotionClass;
     if (!toClass) {
@@ -646,6 +650,8 @@ export default function StudentInformationManagement({ user, onLogout }) {
                   </div>
 
                   <aside className="xl:w-[30%]">
+                    {selectedStudent ? (
+                      <>
                     <StudentProfileCard student={selectedStudent} onEdit={setEditingStudent} />
 
                     <div className="bg-white border border-slate-100 rounded-lg p-5 shadow-sm">
@@ -766,6 +772,16 @@ export default function StudentInformationManagement({ user, onLogout }) {
                         </div>
                       )}
                     </div>
+                      </>
+                    ) : (
+                      <div className="bg-white border border-slate-100 rounded-lg p-5 shadow-sm text-sm text-slate-600">
+                        <h3 className="font-bold text-slate-900 mb-2">No Students Found</h3>
+                        <p>No student records are available for academic year {academicYear}.</p>
+                        <button onClick={() => setShowModal(true)} className="mt-4 w-full h-10 rounded-full bg-[#fb9a5b] text-white font-semibold">
+                          New Admission
+                        </button>
+                      </div>
+                    )}
                   </aside>
                 </div>
                 </>

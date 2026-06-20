@@ -1,4 +1,5 @@
 export function relationMatches(record, student) {
+  if (!record || !student) return false;
   return record.studentRecordId === student.id || record.studentId === student.studentId;
 }
 

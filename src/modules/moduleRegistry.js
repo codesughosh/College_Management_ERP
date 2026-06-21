@@ -28,7 +28,7 @@ export const moduleRegistry = [
     group: 'Academic Management',
     icon: CalendarDays,
     status: 'active',
-    permission: 'academics.view',
+    permission: 'academicCurriculum.view',
   },
   {
     id: 'academics',

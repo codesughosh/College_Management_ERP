@@ -23,6 +23,7 @@ const shouldReset = process.argv.includes('--reset');
 const confirmed = process.argv.includes('--yes-i-understand-this-deletes-data');
 
 const schemas = {
+  colleges: ['id', 'name', 'code', 'location', 'status'],
   students: ['admissionNo', 'studentId', 'name', 'className', 'section', 'program', 'guardianName', 'idHolder', 'guardianEmail', 'phone', 'email', 'academicYear', 'status', 'createdAtText'],
   studentAdmissions: ['studentRecordId', 'studentId', 'admissionNo', 'academicYear', 'idHolder', 'status', 'submittedAtText'],
   studentDocuments: ['studentRecordId', 'studentId', 'documentType', 'academicYear', 'uploadedBy', 'fileName', 'verificationStatus', 'uploadedAtText'],
@@ -63,7 +64,7 @@ const allPermissions = [
   'students.view', 'students.create', 'students.edit', 'students.archive', 'students.documents', 'students.verifyDocuments', 'students.promote',
   'staff.view', 'staff.create', 'staff.edit', 'staff.archive', 'staff.leave', 'staff.attendance',
   'users.view', 'users.create', 'users.edit', 'roles.view', 'roles.edit',
-  'attendance.view', 'academics.view', 'academics.manage', 'attendance.markStudents', 'attendance.markStaff', 'attendance.reports', 'attendance.notifyParents',
+  'attendance.view', 'academicCurriculum.view', 'academics.view', 'academics.manage', 'attendance.markStudents', 'attendance.markStaff', 'attendance.reports', 'attendance.notifyParents',
   'timetable.view', 'timetable.create', 'timetable.edit', 'timetable.publish', 'timetable.classrooms',
   'exams.view', 'exams.schedule', 'exams.assessments', 'exams.marks', 'exams.results', 'exams.reportCards',
   'fees.view', 'fees.setup', 'fees.assign', 'fees.collect', 'fees.adjust', 'fees.reports',
@@ -73,7 +74,38 @@ const allPermissions = [
   'parentPortal.view', 'settings.view', 'settings.manage',
 ];
 
+const adminPermissions = [
+  'students.view', 'students.edit',
+  'staff.view', 'staff.create', 'staff.edit', 'staff.archive', 'staff.leave', 'staff.attendance',
+  'attendance.view', 'academicCurriculum.view', 'academics.view', 'academics.manage', 'attendance.markStudents', 'attendance.markStaff', 'attendance.reports', 'attendance.notifyParents',
+  'timetable.view', 'timetable.create', 'timetable.edit', 'timetable.publish', 'timetable.classrooms',
+  'exams.view', 'exams.schedule', 'exams.assessments', 'exams.marks', 'exams.results', 'exams.reportCards',
+  'fees.view', 'fees.setup', 'fees.assign', 'fees.collect', 'fees.adjust', 'fees.reports',
+  'financialReports.view', 'financialReports.export', 'financialReports.snapshots',
+  'notices.view', 'notices.create', 'notices.edit', 'notices.archive',
+  'documents.view', 'documents.upload', 'documents.verify', 'documents.archive',
+];
+
+const facultyPermissions = [
+  'attendance.view', 'attendance.markStudents', 'attendance.reports',
+  'academicCurriculum.view',
+  'timetable.view',
+  'exams.view', 'exams.marks',
+  'notices.view',
+];
+
+const parentPermissions = [
+  'academicCurriculum.view',
+  'timetable.view',
+  'exams.view',
+  'documents.view',
+  'parentPortal.view',
+];
+
 const seed = {
+  colleges: {
+    'main-campus': { id: 'main-campus', name: 'COLLEGE NAME', code: 'COL-097', location: 'Main Campus', status: 'Active', createdAtText: '19 Jun 2026' },
+  },
   students: {
     'seed-student-vivek': { admissionNo: 'ADM-2026-04449', studentId: 'STU-4449', name: 'Vivek Sharma', className: 'Class XII', section: 'A', program: 'CBSE Science', guardianName: 'Rajesh Sharma', idHolder: 'Vivek Sharma', guardianEmail: 'parent.vivek@example.com', phone: '+91 98765 43210', email: 'vivek.sharma@student.edu', academicYear: '2026-2027', status: 'Active', createdAtText: '03 Jun 2026' },
     'seed-student-vaibhavi': { admissionNo: 'ADM-2026-04450', studentId: 'STU-4450', name: 'Vaibhavi Aggarwal', className: 'Class XI', section: 'B', program: 'PU Commerce', guardianName: 'Anita Aggarwal', idHolder: 'Vaibhavi Aggarwal', guardianEmail: 'parent.vaibhavi@example.com', phone: '+91 99887 77665', email: 'vaibhavi@student.edu', academicYear: '2026-2027', status: 'Active', createdAtText: '01 Jun 2026' },
@@ -91,14 +123,15 @@ const seed = {
     'seed-transfer-vivek': { studentRecordId: 'seed-student-vivek', studentId: 'STU-4449', transferType: 'Internal Class Transfer', reason: 'Promoted to next class', academicYear: '2026-2027', status: 'Not Requested', requestedAtText: '03 Jun 2026' },
   },
   roles: {
-    'super-admin': { id: 'super-admin', name: 'Super Admin', description: 'Full ERP control.', locked: true, permissions: allPermissions },
-    admin: { id: 'admin', name: 'Admin', description: 'Administrative ERP access.', locked: false, permissions: allPermissions.filter((p) => p !== 'roles.edit' || true) },
-    faculty: { id: 'faculty', name: 'Faculty', description: 'Academic staff access.', locked: false, permissions: ['students.view', 'staff.view', 'attendance.view', 'attendance.markStudents', 'attendance.markStaff', 'attendance.reports', 'academics.view', 'timetable.view', 'exams.view', 'exams.marks', 'notices.view', 'documents.view'] },
-    parent: { id: 'parent', name: 'Parent', description: 'Parent portal access.', locked: false, permissions: ['students.view', 'notices.view', 'parentPortal.view'] },
+    'super-admin': { id: 'super-admin', name: 'Super Admin', description: 'Full ERP control with college selection.', locked: true, permissions: allPermissions },
+    admin: { id: 'admin', name: 'Admin', description: 'Administrative ERP access without new admission creation.', locked: false, permissions: adminPermissions },
+    faculty: { id: 'faculty', name: 'Faculty', description: 'Academic staff access with notice board view only.', locked: false, permissions: facultyPermissions },
+    parent: { id: 'parent', name: 'Parent', description: 'Parent portal access for academic visibility.', locked: false, permissions: parentPermissions },
   },
   users: {
-    'seed-admin-user': { uid: 'seed-admin-user', name: 'ERP Admin', email: 'admin@college.edu', roleId: 'admin', status: 'Active', createdAtText: '19 Jun 2026' },
-    'seed-parent-user': { uid: 'seed-parent-user', name: 'Rajesh Sharma', email: 'parent.vivek@example.com', roleId: 'parent', status: 'Active', createdAtText: '19 Jun 2026' },
+    'seed-super-admin-user': { uid: 'seed-super-admin-user', name: 'Super Admin', email: 'superadmin@college.edu', roleId: 'super-admin', collegeIds: ['main-campus'], status: 'Active', createdAtText: '19 Jun 2026' },
+    'seed-admin-user': { uid: 'seed-admin-user', name: 'ERP Admin', email: 'admin@college.edu', roleId: 'admin', collegeIds: ['main-campus'], status: 'Active', createdAtText: '19 Jun 2026' },
+    'seed-parent-user': { uid: 'seed-parent-user', name: 'Rajesh Sharma', email: 'parent.vivek@example.com', roleId: 'parent', collegeIds: ['main-campus'], status: 'Active', createdAtText: '19 Jun 2026' },
   },
   departments: {
     'seed-dept-science': { name: 'Science', headName: 'Dr. Kavita Menon', status: 'Active' },

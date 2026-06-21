@@ -28,7 +28,7 @@ import {
 } from '../../firebase/db';
 import { isFirebaseConfigured } from '../../firebase/config';
 import { uploadStudentDocumentFile } from '../../firebase/storage';
-import { getModuleById } from '../moduleRegistry';
+import { getEnabledModules, getModuleById } from '../moduleRegistry';
 import { demoStudents } from './demoStudents';
 import DemoModulePage from './components/DemoModulePage';
 import Sidebar from './components/Sidebar';
@@ -204,10 +204,31 @@ export default function StudentInformationManagement({ user, onLogout }) {
   const [documentType, setDocumentType] = useState('Admission Form');
   const [academicYear, setAcademicYear] = useState('2026-2027');
   const [promotionDraft, setPromotionDraft] = useState({ toClass: '', reason: '' });
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const documentInputRef = useRef(null);
   const currentRoleId = user?.roleId || 'admin';
   const activeModule = getModuleById(activePage);
-  const canOpenActiveModule = !activeModule?.permission || canAccess(defaultRoles, currentRoleId, activeModule.permission);
+  const canViewStudents = canAccess(defaultRoles, currentRoleId, 'students.view');
+  const canCreateAdmission = canAccess(defaultRoles, currentRoleId, 'students.create');
+  const canEditStudents = canAccess(defaultRoles, currentRoleId, 'students.edit');
+  const canArchiveStudents = canAccess(defaultRoles, currentRoleId, 'students.archive');
+  const canManageStudentDocuments = canAccess(defaultRoles, currentRoleId, 'students.documents');
+  const canVerifyStudentDocuments = canAccess(defaultRoles, currentRoleId, 'students.verifyDocuments');
+  const canPromoteStudents = canAccess(defaultRoles, currentRoleId, 'students.promote');
+  const accessibleModules = useMemo(() => getEnabledModules()
+    .filter((module) => !module.permission || canAccess(defaultRoles, currentRoleId, module.permission)), [currentRoleId]);
+  const canOpenActiveModule = activePage === 'reports'
+    ? canViewStudents
+    : !activeModule?.permission || canAccess(defaultRoles, currentRoleId, activeModule.permission);
+
+  useEffect(() => {
+    const isActivePageAllowed = activePage === 'reports'
+      ? canViewStudents
+      : accessibleModules.some((module) => module.id === activePage);
+    if (!isActivePageAllowed) {
+      setActivePage(accessibleModules[0]?.id || 'dashboard');
+    }
+  }, [accessibleModules, activePage, canViewStudents]);
 
   useEffect(() => {
     const loadStudentInformation = async () => {
@@ -276,6 +297,11 @@ export default function StudentInformationManagement({ user, onLogout }) {
   ];
 
   const saveStudent = async (form) => {
+    if (!canCreateAdmission) {
+      toast.error('You do not have permission to create new admissions.');
+      return;
+    }
+
     const validationMessage = validateStudentProfile(form);
     if (validationMessage) {
       toast.error(validationMessage);
@@ -369,6 +395,10 @@ export default function StudentInformationManagement({ user, onLogout }) {
 
   const saveStudentProfile = async (form) => {
     if (!editingStudent) return;
+    if (!canEditStudents) {
+      toast.error('You do not have permission to edit student profiles.');
+      return;
+    }
     const validationMessage = validateStudentProfile(form);
     if (validationMessage) {
       toast.error(validationMessage);
@@ -397,6 +427,11 @@ export default function StudentInformationManagement({ user, onLogout }) {
   };
 
   const archiveSelectedStudent = async (student) => {
+    if (!canArchiveStudents) {
+      toast.error('You do not have permission to archive student records.');
+      return;
+    }
+
     const archivedAtText = formatDisplayDate();
     const updates = { status: 'Archived', archivedAtText };
 
@@ -419,6 +454,11 @@ export default function StudentInformationManagement({ user, onLogout }) {
   };
 
   const restoreArchivedStudent = async (student) => {
+    if (!canArchiveStudents) {
+      toast.error('You do not have permission to restore student records.');
+      return;
+    }
+
     const restoredAtText = formatDisplayDate();
     const updates = { status: 'Active', restoredAtText };
 
@@ -441,6 +481,12 @@ export default function StudentInformationManagement({ user, onLogout }) {
   };
 
   const uploadDocument = async (event) => {
+    if (!canManageStudentDocuments) {
+      toast.error('You do not have permission to upload student documents.');
+      event.target.value = '';
+      return;
+    }
+
     const file = event.target.files?.[0];
     event.target.value = '';
     if (!file || !selectedStudent) return;
@@ -505,6 +551,11 @@ export default function StudentInformationManagement({ user, onLogout }) {
   };
 
   const promoteStudent = async () => {
+    if (!canPromoteStudents) {
+      toast.error('You do not have permission to promote or transfer students.');
+      return;
+    }
+
     if (!selectedStudent) {
       toast.error('Select a student before promotion.');
       return;
@@ -560,9 +611,17 @@ export default function StudentInformationManagement({ user, onLogout }) {
   return (
     <div className="erp-shell min-h-screen bg-white text-slate-900">
         <div className="flex min-h-screen">
-          <Sidebar activePage={activePage} currentUser={user} onNavigate={setActivePage} />
+          <Sidebar activePage={activePage} collapsed={sidebarCollapsed} currentUser={user} onNavigate={setActivePage} />
           <main className="flex-1 min-w-0 bg-[#f0f1f3] flex flex-col">
-            <TopHeader academicYear={academicYear} academicYears={academicYearOptions} onAcademicYearChange={setAcademicYear} user={user} onLogout={onLogout} />
+            <TopHeader
+              academicYear={academicYear}
+              academicYears={academicYearOptions}
+              onAcademicYearChange={setAcademicYear}
+              onMenuToggle={() => setSidebarCollapsed((prev) => !prev)}
+              onNavigate={setActivePage}
+              user={user}
+              onLogout={onLogout}
+            />
 
             <div className="flex-1 p-4 lg:p-5">
               <section className="erp-workspace bg-white min-h-full p-5 lg:p-7">
@@ -587,9 +646,11 @@ export default function StudentInformationManagement({ user, onLogout }) {
                     >
                       <Eye size={16} /> View Report
                     </button>
-                    <button onClick={() => setShowModal(true)} className="h-10 px-5 rounded-full bg-[#fb9a5b] text-white font-semibold text-sm flex items-center gap-2">
-                      <Plus size={16} /> New Admission
-                    </button>
+                    {canCreateAdmission && (
+                      <button onClick={() => setShowModal(true)} className="h-10 px-5 rounded-full bg-[#fb9a5b] text-white font-semibold text-sm flex items-center gap-2">
+                        <Plus size={16} /> New Admission
+                      </button>
+                    )}
                   </div>
                 </div>
 
@@ -642,6 +703,8 @@ export default function StudentInformationManagement({ user, onLogout }) {
                     </div>
 
                     <StudentTable
+                      canArchive={canArchiveStudents}
+                      canEdit={canEditStudents}
                       students={filteredStudents}
                       statusFilter={statusFilter}
                       onSelect={setSelectedId}
@@ -655,7 +718,7 @@ export default function StudentInformationManagement({ user, onLogout }) {
                   <aside className="xl:w-[30%]">
                     {selectedStudent ? (
                       <>
-                    <StudentProfileCard student={selectedStudent} onEdit={setEditingStudent} />
+                    <StudentProfileCard canEdit={canEditStudents} student={selectedStudent} onEdit={setEditingStudent} />
 
                     <div className="bg-white border border-slate-100 rounded-lg p-5 shadow-sm">
                       <h3 className="font-bold mb-4">
@@ -687,18 +750,22 @@ export default function StudentInformationManagement({ user, onLogout }) {
                                       <Download size={13} /> Open
                                     </a>
                                   )}
-                                  <button
-                                    onClick={() => updateDocumentVerification(item, 'Verified')}
-                                    className="h-8 px-3 rounded-md bg-white border border-emerald-200 text-emerald-700 text-xs font-semibold flex items-center gap-1"
-                                  >
-                                    <CheckCircle size={13} /> Verify
-                                  </button>
-                                  <button
-                                    onClick={() => updateDocumentVerification(item, 'Rejected')}
-                                    className="h-8 px-3 rounded-md bg-white border border-rose-200 text-rose-700 text-xs font-semibold flex items-center gap-1"
-                                  >
-                                    <XCircle size={13} /> Reject
-                                  </button>
+                                  {canVerifyStudentDocuments && (
+                                    <>
+                                      <button
+                                        onClick={() => updateDocumentVerification(item, 'Verified')}
+                                        className="h-8 px-3 rounded-md bg-white border border-emerald-200 text-emerald-700 text-xs font-semibold flex items-center gap-1"
+                                      >
+                                        <CheckCircle size={13} /> Verify
+                                      </button>
+                                      <button
+                                        onClick={() => updateDocumentVerification(item, 'Rejected')}
+                                        className="h-8 px-3 rounded-md bg-white border border-rose-200 text-rose-700 text-xs font-semibold flex items-center gap-1"
+                                      >
+                                        <XCircle size={13} /> Reject
+                                      </button>
+                                    </>
+                                  )}
                                 </div>
                               )}
                             </div>
@@ -709,28 +776,32 @@ export default function StudentInformationManagement({ user, onLogout }) {
                               No documents uploaded for this student yet.
                             </div>
                           )}
-                          <label className="block">
-                            <span className="text-xs font-semibold text-slate-500 mb-1.5 block">Document Type</span>
-                            <input
-                              value={documentType}
-                              onChange={(event) => setDocumentType(event.target.value)}
-                              placeholder="Aadhaar Card, Transfer Certificate, Marks Card..."
-                              className="w-full h-10 rounded-lg border border-slate-200 px-3 text-sm outline-none focus:border-[#fb9a5b] focus:ring-2 focus:ring-orange-100"
-                            />
-                          </label>
-                          <input
-                            ref={documentInputRef}
-                            type="file"
-                            className="hidden"
-                            onChange={uploadDocument}
-                          />
-                          <button
-                            onClick={() => documentInputRef.current?.click()}
-                            disabled={documentUploading}
-                            className="w-full h-10 rounded-full bg-[#fb9a5b] text-white font-semibold text-sm flex items-center justify-center gap-2 disabled:bg-slate-300 disabled:cursor-not-allowed"
-                          >
-                            <Upload size={16} /> {documentUploading ? 'Uploading...' : 'Upload Document'}
-                          </button>
+                          {canManageStudentDocuments && (
+                            <>
+                              <label className="block">
+                                <span className="text-xs font-semibold text-slate-500 mb-1.5 block">Document Type</span>
+                                <input
+                                  value={documentType}
+                                  onChange={(event) => setDocumentType(event.target.value)}
+                                  placeholder="Aadhaar Card, Transfer Certificate, Marks Card..."
+                                  className="w-full h-10 rounded-lg border border-slate-200 px-3 text-sm outline-none focus:border-[#fb9a5b] focus:ring-2 focus:ring-orange-100"
+                                />
+                              </label>
+                              <input
+                                ref={documentInputRef}
+                                type="file"
+                                className="hidden"
+                                onChange={uploadDocument}
+                              />
+                              <button
+                                onClick={() => documentInputRef.current?.click()}
+                                disabled={documentUploading}
+                                className="w-full h-10 rounded-full bg-[#fb9a5b] text-white font-semibold text-sm flex items-center justify-center gap-2 disabled:bg-slate-300 disabled:cursor-not-allowed"
+                              >
+                                <Upload size={16} /> {documentUploading ? 'Uploading...' : 'Upload Document'}
+                              </button>
+                            </>
+                          )}
                         </div>
                       )}
                       {activeTab === 'promotion' && (
@@ -743,26 +814,30 @@ export default function StudentInformationManagement({ user, onLogout }) {
                             <span>Transfer Status</span>
                             <StatusBadge value={latestTransfer?.status || selectedStudent.transferStatus || 'Not Requested'} />
                           </div>
-                          <label className="block">
-                            <span className="text-xs font-semibold text-slate-500 mb-1.5 block">Promote To</span>
-                            <input
-                              value={promotionDraft.toClass || suggestedPromotionClass}
-                              onChange={(event) => setPromotionDraft((prev) => ({ ...prev, toClass: event.target.value }))}
-                              className="w-full h-10 rounded-lg border border-slate-200 px-3 text-sm outline-none focus:border-[#fb9a5b] focus:ring-2 focus:ring-orange-100"
-                            />
-                          </label>
-                          <label className="block">
-                            <span className="text-xs font-semibold text-slate-500 mb-1.5 block">Reason / Note</span>
-                            <textarea
-                              value={promotionDraft.reason}
-                              onChange={(event) => setPromotionDraft((prev) => ({ ...prev, reason: event.target.value }))}
-                              className="w-full min-h-20 rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none focus:border-[#fb9a5b] focus:ring-2 focus:ring-orange-100"
-                              placeholder={`Promoted from ${selectedStudent.className}`}
-                            />
-                          </label>
-                          <button onClick={promoteStudent} className="w-full h-10 rounded-full bg-[#fb9a5b] text-white font-semibold">
-                            Promote / Update Transfer
-                          </button>
+                          {canPromoteStudents && (
+                            <>
+                              <label className="block">
+                                <span className="text-xs font-semibold text-slate-500 mb-1.5 block">Promote To</span>
+                                <input
+                                  value={promotionDraft.toClass || suggestedPromotionClass}
+                                  onChange={(event) => setPromotionDraft((prev) => ({ ...prev, toClass: event.target.value }))}
+                                  className="w-full h-10 rounded-lg border border-slate-200 px-3 text-sm outline-none focus:border-[#fb9a5b] focus:ring-2 focus:ring-orange-100"
+                                />
+                              </label>
+                              <label className="block">
+                                <span className="text-xs font-semibold text-slate-500 mb-1.5 block">Reason / Note</span>
+                                <textarea
+                                  value={promotionDraft.reason}
+                                  onChange={(event) => setPromotionDraft((prev) => ({ ...prev, reason: event.target.value }))}
+                                  className="w-full min-h-20 rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none focus:border-[#fb9a5b] focus:ring-2 focus:ring-orange-100"
+                                  placeholder={`Promoted from ${selectedStudent.className}`}
+                                />
+                              </label>
+                              <button onClick={promoteStudent} className="w-full h-10 rounded-full bg-[#fb9a5b] text-white font-semibold">
+                                Promote / Update Transfer
+                              </button>
+                            </>
+                          )}
                         </div>
                       )}
                       {!['documents', 'promotion'].includes(activeTab) && (
@@ -771,7 +846,9 @@ export default function StudentInformationManagement({ user, onLogout }) {
                             Admission status: {latestAdmission?.status || selectedStudent.status}. Created on {selectedStudent.createdAtText || latestAdmission?.submittedAtText || 'today'}.
                           </div>
                           <div className="rounded-lg bg-[#f5f5f6] p-3">Profile management keeps guardian, class, contact, and academic details together.</div>
-                          <button onClick={() => setShowModal(true)} className="w-full h-10 rounded-full bg-[#fb9a5b] text-white font-semibold">Create Another Admission</button>
+                          {canCreateAdmission && (
+                            <button onClick={() => setShowModal(true)} className="w-full h-10 rounded-full bg-[#fb9a5b] text-white font-semibold">Create Another Admission</button>
+                          )}
                         </div>
                       )}
                     </div>
@@ -780,9 +857,11 @@ export default function StudentInformationManagement({ user, onLogout }) {
                       <div className="bg-white border border-slate-100 rounded-lg p-5 shadow-sm text-sm text-slate-600">
                         <h3 className="font-bold text-slate-900 mb-2">No Students Found</h3>
                         <p>No student records are available for academic year {academicYear}.</p>
-                        <button onClick={() => setShowModal(true)} className="mt-4 w-full h-10 rounded-full bg-[#fb9a5b] text-white font-semibold">
-                          New Admission
-                        </button>
+                        {canCreateAdmission && (
+                          <button onClick={() => setShowModal(true)} className="mt-4 w-full h-10 rounded-full bg-[#fb9a5b] text-white font-semibold">
+                            New Admission
+                          </button>
+                        )}
                       </div>
                     )}
                   </aside>

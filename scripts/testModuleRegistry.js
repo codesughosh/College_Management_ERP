@@ -12,10 +12,14 @@ const modulesWithoutPermission = moduleRegistry.filter((module) => !module.permi
 assert.deepEqual(modulesWithoutPermission, []);
 
 const parentVisible = enabled.filter((module) => canAccess(defaultRoles, 'parent', module.permission)).map((module) => module.id);
-assert.deepEqual(parentVisible, ['dashboard', 'notice-board', 'parent-portal']);
+assert.deepEqual(parentVisible, ['calendar', 'timetable', 'examination-results', 'document-management', 'parent-portal']);
 
 const facultyVisible = enabled.filter((module) => canAccess(defaultRoles, 'faculty', module.permission)).map((module) => module.id);
+assert.equal(facultyVisible.includes('calendar'), true);
+assert.equal(facultyVisible.includes('academics'), false);
 assert.equal(facultyVisible.includes('attendance'), true);
+assert.equal(facultyVisible.includes('notice-board'), true);
+assert.equal(facultyVisible.includes('document-management'), false);
 assert.equal(facultyVisible.includes('fees'), false);
 assert.equal(facultyVisible.includes('financial-reports'), false);
 

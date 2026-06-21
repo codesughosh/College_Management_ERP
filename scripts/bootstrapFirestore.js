@@ -39,6 +39,10 @@ if (missing.length) {
 }
 
 const collections = {
+  colleges: {
+    purpose: 'College master records available to Super Admin users',
+    fields: ['id', 'name', 'code', 'location', 'status', 'createdAtText', 'updatedAtText'],
+  },
   students: {
     purpose: 'Main student profile records',
     fields: [
@@ -92,7 +96,7 @@ const collections = {
   },
   users: {
     purpose: 'ERP user profiles linked to Firebase Auth users',
-    fields: ['uid', 'name', 'email', 'roleId', 'status', 'createdBy', 'createdAtText', 'updatedAtText'],
+    fields: ['uid', 'name', 'email', 'roleId', 'collegeIds', 'status', 'createdBy', 'createdAtText', 'updatedAtText'],
   },
   roles: {
     purpose: 'ERP role definitions and permission maps',

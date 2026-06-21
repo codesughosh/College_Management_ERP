@@ -1,13 +1,27 @@
 import { Bell, LogOut, Menu, UserRound } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { canAccess, defaultRoles, getRoleById } from '../../userRoles/rolePermissions';
 
-export default function TopHeader({ academicYear, academicYears = [], onAcademicYearChange, user, onLogout }) {
+export default function TopHeader({ academicYear, academicYears = [], onAcademicYearChange, onMenuToggle, onNavigate, user, onLogout }) {
+  const currentRoleId = user?.roleId || 'admin';
+  const currentRole = getRoleById(defaultRoles, currentRoleId);
+  const canViewNotices = canAccess(defaultRoles, currentRoleId, 'notices.view');
+
+  const openNoticeBoard = () => {
+    if (!canViewNotices) {
+      toast.error('You do not have permission to open the notice board.');
+      return;
+    }
+    onNavigate?.('notice-board');
+  };
+
   return (
     <header className="erp-header h-[72px] bg-white border-b border-slate-200 flex items-center justify-between px-5 lg:px-10 shrink-0">
       <div className="flex items-center gap-5 min-w-0">
         <button
-          onClick={() => toast.success('Menu toggled')}
+          onClick={onMenuToggle}
           className="h-12 w-12 rounded-full bg-[#fb9a5b] text-slate-800 flex items-center justify-center shadow-sm shrink-0"
+          title="Toggle menu"
         >
           <Menu size={20} />
         </button>
@@ -28,9 +42,9 @@ export default function TopHeader({ academicYear, academicYears = [], onAcademic
       </div>
 
       <div className="flex items-center gap-5">
-        <button onClick={() => toast.success('No new notifications')} className="relative text-slate-500">
+        <button onClick={openNoticeBoard} className="relative text-slate-500" title="Open notice board">
           <Bell size={19} />
-          <span className="absolute -top-1 -right-1 h-2.5 w-2.5 rounded-full bg-orange-500 border border-white" />
+          {canViewNotices && <span className="absolute -top-1 -right-1 h-2.5 w-2.5 rounded-full bg-orange-500 border border-white" />}
         </button>
         <div className="hidden sm:block h-9 w-px bg-slate-200" />
         <div className="hidden sm:block text-xs text-slate-700 leading-5">
@@ -41,7 +55,7 @@ export default function TopHeader({ academicYear, academicYears = [], onAcademic
         <div className="text-right leading-tight">
           <div className="text-sm font-bold text-slate-900">{user?.name || 'Admin'}</div>
           <span className="inline-flex bg-[#ff9f68] text-white text-[9px] px-2 py-0.5 rounded-sm font-bold uppercase">
-            Admin
+            {currentRole?.name || 'Admin'}
           </span>
         </div>
         <div className="h-10 w-10 rounded-full bg-[#2e333b] text-emerald-300 flex items-center justify-center">

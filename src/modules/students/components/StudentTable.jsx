@@ -2,6 +2,8 @@ import { Archive, ArchiveRestore, Download, Edit3, Eye, UserRound } from 'lucide
 import StatusBadge from './StatusBadge';
 
 export default function StudentTable({
+  canArchive = true,
+  canEdit = true,
   students,
   statusFilter,
   onArchive,
@@ -50,13 +52,15 @@ export default function StudentTable({
                   <button onClick={() => onSelect(student.id)} className="h-9 w-9 rounded-full border border-slate-200 flex items-center justify-center">
                     <Eye size={15} />
                   </button>
-                  <button
-                    onClick={() => onEdit(student)}
-                    className="h-9 w-9 rounded-full border border-slate-200 flex items-center justify-center"
-                    title="Edit profile"
-                  >
-                    <Edit3 size={15} />
-                  </button>
+                  {canEdit && (
+                    <button
+                      onClick={() => onEdit(student)}
+                      className="h-9 w-9 rounded-full border border-slate-200 flex items-center justify-center"
+                      title="Edit profile"
+                    >
+                      <Edit3 size={15} />
+                    </button>
+                  )}
                   <button
                     onClick={() => onDownload(student)}
                     className="h-9 w-9 rounded-full border border-slate-200 flex items-center justify-center"
@@ -64,7 +68,7 @@ export default function StudentTable({
                   >
                     <Download size={15} />
                   </button>
-                  {student.status !== 'Archived' && (
+                  {canArchive && student.status !== 'Archived' && (
                     <button
                       onClick={() => onArchive(student)}
                       className="h-9 w-9 rounded-full border border-slate-200 flex items-center justify-center"
@@ -73,7 +77,7 @@ export default function StudentTable({
                       <Archive size={15} />
                     </button>
                   )}
-                  {student.status === 'Archived' && (
+                  {canArchive && student.status === 'Archived' && (
                     <button
                       onClick={() => onRestore(student)}
                       className="h-9 w-9 rounded-full border border-slate-200 flex items-center justify-center"

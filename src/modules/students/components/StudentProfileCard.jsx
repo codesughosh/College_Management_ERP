@@ -1,7 +1,7 @@
 import { Edit3, UserRound } from 'lucide-react';
 import StatusBadge from './StatusBadge';
 
-export default function StudentProfileCard({ student, onEdit }) {
+export default function StudentProfileCard({ canEdit = true, student, onEdit }) {
   return (
     <div className="bg-[#f0f0f2] rounded-lg p-4 mb-5">
       <div className="bg-white rounded-lg p-5">
@@ -42,12 +42,14 @@ export default function StudentProfileCard({ student, onEdit }) {
             <div className="text-slate-500">{student.email}</div>
           </div>
         </div>
-        <button
-          onClick={() => onEdit(student)}
-          className="mt-5 w-full h-10 rounded-full bg-[#33373e] text-white font-semibold text-sm flex items-center justify-center gap-2"
-        >
-          <Edit3 size={15} /> Edit Profile
-        </button>
+        {canEdit && (
+          <button
+            onClick={() => onEdit(student)}
+            className="mt-5 w-full h-10 rounded-full bg-[#33373e] text-white font-semibold text-sm flex items-center justify-center gap-2"
+          >
+            <Edit3 size={15} /> Edit Profile
+          </button>
+        )}
       </div>
     </div>
   );

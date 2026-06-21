@@ -29,7 +29,7 @@ export default function StaffTable({ staff, canArchive, canEdit, canManageLeave,
               tabIndex={0}
               onClick={() => onSelect(member.id)}
               onKeyDown={(event) => handleRowKeyDown(event, member.id)}
-              className={`bg-white shadow-[0_0_0_1px_rgba(226,232,240,0.9)] rounded-lg cursor-pointer transition-colors ${selectedId === member.id ? 'staff-row-selected' : ''}`}
+              className={`bg-white shadow-[0_0_0_1px_rgba(226,232,240,0.9)] rounded-lg cursor-pointer transition-colors ${selectedId === member.id ? 'erp-row-selected' : ''}`}
             >
               <td className="px-5 py-4 rounded-l-lg">
                 <div className="flex items-center gap-3 text-left">

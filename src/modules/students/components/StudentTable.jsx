@@ -11,7 +11,15 @@ export default function StudentTable({
   onEdit,
   onRestore,
   onSelect,
+  selectedId,
 }) {
+  const handleRowKeyDown = (event, studentId) => {
+    if (event.key === 'Enter' || event.key === ' ') {
+      event.preventDefault();
+      onSelect(studentId);
+    }
+  };
+
   return (
     <div className="overflow-x-auto">
       <table className="w-full text-sm border-separate border-spacing-y-2">
@@ -26,9 +34,16 @@ export default function StudentTable({
         </thead>
         <tbody>
           {students.map((student) => (
-            <tr key={student.id} className="bg-white shadow-[0_0_0_1px_rgba(226,232,240,0.9)] rounded-lg">
+            <tr
+              key={student.id}
+              role="button"
+              tabIndex={0}
+              onClick={() => onSelect(student.id)}
+              onKeyDown={(event) => handleRowKeyDown(event, student.id)}
+              className={`bg-white shadow-[0_0_0_1px_rgba(226,232,240,0.9)] rounded-lg cursor-pointer transition-colors ${selectedId === student.id ? 'erp-row-selected' : ''}`}
+            >
               <td className="px-5 py-4 rounded-l-lg">
-                <button onClick={() => onSelect(student.id)} className="flex items-center gap-3 text-left">
+                <div className="flex items-center gap-3 text-left">
                   <span className="h-10 w-10 rounded-full bg-[#30343c] text-emerald-300 flex items-center justify-center">
                     <UserRound size={20} />
                   </span>
@@ -36,7 +51,7 @@ export default function StudentTable({
                     <span className="block font-bold text-slate-900">{student.name}</span>
                     <span className="block text-xs text-slate-500">{student.guardianName}</span>
                   </span>
-                </button>
+                </div>
               </td>
               <td className="px-5 py-4">
                 <div className="font-semibold">{student.admissionNo}</div>
@@ -49,12 +64,12 @@ export default function StudentTable({
               <td className="px-5 py-4"><StatusBadge value={student.status} /></td>
               <td className="px-5 py-4 rounded-r-lg">
                 <div className="flex justify-end gap-2">
-                  <button onClick={() => onSelect(student.id)} className="h-9 w-9 rounded-full border border-slate-200 flex items-center justify-center">
+                  <button onClick={(event) => { event.stopPropagation(); onSelect(student.id); }} className="h-9 w-9 rounded-full border border-slate-200 flex items-center justify-center">
                     <Eye size={15} />
                   </button>
                   {canEdit && (
                     <button
-                      onClick={() => onEdit(student)}
+                      onClick={(event) => { event.stopPropagation(); onEdit(student); }}
                       className="h-9 w-9 rounded-full border border-slate-200 flex items-center justify-center"
                       title="Edit profile"
                     >
@@ -62,7 +77,7 @@ export default function StudentTable({
                     </button>
                   )}
                   <button
-                    onClick={() => onDownload(student)}
+                    onClick={(event) => { event.stopPropagation(); onDownload(student); }}
                     className="h-9 w-9 rounded-full border border-slate-200 flex items-center justify-center"
                     title="Download record"
                   >
@@ -70,7 +85,7 @@ export default function StudentTable({
                   </button>
                   {canArchive && student.status !== 'Archived' && (
                     <button
-                      onClick={() => onArchive(student)}
+                      onClick={(event) => { event.stopPropagation(); onArchive(student); }}
                       className="h-9 w-9 rounded-full border border-slate-200 flex items-center justify-center"
                       title="Archive student"
                     >
@@ -79,7 +94,7 @@ export default function StudentTable({
                   )}
                   {canArchive && student.status === 'Archived' && (
                     <button
-                      onClick={() => onRestore(student)}
+                      onClick={(event) => { event.stopPropagation(); onRestore(student); }}
                       className="h-9 w-9 rounded-full border border-slate-200 flex items-center justify-center"
                       title="Restore student"
                     >

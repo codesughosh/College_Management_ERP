@@ -731,6 +731,7 @@ export default function StudentInformationManagement({ user, onLogout }) {
                       canEdit={canEditStudents}
                       students={filteredStudents}
                       statusFilter={statusFilter}
+                      selectedId={selectedId}
                       onSelect={setSelectedId}
                       onEdit={setEditingStudent}
                       onDownload={(student) => toast.success(`${student.name} record downloaded`)}

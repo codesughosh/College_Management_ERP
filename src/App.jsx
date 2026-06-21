@@ -4,6 +4,7 @@ import { Building2, GraduationCap } from 'lucide-react';
 import AuthPage from './pages/AuthPage';
 import StudentInformationManagement from './modules/students/StudentInformationManagement';
 import { logoutUser, subscribeToAuthState } from './firebase/auth';
+import { getFallbackRoleId } from './firebase/demoRoles';
 import { getUserProfile } from './firebase/db';
 import ParticleBackground from './components/ParticleBackground';
 
@@ -74,9 +75,10 @@ export default function App() {
       }
 
       const profile = await getUserProfile(nextUser.uid).catch(() => null);
+      const roleId = profile?.roleId || getFallbackRoleId(nextUser.email);
       setUser({
         ...nextUser,
-        roleId: profile?.roleId || nextUser.roleId || 'admin',
+        roleId,
         status: profile?.status || 'Active',
         permissions: profile?.permissions || [],
         collegeIds: profile?.collegeIds || ['main-campus'],

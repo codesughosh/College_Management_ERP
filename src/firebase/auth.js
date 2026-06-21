@@ -8,6 +8,7 @@ import {
 } from 'firebase/auth';
 import { deleteApp, getApp, initializeApp } from 'firebase/app';
 import { auth, firebaseConfig, isFirebaseConfigured } from './config';
+import { getFallbackRoleId } from './demoRoles';
 
 function requireAuth() {
   if (!isFirebaseConfigured || !auth) {
@@ -18,12 +19,12 @@ function requireAuth() {
 
 export function toAppUser(firebaseUser) {
   if (!firebaseUser) return null;
+  const roleId = getFallbackRoleId(firebaseUser.email);
   return {
     uid: firebaseUser.uid,
     name: firebaseUser.displayName || 'Admin',
     email: firebaseUser.email,
-    role: 'Admin',
-    roleId: 'admin',
+    roleId,
   };
 }
 
@@ -49,8 +50,7 @@ export async function registerWithEmail({ name, email, password }) {
     uid: result.user.uid,
     name: name || result.user.displayName || 'Admin',
     email: result.user.email,
-    role: 'Admin',
-    roleId: 'admin',
+    roleId: getFallbackRoleId(result.user.email),
   };
 }
 

@@ -929,9 +929,18 @@ export default function StudentInformationManagement({ user, onLogout }) {
               </section>
             </div>
 
-            <footer className="h-14 bg-white border-t border-slate-200 px-6 flex items-center justify-between text-xs text-slate-500">
-              <span>Copyright © 2026 Devloft Technologies | College ERP</span>
-
+            <footer className="h-14 bg-white border-t border-slate-200 px-6 flex items-center justify-center text-xs text-slate-500">
+              <span>
+                Designed & Developed by{' '}
+                <a
+                  href="https://www.devlofttech.com"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="font-bold text-[#fb8d49] hover:underline"
+                >
+                  Devloft Technologies
+                </a>
+              </span>
             </footer>
           </main>
         </div>

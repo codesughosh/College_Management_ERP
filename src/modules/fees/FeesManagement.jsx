@@ -319,7 +319,7 @@ export default function FeesManagement({ currentUser, academicYear = '2026-2027'
 
       <div className="flex flex-col xl:flex-row gap-5">
         <div className="xl:w-[68%] min-w-0">
-          <FeeVisualGraph assignments={assignments} summary={summary} />
+          <FeeVisualGraph assignments={assignments} collections={collections} summary={summary} />
           <div className="relative mb-4">
             <Search size={17} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
             <input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search student name, ID, class, status..." className="w-full h-11 rounded-lg bg-[#f0f0f2] border-0 pl-10 pr-4 text-sm outline-none focus:ring-2 focus:ring-orange-100" />

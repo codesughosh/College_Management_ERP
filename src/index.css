@@ -237,3 +237,42 @@ html{color-scheme:dark}::selection{background:rgba(0,255,136,.2);color:#fff}::-w
 .erp-shell.light-mode button:hover:not(:disabled) {
   border-color:#cfd6ef!important;
 }
+
+.erp-shell.light-mode button[class*="bg-[#333"],
+.erp-shell.light-mode button[class*="bg-[#343"],
+.erp-shell.light-mode button[class*="bg-[#fb"],
+.erp-shell.light-mode button[class*="bg-orange"],
+.erp-shell.light-mode button[class*="border-[#333"],
+.erp-shell.light-mode button[class*="border-[#343"],
+.erp-shell.light-mode button[class*="border-[#fb"],
+.erp-shell.light-mode button[class*="border-orange"] {
+  background:#6576d8!important;
+  border-color:#6576d8!important;
+  color:#ffffff!important;
+  box-shadow:0 8px 18px rgba(101,118,216,.22)!important;
+}
+
+.erp-shell.light-mode button[class*="bg-[#333"] svg,
+.erp-shell.light-mode button[class*="bg-[#343"] svg,
+.erp-shell.light-mode button[class*="bg-[#fb"] svg,
+.erp-shell.light-mode button[class*="bg-orange"] svg,
+.erp-shell.light-mode button[class*="border-[#333"] svg,
+.erp-shell.light-mode button[class*="border-[#343"] svg,
+.erp-shell.light-mode button[class*="border-[#fb"] svg,
+.erp-shell.light-mode button[class*="border-orange"] svg {
+  color:#ffffff!important;
+  stroke:#ffffff!important;
+}
+
+.erp-shell.light-mode button[class*="bg-[#333"]:hover:not(:disabled),
+.erp-shell.light-mode button[class*="bg-[#343"]:hover:not(:disabled),
+.erp-shell.light-mode button[class*="bg-[#fb"]:hover:not(:disabled),
+.erp-shell.light-mode button[class*="bg-orange"]:hover:not(:disabled),
+.erp-shell.light-mode button[class*="border-[#333"]:hover:not(:disabled),
+.erp-shell.light-mode button[class*="border-[#343"]:hover:not(:disabled),
+.erp-shell.light-mode button[class*="border-[#fb"]:hover:not(:disabled),
+.erp-shell.light-mode button[class*="border-orange"]:hover:not(:disabled) {
+  background:#5667c8!important;
+  border-color:#5667c8!important;
+  color:#ffffff!important;
+}

@@ -83,16 +83,16 @@ export default function AuthPage() {
           <div className="h-14 w-14 rounded-full bg-white text-emerald-700 flex items-center justify-center mb-5">
             <GraduationCap size={30} />
           </div>
-          <h1 className="text-2xl font-bold">COLLEGE NAME</h1>
-          <p className="text-sm text-slate-300 mt-1">ERP Management Suite</p>
+          <h1 className="text-2xl font-bold">Devloft College Management</h1>
+          <p className="text-sm text-slate-300 mt-1">College Management Suite</p>
         </div>
 
         <form onSubmit={submit} className="p-7 space-y-5">
           <div>
-            <h2 className="text-xl font-bold text-slate-900">ERP login</h2>
-            <p className="text-sm text-slate-500 mt-1">
-              {isFirebaseConfigured ? 'Use your registered ERP account.' : 'Add Firebase values to .env before signing in.'}
-            </p>
+            <h2 className="text-xl font-bold text-slate-900">Login</h2>
+            {!isFirebaseConfigured && (
+              <p className="text-sm text-slate-500 mt-1">Add Firebase values to .env before signing in.</p>
+            )}
           </div>
 
           <fieldset className="space-y-2">

@@ -14,8 +14,30 @@ assert.equal(getModuleById('missing-module'), null);
 const modulesWithoutPermission = moduleRegistry.filter((module) => !module.permission);
 assert.deepEqual(modulesWithoutPermission, []);
 
-const sidebarVisible = enabled.filter((module) => !module.footer).map((module) => module.id);
-assert.deepEqual(sidebarVisible, [
+const adminSidebarVisible = enabled
+  .filter((module) => canAccess(defaultRoles, 'admin', module.permission))
+  .filter((module) => !module.footer)
+  .filter((module) => !module.hideFromSidebar)
+  .map((module) => module.id);
+assert.deepEqual(adminSidebarVisible, [
+  'dashboard',
+  'students',
+  'faculty-staff',
+  'attendance',
+  'timetable',
+  'examination-results',
+  'document-management',
+  'fees',
+  'financial-reports',
+]);
+
+const footerVisible = enabled.filter((module) => module.footer).map((module) => module.id);
+assert.deepEqual(footerVisible, ['settings']);
+
+const superAdminVisible = enabled
+  .filter((module) => canAccess(defaultRoles, 'super-admin', module.permission))
+  .map((module) => module.id);
+assert.deepEqual(superAdminVisible, [
   'dashboard',
   'students',
   'calendar',
@@ -30,10 +52,8 @@ assert.deepEqual(sidebarVisible, [
   'fees',
   'financial-reports',
   'parent-portal',
+  'settings',
 ]);
-
-const footerVisible = enabled.filter((module) => module.footer).map((module) => module.id);
-assert.deepEqual(footerVisible, ['settings']);
 
 const parentVisible = enabled.filter((module) => canAccess(defaultRoles, 'parent', module.permission)).map((module) => module.id);
 assert.deepEqual(parentVisible, ['calendar', 'timetable', 'examination-results', 'document-management', 'parent-portal']);
@@ -51,13 +71,10 @@ const adminVisible = enabled.filter((module) => canAccess(defaultRoles, 'admin',
 assert.deepEqual(adminVisible, [
   'dashboard',
   'students',
-  'calendar',
-  'academics',
   'faculty-staff',
   'attendance',
   'timetable',
   'examination-results',
-  'notice-board',
   'document-management',
   'fees',
   'financial-reports',

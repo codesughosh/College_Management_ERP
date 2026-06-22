@@ -4,10 +4,12 @@ import { canAccess, defaultRoles } from '../../userRoles/rolePermissions';
 
 export default function Sidebar({ activePage, collapsed = false, currentUser, institute, onNavigate, onThemeToggle, themeMode = 'dark' }) {
   const currentRoleId = currentUser?.roleId || 'admin';
+  const isSuperAdmin = currentRoleId === 'super-admin';
   const collegeName = institute?.name || currentUser?.selectedCollege?.name || 'College';
   const navItems = getEnabledModules()
     .filter((module) => !module.permission || canAccess(defaultRoles, currentRoleId, module.permission))
     .filter((module) => !module.footer)
+    .filter((module) => isSuperAdmin || !module.hideFromSidebar)
     .map((module) => {
       const Icon = module.icon;
       return {

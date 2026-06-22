@@ -4,12 +4,31 @@ import { canAccess, defaultRoles } from '../src/modules/userRoles/rolePermission
 
 const enabled = getEnabledModules();
 assert.equal(enabled.every((module) => module.status !== 'disabled'), true);
+assert.equal(getModuleById('dashboard').label, 'Dashboard');
+assert.equal(getModuleById('students').permission, 'students.view');
 assert.equal(getModuleById('fees').permission, 'fees.view');
+assert.equal(getModuleById('fees').label, 'Payment');
 assert.equal(getModuleById('parent-portal').permission, 'parentPortal.view');
 assert.equal(getModuleById('missing-module'), null);
 
 const modulesWithoutPermission = moduleRegistry.filter((module) => !module.permission);
 assert.deepEqual(modulesWithoutPermission, []);
+
+const sidebarVisible = enabled.filter((module) => !module.hideFromSidebar && !module.footer).map((module) => module.id);
+assert.deepEqual(sidebarVisible, [
+  'dashboard',
+  'students',
+  'faculty-staff',
+  'attendance',
+  'timetable',
+  'examination-results',
+  'document-management',
+  'fees',
+  'financial-reports',
+]);
+
+const footerVisible = enabled.filter((module) => module.footer).map((module) => module.id);
+assert.deepEqual(footerVisible, ['settings']);
 
 const parentVisible = enabled.filter((module) => canAccess(defaultRoles, 'parent', module.permission)).map((module) => module.id);
 assert.deepEqual(parentVisible, ['calendar', 'timetable', 'parent-portal']);

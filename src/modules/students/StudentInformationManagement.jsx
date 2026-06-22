@@ -18,6 +18,7 @@ import {
 import { isFirebaseConfigured } from '../../firebase/config';
 import { getEnabledModules, getModuleById } from '../moduleRegistry';
 import { demoStudents } from './demoStudents';
+import DashboardManagement from '../dashboard/DashboardManagement';
 import DemoModulePage from './components/DemoModulePage';
 import Sidebar from './components/Sidebar';
 import StatusBadge from './components/StatusBadge';
@@ -502,6 +503,8 @@ export default function StudentInformationManagement({ user, onLogout }) {
                     You do not have permission to open this module.
                   </div>
                 ) : activePage === 'dashboard' ? (
+                  <DashboardManagement academicYear={academicYear} onNavigate={setActivePage} />
+                ) : activePage === 'students' ? (
                 <>
                 <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-4 pb-6 border-b border-slate-100">
                   <div>
@@ -605,7 +608,7 @@ export default function StudentInformationManagement({ user, onLogout }) {
                     admissions={admissions.filter((item) => item.academicYear === academicYear)}
                     documents={studentDocuments.filter((item) => item.academicYear === academicYear)}
                     promotions={promotions.filter((item) => item.academicYear === academicYear)}
-                    onBack={() => setActivePage('dashboard')}
+                    onBack={() => setActivePage('students')}
                   />
                 ) : activePage === 'faculty-staff' ? (
                   <FacultyStaffManagement currentUser={user} academicYear={academicYear} />
@@ -634,7 +637,7 @@ export default function StudentInformationManagement({ user, onLogout }) {
                 ) : activePage === 'settings' ? (
                   <SettingsManagement currentUser={user} />
                 ) : (
-                  <DemoModulePage page={activePage} onOpenStudents={() => setActivePage('dashboard')} />
+                  <DemoModulePage page={activePage} onOpenStudents={() => setActivePage('students')} />
                 )}
               </section>
             </div>

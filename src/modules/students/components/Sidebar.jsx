@@ -7,6 +7,7 @@ export default function Sidebar({ activePage, collapsed = false, currentUser, in
   const collegeName = institute?.name || currentUser?.selectedCollege?.name || 'College';
   const navItems = getEnabledModules()
     .filter((module) => !module.permission || canAccess(defaultRoles, currentRoleId, module.permission))
+    .filter((module) => !module.hideFromSidebar && !module.footer)
     .map((module) => {
       const Icon = module.icon;
       return {
@@ -14,6 +15,17 @@ export default function Sidebar({ activePage, collapsed = false, currentUser, in
         label: module.label,
         group: module.group,
         status: module.status,
+        icon: <Icon size={18} />,
+      };
+    });
+  const footerItems = getEnabledModules()
+    .filter((module) => !module.permission || canAccess(defaultRoles, currentRoleId, module.permission))
+    .filter((module) => !module.hideFromSidebar && module.footer)
+    .map((module) => {
+      const Icon = module.icon;
+      return {
+        id: module.id,
+        label: module.label,
         icon: <Icon size={18} />,
       };
     });
@@ -34,7 +46,7 @@ export default function Sidebar({ activePage, collapsed = false, currentUser, in
         </div>
       </div>
 
-      <nav className={`${collapsed ? 'px-4' : 'px-9'} py-3 flex flex-col`}>
+      <nav className={`${collapsed ? 'px-4' : 'px-9'} py-3 flex flex-col flex-1`}>
         {navItems.map(({ id, label, icon, status }) => {
           const active = activePage === id;
           return (
@@ -56,6 +68,29 @@ export default function Sidebar({ activePage, collapsed = false, currentUser, in
           );
         })}
       </nav>
+
+      {!!footerItems.length && (
+        <nav className={`${collapsed ? 'px-4' : 'px-9'} pb-5 flex flex-col mt-auto`}>
+          {footerItems.map(({ id, label, icon }) => {
+            const active = activePage === id;
+            return (
+              <button
+                key={id}
+                onClick={() => onNavigate(id)}
+                className={`h-14 border-t border-slate-100 flex items-center text-[15px] ${
+                  collapsed ? 'justify-center' : 'justify-between'
+                } ${active ? 'text-slate-800' : 'text-slate-600'}`}
+                title={collapsed ? label : undefined}
+              >
+                <span className={`flex items-center ${collapsed ? 'justify-center h-11 w-11' : 'gap-3'} ${active ? 'bg-[#e7e7ea] rounded-md px-3 py-3 w-full' : ''}`}>
+                  {icon}
+                  {!collapsed && label}
+                </span>
+              </button>
+            );
+          })}
+        </nav>
+      )}
     </aside>
   );
 }

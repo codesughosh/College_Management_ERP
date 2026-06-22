@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { Component, useEffect, useMemo, useState } from 'react';
 import {
   Download,
   Search,
@@ -45,6 +45,40 @@ import { demoInstituteSettings } from '../settings/demoSettings';
 
 function csvValue(value) {
   return `"${String(value ?? '').replace(/"/g, '""')}"`;
+}
+
+class ModuleErrorBoundary extends Component {
+  constructor(props) {
+    super(props);
+    this.state = { error: null, resetKey: props.resetKey };
+  }
+
+  static getDerivedStateFromError(error) {
+    return { error };
+  }
+
+  static getDerivedStateFromProps(props, state) {
+    if (props.resetKey !== state.resetKey) {
+      return { error: null, resetKey: props.resetKey };
+    }
+    return null;
+  }
+
+  componentDidCatch(error) {
+    console.error('Module render failed', error);
+  }
+
+  render() {
+    if (this.state.error) {
+      return (
+        <div className="rounded-lg bg-rose-50 border border-rose-100 p-6 text-sm text-rose-700">
+          <h2 className="font-bold text-rose-900 mb-2">This module could not be opened.</h2>
+          <p>Please refresh the page. If it keeps happening, share the browser console error with support.</p>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
 }
 
 function StudentReportView({ academicYear, admissions, documents, promotions, students, onBack }) {
@@ -538,6 +572,7 @@ export default function StudentInformationManagement({ user, onLogout }) {
 
             <div className="flex-1 p-4 lg:p-5">
               <section className="erp-workspace bg-white min-h-full p-5 lg:p-7">
+                <ModuleErrorBoundary resetKey={activePage}>
                 {!canOpenActiveModule ? (
                   <div className="rounded-lg bg-[#f5f5f6] p-6 text-sm text-slate-600">
                     You do not have permission to open this module.
@@ -681,6 +716,7 @@ export default function StudentInformationManagement({ user, onLogout }) {
                 ) : (
                   <DemoModulePage page={activePage} onOpenStudents={() => setActivePage('students')} />
                 )}
+                </ModuleErrorBoundary>
               </section>
             </div>
 

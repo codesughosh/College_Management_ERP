@@ -21,10 +21,10 @@ import StaffProfilePanel from './components/StaffProfilePanel';
 import StaffTable from './components/StaffTable';
 
 export default function FacultyStaffManagement({ currentUser, academicYear = '2026-2027' }) {
-  const [staffMembers, setStaffMembers] = useState(demoStaffMembers);
-  const [departments, setDepartments] = useState(demoDepartments);
-  const [leaveRecords, setLeaveRecords] = useState(demoLeaveRecords);
-  const [attendanceRecords, setAttendanceRecords] = useState(demoAttendanceRecords);
+  const [staffMembers, setStaffMembers] = useState(isFirebaseConfigured ? [] : demoStaffMembers);
+  const [departments, setDepartments] = useState(isFirebaseConfigured ? [] : demoDepartments);
+  const [leaveRecords, setLeaveRecords] = useState(isFirebaseConfigured ? [] : demoLeaveRecords);
+  const [attendanceRecords, setAttendanceRecords] = useState(isFirebaseConfigured ? [] : demoAttendanceRecords);
   const [selectedId, setSelectedId] = useState('');
   const [search, setSearch] = useState('');
   const [typeFilter, setTypeFilter] = useState('All');
@@ -41,13 +41,11 @@ export default function FacultyStaffManagement({ currentUser, academicYear = '20
     const loadFacultyStaff = async () => {
       try {
         const data = await getFacultyStaffData(academicYear);
-        if (data.staff.length) {
-          setStaffMembers(data.staff);
-          setSelectedId('');
-        }
-        if (data.departments.length) setDepartments(data.departments);
-        setLeaveRecords(data.leaveRecords);
-        setAttendanceRecords(data.attendanceRecords);
+        setStaffMembers(data.staff || []);
+        setDepartments(data.departments || []);
+        setSelectedId('');
+        setLeaveRecords(data.leaveRecords || []);
+        setAttendanceRecords(data.attendanceRecords || []);
       } catch (error) {
         console.warn('Using demo faculty/staff because Firestore is not reachable.', error);
         setLoadError('Unable to load Firestore faculty/staff records. Showing demo/local records.');

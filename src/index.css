@@ -738,35 +738,35 @@ html{color-scheme:dark}::selection{background:rgba(0,255,136,.18);color:#eafff5}
 
 /* Final light sidebar pass */
 .erp-shell.light-mode .erp-sidebar {
-  background:linear-gradient(180deg,#ffffff 0%,#f6f7ff 42%,#eef1ff 100%)!important;
-  border-right:1px solid #d9ddff!important;
-  box-shadow:14px 0 34px rgba(88,96,190,.12)!important;
+  background:#626bd8!important;
+  border-right:1px solid #545cc7!important;
+  box-shadow:14px 0 34px rgba(88,96,190,.22)!important;
 }
 
 .erp-shell.light-mode .erp-sidebar > div:first-child {
-  border-bottom:1px solid rgba(120,139,210,.22)!important;
+  border-bottom:1px solid rgba(255,255,255,.18)!important;
 }
 
 .erp-shell.light-mode .erp-sidebar > div:first-child > div {
   padding:10px 8px;
   border-radius:14px;
-  background:#ffffff!important;
-  box-shadow:0 10px 24px rgba(88,96,190,.10), inset 0 0 0 1px #e3e6ff!important;
+  background:rgba(255,255,255,.12)!important;
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.20),0 10px 24px rgba(32,38,120,.16)!important;
 }
 
 .erp-shell.light-mode .erp-sidebar > div:first-child > div > div:first-child {
-  background:#eef0ff!important;
-  border-color:#7c83e8!important;
+  background:#ffffff!important;
+  border-color:rgba(255,255,255,.70)!important;
   color:#626bd8!important;
-  box-shadow:0 10px 22px rgba(98,107,216,.16)!important;
+  box-shadow:0 10px 22px rgba(32,38,120,.20)!important;
 }
 
 .erp-shell.light-mode .erp-sidebar .text-slate-900 {
-  color:#24305f!important;
+  color:#ffffff!important;
 }
 
 .erp-shell.light-mode .erp-sidebar .text-slate-500 {
-  color:#66739d!important;
+  color:rgba(255,255,255,.72)!important;
 }
 
 .erp-shell.light-mode .erp-sidebar nav {
@@ -774,14 +774,14 @@ html{color-scheme:dark}::selection{background:rgba(0,255,136,.18);color:#eafff5}
 }
 
 .erp-shell.light-mode .erp-sidebar nav button {
-  color:#687089!important;
+  color:rgba(255,255,255,.82)!important;
   background:transparent!important;
   border-radius:12px!important;
 }
 
 .erp-shell.light-mode .erp-sidebar nav button:hover {
-  color:#626bd8!important;
-  background:rgba(98,107,216,.08)!important;
+  color:#ffffff!important;
+  background:rgba(255,255,255,.12)!important;
 }
 
 .erp-shell.light-mode .erp-sidebar nav button > span {
@@ -795,16 +795,16 @@ html{color-scheme:dark}::selection{background:rgba(0,255,136,.18);color:#eafff5}
 }
 
 .erp-shell.light-mode .erp-sidebar nav button > span[class*="bg-"] {
-  background:linear-gradient(135deg,#eef0ff 0%,#e6e9ff 100%)!important;
+  background:#ffffff!important;
   color:#626bd8!important;
-  border:1px solid rgba(98,107,216,.34)!important;
-  box-shadow:inset 4px 0 0 #626bd8,0 12px 26px rgba(98,107,216,.14)!important;
+  border:1px solid rgba(255,255,255,.85)!important;
+  box-shadow:0 12px 26px rgba(32,38,120,.18)!important;
 }
 
 .erp-shell.light-mode .erp-sidebar .erp-theme-toggle {
-  background:#ffffff!important;
-  color:#687089!important;
-  border:1px solid #e3e6ff!important;
+  background:rgba(255,255,255,.14)!important;
+  color:#ffffff!important;
+  border:1px solid rgba(255,255,255,.20)!important;
 }
 
 .erp-shell.light-mode .erp-header button:first-child {

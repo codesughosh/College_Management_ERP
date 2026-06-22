@@ -7,9 +7,9 @@ import { isFirebaseConfigured } from '../firebase/config';
 import { getUserProfile } from '../firebase/db';
 
 const roleOptions = [
-  { id: 'admin', label: 'Admin', aliases: ['admin', 'super-admin'] },
-  { id: 'faculty', label: 'Faculty', aliases: ['faculty'] },
   { id: 'parent', label: 'Parent', aliases: ['parent'] },
+  { id: 'faculty', label: 'Staff', aliases: ['faculty'] },
+  { id: 'admin', label: 'Admin', aliases: ['admin', 'super-admin'] },
 ];
 
 function getAuthErrorMessage(error) {
@@ -26,7 +26,7 @@ function getAuthErrorMessage(error) {
 export default function AuthPage() {
   const navigate = useNavigate();
   const [form, setForm] = useState({
-    roleId: 'admin',
+    roleId: 'parent',
     email: '',
     password: '',
   });
@@ -87,7 +87,7 @@ export default function AuthPage() {
           <p className="text-sm text-slate-300 mt-1">ERP Management Suite</p>
         </div>
 
-        <form onSubmit={submit} className="p-7 space-y-4">
+        <form onSubmit={submit} className="p-7 space-y-5">
           <div>
             <h2 className="text-xl font-bold text-slate-900">ERP login</h2>
             <p className="text-sm text-slate-500 mt-1">
@@ -103,10 +103,10 @@ export default function AuthPage() {
                 return (
                   <label
                     key={role.id}
-                    className={`h-11 rounded-lg border px-3 flex items-center justify-center gap-2 text-sm font-semibold cursor-pointer transition-colors ${
+                    className={`auth-role-option h-11 rounded-lg border px-3 flex items-center justify-center gap-2 text-sm font-semibold cursor-pointer transition-colors ${
                       selected
-                        ? 'border-[#fb9a5b] bg-[#fb9a5b] text-white'
-                        : 'border-slate-200 bg-[#f5f5f6] text-slate-600 hover:border-[#fb9a5b]'
+                        ? 'is-selected border-[#00ff88] bg-[#00ff88] text-[#02100d]'
+                        : 'border-slate-200 bg-[#f5f5f6] text-slate-600 hover:border-[#00ff88]'
                     }`}
                   >
                     <input
@@ -159,7 +159,7 @@ export default function AuthPage() {
           <div className="flex flex-col sm:flex-row gap-3 sm:items-center">
             <button
               disabled={!isFirebaseConfigured || submitting || resetting}
-              className="flex-1 h-11 rounded-full bg-[#fb9a5b] text-white font-bold disabled:cursor-not-allowed disabled:bg-slate-300"
+              className="auth-primary-button flex-1 h-11 rounded-full bg-[#00ff88] text-[#02100d] font-bold disabled:cursor-not-allowed disabled:bg-slate-300"
             >
               {submitting ? 'Please wait...' : 'Login'}
             </button>

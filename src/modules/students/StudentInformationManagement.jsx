@@ -739,8 +739,14 @@ export default function StudentInformationManagement({ user, onLogout }) {
         />
       )}
       {selectedStudent && activePage === 'students' && (
-        <div className="fixed inset-0 z-50 bg-slate-950/60 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="relative w-full max-w-6xl max-h-[90vh] overflow-y-auto bg-white rounded-xl shadow-2xl border border-slate-200">
+        <div
+          className="erp-student-modal-overlay fixed inset-0 z-50 flex items-center justify-center p-4"
+          onClick={() => setSelectedId('')}
+        >
+          <div
+            className="erp-student-modal-panel relative w-full max-w-6xl max-h-[90vh] overflow-y-auto bg-white rounded-xl shadow-2xl border border-slate-200"
+            onClick={(event) => event.stopPropagation()}
+          >
             <button
               type="button"
               onClick={() => setSelectedId('')}

@@ -71,8 +71,7 @@ export default function Sidebar({ activePage, collapsed = false, currentUser, in
         })}
       </nav>
 
-      {!!footerItems.length && (
-        <nav className={`${collapsed ? 'px-4' : 'px-9'} pb-5 flex flex-col mt-auto`}>
+      <nav className={`${collapsed ? 'px-4' : 'px-9'} pb-5 flex flex-col mt-auto`}>
           <button
             onClick={onThemeToggle}
             className={`h-14 flex items-center text-[15px] text-slate-600 ${collapsed ? 'justify-center' : 'justify-between'}`}
@@ -109,7 +108,6 @@ export default function Sidebar({ activePage, collapsed = false, currentUser, in
             );
           })}
         </nav>
-      )}
     </aside>
   );
 }

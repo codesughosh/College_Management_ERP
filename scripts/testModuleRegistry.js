@@ -78,6 +78,7 @@ assert.deepEqual(adminVisible, [
   'document-management',
   'fees',
   'financial-reports',
+  'settings',
 ]);
 
 const remainingDemo = enabled.filter((module) => module.status === 'demo').map((module) => module.id);

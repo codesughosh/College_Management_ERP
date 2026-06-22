@@ -133,6 +133,8 @@ export const defaultRoles = [
       'documents.upload',
       'documents.verify',
       'documents.archive',
+      'settings.view',
+      'settings.manage',
     ],
   },
   {

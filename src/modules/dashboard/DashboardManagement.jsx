@@ -45,7 +45,15 @@ export default function DashboardManagement({ academicYear = '2026-2027', curren
   const pendingDocuments = demoManagedDocuments.filter((item) => item.verificationStatus === 'Pending Review');
   const upcomingExams = demoExamSchedules.filter((item) => item.status !== 'Archived');
   const collectionMonths = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'];
-  const collectionValues = [18, 24, 16, 28, 22, 40];
+  const collectionValues = [14, 11, 8, 11.3, 10.6, 14.8, 13.2, 15.9, 17.8];
+  const trendPoints = collectionValues.map((value, index) => {
+    const x = 16 + (index / (collectionValues.length - 1)) * 328;
+    const y = 126 - (value / 20) * 96;
+    return [x, y, value];
+  });
+  const trendPath = trendPoints.map(([x, y], index) => `${index ? 'L' : 'M'} ${x} ${y}`).join(' ');
+  const trendArea = `${trendPath} L ${trendPoints.at(-1)[0]} 138 L ${trendPoints[0][0]} 138 Z`;
+  const highlightPoint = trendPoints[3];
   const admissionStages = [
     { label: 'Enquiries', value: 1324, color: '#2563eb' },
     { label: 'Applications', value: 842, color: '#22c55e' },
@@ -126,18 +134,33 @@ export default function DashboardManagement({ academicYear = '2026-2027', curren
           <div className="flex items-center justify-between gap-3 mb-5">
             <div>
               <h2 className="font-bold text-slate-900">Payment Trend</h2>
-              <p className="text-xs text-slate-500 mt-1">Simple monthly collection view.</p>
+              <p className="text-xs text-slate-500 mt-1">Smooth monthly collection movement.</p>
             </div>
             <span className="rounded-full bg-[#f5f5f6] px-3 py-1 text-xs font-semibold text-slate-600">2026</span>
           </div>
-          <div className="h-64 flex items-end gap-4">
-            {collectionMonths.map((month, index) => (
-              <div key={month} className="flex-1 h-full flex flex-col justify-end gap-2">
-                <div className="rounded-t-lg min-h-6" style={{ height: `${collectionValues[index] * 2.2}%`, background: 'linear-gradient(180deg,#2563eb,#38bdf8)' }} />
-                <div className="rounded-t-lg min-h-6" style={{ height: `${Math.max(collectionValues[index] - 8, 8) * 1.7}%`, background: 'linear-gradient(180deg,#f59e0b,#fb7185)' }} />
-                <span className="text-[11px] text-center text-slate-500">{month}</span>
-              </div>
-            ))}
+          <div className="relative">
+            <svg viewBox="0 0 360 160" className="w-full h-64">
+              <defs>
+                <linearGradient id="paymentTrendFill" x1="0" x2="0" y1="0" y2="1">
+                  <stop offset="0%" stopColor="#f97316" stopOpacity="0.28" />
+                  <stop offset="100%" stopColor="#f97316" stopOpacity="0" />
+                </linearGradient>
+              </defs>
+              <path d={trendArea} fill="url(#paymentTrendFill)" />
+              <path d={trendPath} fill="none" stroke="#f97316" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" />
+              <line x1={highlightPoint[0]} x2={highlightPoint[0]} y1="12" y2="142" stroke="rgba(148,163,184,.55)" strokeWidth="2" strokeDasharray="6 6" />
+              <circle cx={highlightPoint[0]} cy={highlightPoint[1]} r="6" fill="#f97316" stroke="#ffffff" strokeWidth="3" />
+              <g transform={`translate(${highlightPoint[0] + 12} ${highlightPoint[1] - 34})`}>
+                <rect x="0" y="0" width="78" height="32" rx="10" fill="white" opacity="0.96" />
+                <text x="10" y="21" fill="#111827" fontSize="14" fontWeight="700">11.3 L</text>
+              </g>
+              {trendPoints.map(([x], index) => (
+                <line key={index} x1={x} x2={x} y1="145" y2="150" stroke="rgba(148,163,184,.5)" strokeWidth="2" />
+              ))}
+            </svg>
+            <div className="grid grid-cols-6 gap-2 text-[11px] text-slate-500 px-4 -mt-4">
+              {collectionMonths.map((month) => <span key={month}>{month}</span>)}
+            </div>
           </div>
         </section>
         )}

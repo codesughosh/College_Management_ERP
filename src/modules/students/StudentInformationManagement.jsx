@@ -1,29 +1,15 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import {
-  ArrowLeft,
-  ArrowRight,
-  Archive as ArchiveIcon,
-  CheckCircle,
   Download,
-  Edit3,
-  Eye,
-  FileText,
-  GraduationCap,
-  Plus,
   Search,
-  Upload,
   UserRound,
   Users,
-  XCircle,
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import {
   createStudent,
   createStudentAdmission,
   createStudentDocument,
-  createStudentPromotion,
-  createStudentTransfer,
-  updateStudentDocument,
   getStudentInformationData,
   getSettingsData,
   archiveStudent,
@@ -31,7 +17,6 @@ import {
   updateStudent,
 } from '../../firebase/db';
 import { isFirebaseConfigured } from '../../firebase/config';
-import { uploadStudentDocumentFile } from '../../firebase/storage';
 import { getEnabledModules, getModuleById } from '../moduleRegistry';
 import { demoStudents } from './demoStudents';
 import DemoModulePage from './components/DemoModulePage';
@@ -39,10 +24,9 @@ import Sidebar from './components/Sidebar';
 import StatusBadge from './components/StatusBadge';
 import StudentModal from './components/StudentModal';
 import StudentProfileCard from './components/StudentProfileCard';
-import StudentStats from './components/StudentStats';
 import StudentTable from './components/StudentTable';
 import TopHeader from './components/TopHeader';
-import { formatDisplayDate, getNextClassName, latestRecord, relationMatches, validateStudentProfile } from './studentUtils';
+import { formatDisplayDate, latestRecord, relationMatches, validateStudentProfile } from './studentUtils';
 import UserRoleManagement from '../userRoles/UserRoleManagement';
 import FacultyStaffManagement from '../facultyStaff/FacultyStaffManagement';
 import AttendanceManagement from '../attendance/AttendanceManagement';
@@ -58,13 +42,6 @@ import AcademicsManagement from '../academics/AcademicsManagement';
 import CurriculumManagement from '../curriculum/CurriculumManagement';
 import SettingsManagement from '../settings/SettingsManagement';
 import { demoInstituteSettings } from '../settings/demoSettings';
-
-const tabs = [
-  { id: 'admissions', label: 'Admissions', icon: <Plus size={15} /> },
-  { id: 'profiles', label: 'Profiles', icon: <UserRound size={15} /> },
-  { id: 'documents', label: 'Documents', icon: <FileText size={15} /> },
-  { id: 'promotion', label: 'Promotion & Transfer', icon: <GraduationCap size={15} /> },
-];
 
 function csvValue(value) {
   return `"${String(value ?? '').replace(/"/g, '""')}"`;
@@ -195,36 +172,25 @@ export default function StudentInformationManagement({ user, onLogout }) {
   const [themeMode, setThemeMode] = useState(() => localStorage.getItem('erpThemeMode') || 'dark');
   const [students, setStudents] = useState(demoStudents);
   const [activePage, setActivePage] = useState('dashboard');
-  const [activeTab, setActiveTab] = useState('admissions');
-  const [activeStudentTask, setActiveStudentTask] = useState('');
-  const [activeStudentBranch, setActiveStudentBranch] = useState('');
   const [search, setSearch] = useState('');
   const [selectedId, setSelectedId] = useState(demoStudents[0].id);
   const [admissions, setAdmissions] = useState([]);
   const [studentDocuments, setStudentDocuments] = useState([]);
   const [promotions, setPromotions] = useState([]);
   const [transfers, setTransfers] = useState([]);
-  const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState('');
   const [showModal, setShowModal] = useState(false);
   const [editingStudent, setEditingStudent] = useState(null);
   const [statusFilter, setStatusFilter] = useState('active');
-  const [documentUploading, setDocumentUploading] = useState(false);
-  const [documentType, setDocumentType] = useState('Admission Form');
   const [academicYear, setAcademicYear] = useState('2026-2027');
   const [institute, setInstitute] = useState(demoInstituteSettings);
-  const [promotionDraft, setPromotionDraft] = useState({ toClass: '', reason: '' });
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
-  const documentInputRef = useRef(null);
   const currentRoleId = user?.roleId || 'admin';
   const activeModule = getModuleById(activePage);
   const canViewStudents = canAccess(defaultRoles, currentRoleId, 'students.view');
   const canCreateAdmission = canAccess(defaultRoles, currentRoleId, 'students.create');
   const canEditStudents = canAccess(defaultRoles, currentRoleId, 'students.edit');
   const canArchiveStudents = canAccess(defaultRoles, currentRoleId, 'students.archive');
-  const canManageStudentDocuments = canAccess(defaultRoles, currentRoleId, 'students.documents');
-  const canVerifyStudentDocuments = canAccess(defaultRoles, currentRoleId, 'students.verifyDocuments');
-  const canPromoteStudents = canAccess(defaultRoles, currentRoleId, 'students.promote');
   const accessibleModules = useMemo(() => getEnabledModules()
     .filter((module) => !module.permission || canAccess(defaultRoles, currentRoleId, module.permission)), [currentRoleId]);
   const canOpenActiveModule = activePage === 'reports'
@@ -248,14 +214,9 @@ export default function StudentInformationManagement({ user, onLogout }) {
       const flow = event.state?.studentFlow;
       if (!flow) {
         setActivePage('dashboard');
-        setActiveStudentTask('');
-        setActiveStudentBranch('');
         return;
       }
       setActivePage(flow.page || 'dashboard');
-      setActiveStudentTask(flow.task || '');
-      setActiveStudentBranch(flow.branch || '');
-      if (flow.tab) setActiveTab(flow.tab);
       if (flow.statusFilter) setStatusFilter(flow.statusFilter);
     };
 
@@ -300,8 +261,6 @@ export default function StudentInformationManagement({ user, onLogout }) {
       } catch (error) {
         console.warn('Using demo students because Firestore is not reachable.', error);
         setLoadError('Unable to load Firestore records. Showing demo/local records.');
-      } finally {
-        setLoading(false);
       }
     };
     loadStudentInformation();
@@ -319,17 +278,8 @@ export default function StudentInformationManagement({ user, onLogout }) {
   const yearStudents = useMemo(() => students.filter((student) => student.academicYear === academicYear), [academicYear, students]);
 
   const selectedStudent = selectedId ? yearStudents.find((student) => student.id === selectedId) || null : null;
-  const suggestedPromotionClass = getNextClassName(selectedStudent?.className || '');
   const selectedAdmissions = admissions.filter((record) => relationMatches(record, selectedStudent) && recordBelongsToYear(record));
-  const selectedDocuments = studentDocuments.filter((record) => relationMatches(record, selectedStudent) && recordBelongsToYear(record));
-  const selectedPromotions = promotions.filter((record) => relationMatches(record, selectedStudent) && recordBelongsToYear(record));
-  const selectedTransfers = transfers.filter((record) => relationMatches(record, selectedStudent) && recordBelongsToYear(record));
   const latestAdmission = latestRecord(selectedAdmissions);
-  const latestPromotion = latestRecord(selectedPromotions);
-  const latestTransfer = latestRecord(selectedTransfers);
-  const selectedDocumentLabels = selectedDocuments.length
-    ? selectedDocuments
-    : selectedStudent?.documents || [];
 
   const filteredStudents = useMemo(() => {
     const term = search.trim().toLowerCase();
@@ -343,211 +293,6 @@ export default function StudentInformationManagement({ user, onLogout }) {
         .some((value) => value.toLowerCase().includes(term))
     );
   }, [search, statusFilter, yearStudents]);
-
-  const stats = [
-    { label: 'Admissions', value: admissions.filter((item) => item.academicYear === academicYear).length || yearStudents.filter((s) => s.status !== 'Archived').length, icon: <Users size={22} /> },
-    { label: 'Profiles Completed', value: yearStudents.filter((s) => s.status !== 'Archived' && s.email && s.guardianName && s.idHolder).length, icon: <UserRound size={22} /> },
-    { label: 'Documents Stored', value: studentDocuments.filter((item) => item.academicYear === academicYear).length || yearStudents.reduce((sum, s) => sum + (s.documents?.length || 0), 0), icon: <FileText size={22} /> },
-  ];
-
-  const pushStudentFlow = ({ page = 'dashboard', task = '', branch = '', tab = activeTab, nextStatusFilter = statusFilter }) => {
-    window.history.pushState({
-      ...(window.history.state || {}),
-      studentFlow: { page, task, branch, tab, statusFilter: nextStatusFilter },
-    }, '');
-  };
-
-  const openStudentTask = (taskId, tabId = taskId) => {
-    setActivePage('dashboard');
-    setActiveTab(tabId);
-    setActiveStudentTask(taskId);
-    setActiveStudentBranch('');
-    pushStudentFlow({ task: taskId, branch: '', tab: tabId });
-  };
-
-  const openStudentBranch = ({ branchId, tabId = activeStudentTask, nextStatusFilter = 'active', openModal = false }) => {
-    setActiveTab(tabId);
-    setStatusFilter(nextStatusFilter);
-    setSelectedId('');
-    setActiveStudentBranch(branchId);
-    pushStudentFlow({ task: activeStudentTask, branch: branchId, tab: tabId, nextStatusFilter });
-    if (openModal) setShowModal(true);
-  };
-
-  const openStudentReports = () => {
-    setActivePage('reports');
-    setActiveStudentTask('reports');
-    setActiveStudentBranch('student-report');
-    pushStudentFlow({ page: 'reports', task: 'reports', branch: 'student-report', tab: 'reports' });
-  };
-
-  const goBackOneStudentStep = () => {
-    if (window.history.state?.studentFlow) {
-      window.history.back();
-      return;
-    }
-    if (activeStudentBranch) {
-      setActiveStudentBranch('');
-    } else {
-      setActiveStudentTask('');
-    }
-  };
-
-  const studentTaskOptions = [
-    {
-      id: 'admissions',
-      title: 'Admissions',
-      description: 'Add or review admission records.',
-      icon: <Plus size={22} />,
-      meta: [
-        `${admissions.filter((item) => item.academicYear === academicYear).length || yearStudents.length} records`,
-        canCreateAdmission ? 'Can add new' : 'View only',
-      ],
-      onOpen: () => openStudentTask('admissions'),
-    },
-    {
-      id: 'profiles',
-      title: 'Student Profiles',
-      description: 'Find, edit, archive, or download student details.',
-      icon: <UserRound size={22} />,
-      meta: [
-        `${yearStudents.filter((student) => student.status !== 'Archived').length} active`,
-        `${yearStudents.filter((student) => student.status === 'Archived').length} archived`,
-      ],
-      onOpen: () => openStudentTask('profiles'),
-    },
-    {
-      id: 'documents',
-      title: 'Documents',
-      description: 'Upload, open, verify, or reject student files.',
-      icon: <FileText size={22} />,
-      meta: [
-        `${studentDocuments.filter((item) => item.academicYear === academicYear).length || yearStudents.reduce((sum, student) => sum + (student.documents?.length || 0), 0)} stored`,
-        canManageStudentDocuments ? 'Upload enabled' : 'View only',
-      ],
-      onOpen: () => openStudentTask('documents'),
-    },
-    {
-      id: 'promotion',
-      title: 'Promotion & Transfer',
-      description: 'Update class movement and transfer notes.',
-      icon: <GraduationCap size={22} />,
-      meta: [
-        `${promotions.filter((item) => item.academicYear === academicYear).length} promotions`,
-        canPromoteStudents ? 'Update enabled' : 'View only',
-      ],
-      onOpen: () => openStudentTask('promotion'),
-    },
-    {
-      id: 'reports',
-      title: 'Student Reports',
-      description: 'Print or download student summaries.',
-      icon: <Eye size={22} />,
-      meta: [`${yearStudents.length} students`, academicYear],
-      onOpen: openStudentReports,
-    },
-  ];
-
-  const studentBranchOptions = {
-    admissions: [
-      {
-        id: 'new-admission',
-        title: 'New Admission',
-        description: 'Open the admission form.',
-        icon: <Plus size={20} />,
-        disabled: !canCreateAdmission,
-        disabledText: 'No create permission',
-        onOpen: () => openStudentBranch({ branchId: 'new-admission', tabId: 'admissions', openModal: canCreateAdmission }),
-      },
-      {
-        id: 'review-admission',
-        title: 'Review Admission',
-        description: 'Search and select an admission record.',
-        icon: <Search size={20} />,
-        onOpen: () => openStudentBranch({ branchId: 'review-admission', tabId: 'admissions' }),
-      },
-    ],
-    profiles: [
-      {
-        id: 'active-profiles',
-        title: 'Active Students',
-        description: 'Search current student profiles.',
-        icon: <UserRound size={20} />,
-        onOpen: () => openStudentBranch({ branchId: 'active-profiles', tabId: 'profiles', nextStatusFilter: 'active' }),
-      },
-      {
-        id: 'archived-profiles',
-        title: 'Archived Students',
-        description: 'Review or restore archived profiles.',
-        icon: <ArchiveIcon size={20} />,
-        onOpen: () => openStudentBranch({ branchId: 'archived-profiles', tabId: 'profiles', nextStatusFilter: 'archived' }),
-      },
-    ],
-    documents: [
-      {
-        id: 'view-documents',
-        title: 'View Documents',
-        description: 'Open, verify, or reject files.',
-        icon: <FileText size={20} />,
-        onOpen: () => openStudentBranch({ branchId: 'view-documents', tabId: 'documents' }),
-      },
-      {
-        id: 'upload-documents',
-        title: 'Upload Document',
-        description: 'Select a student, then upload a file.',
-        icon: <Upload size={20} />,
-        disabled: !canManageStudentDocuments,
-        disabledText: 'No upload permission',
-        onOpen: () => openStudentBranch({ branchId: 'upload-documents', tabId: 'documents' }),
-      },
-    ],
-    promotion: [
-      {
-        id: 'promote-student',
-        title: 'Promote Student',
-        description: 'Choose next class and save.',
-        icon: <GraduationCap size={20} />,
-        disabled: !canPromoteStudents,
-        disabledText: 'View only',
-        onOpen: () => openStudentBranch({ branchId: 'promote-student', tabId: 'promotion' }),
-      },
-      {
-        id: 'transfer-status',
-        title: 'Transfer Status',
-        description: 'Review transfer state and notes.',
-        icon: <ArrowRight size={20} />,
-        onOpen: () => openStudentBranch({ branchId: 'transfer-status', tabId: 'promotion' }),
-      },
-    ],
-  };
-
-  const activeTask = studentTaskOptions.find((task) => task.id === activeStudentTask);
-  const activeBranches = studentBranchOptions[activeStudentTask] || [];
-  const activeBranch = activeBranches.find((branch) => branch.id === activeStudentBranch);
-  const branchShouldShowActions = activeStudentTask === 'profiles';
-  const selectedDetailTitle = activeStudentTask === 'documents'
-    ? 'Document Details'
-    : activeStudentTask === 'promotion'
-      ? 'Promotion Details'
-      : activeStudentTask === 'profiles'
-        ? 'Profile Details'
-        : 'Admission Details';
-  const selectedDetailHint = activeStudentTask === 'documents'
-    ? 'Click a student name to view documents and upload options.'
-    : activeStudentTask === 'promotion'
-      ? 'Click a student name to view promotion and transfer controls.'
-      : activeStudentTask === 'profiles'
-        ? 'Click a student name to view profile actions.'
-        : 'Click a student name to review admission details.';
-  const branchAccentText = activeStudentBranch === 'new-admission'
-    ? 'Admission form'
-    : activeStudentTask === 'documents'
-      ? 'Document work'
-      : activeStudentTask === 'promotion'
-        ? 'Promotion work'
-        : activeStudentTask === 'profiles'
-          ? 'Profile tools'
-          : 'Review mode';
 
   const saveStudent = async (form) => {
     if (!canCreateAdmission) {
@@ -733,134 +478,6 @@ export default function StudentInformationManagement({ user, onLogout }) {
     }
   };
 
-  const uploadDocument = async (event) => {
-    if (!canManageStudentDocuments) {
-      toast.error('You do not have permission to upload student documents.');
-      event.target.value = '';
-      return;
-    }
-
-    const file = event.target.files?.[0];
-    event.target.value = '';
-    if (!file || !selectedStudent) return;
-
-    setDocumentUploading(true);
-    const uploadedAtText = formatDisplayDate();
-    try {
-      const fileData = await uploadStudentDocumentFile({ student: selectedStudent, file });
-      const payload = {
-        studentRecordId: selectedStudent.id,
-        studentId: selectedStudent.studentId,
-        documentType: documentType.trim() || 'Uploaded Document',
-        academicYear,
-        uploadedBy: user?.name || 'Admin',
-        verificationStatus: 'Pending Review',
-        uploadedAtText,
-        ...fileData,
-      };
-      const id = await createStudentDocument(payload);
-      setStudentDocuments((prev) => [{ id: id || `local-document-${Date.now()}`, ...payload }, ...prev]);
-      toast.success('Document uploaded');
-    } catch {
-      const payload = {
-        studentRecordId: selectedStudent.id,
-        studentId: selectedStudent.studentId,
-        documentType: documentType.trim() || 'Uploaded Document',
-        academicYear,
-        uploadedBy: user?.name || 'Admin',
-        fileName: file.name,
-        fileSize: file.size,
-        fileType: file.type || 'application/octet-stream',
-        verificationStatus: 'Pending Review',
-        uploadedAtText,
-      };
-      const id = await createStudentDocument(payload);
-      setStudentDocuments((prev) => [{ id: id || `local-document-${Date.now()}`, ...payload }, ...prev]);
-      toast.success('Document metadata saved. Check Firebase Storage setup for file upload.');
-    } finally {
-      setDocumentUploading(false);
-    }
-  };
-
-  const updateDocumentVerification = async (documentRecord, verificationStatus) => {
-    if (typeof documentRecord === 'string') return;
-    const updates = {
-      verificationStatus,
-      verifiedAtText: formatDisplayDate(),
-    };
-
-    try {
-      await updateStudentDocument(documentRecord.id, updates);
-      setStudentDocuments((prev) => prev.map((item) => (
-        item.id === documentRecord.id ? { ...item, ...updates } : item
-      )));
-      toast.success(`Document marked ${verificationStatus.toLowerCase()}`);
-    } catch {
-      setStudentDocuments((prev) => prev.map((item) => (
-        item.id === documentRecord.id ? { ...item, ...updates } : item
-      )));
-      toast.success(`Document marked ${verificationStatus.toLowerCase()} locally`);
-    }
-  };
-
-  const promoteStudent = async () => {
-    if (!canPromoteStudents) {
-      toast.error('You do not have permission to promote or transfer students.');
-      return;
-    }
-
-    if (!selectedStudent) {
-      toast.error('Select a student before promotion.');
-      return;
-    }
-    const fromClass = selectedStudent.className;
-    const toClass = promotionDraft.toClass.trim() || suggestedPromotionClass;
-    if (!toClass) {
-      toast.error('Target class is required.');
-      return;
-    }
-    const actionDateText = formatDisplayDate();
-    const updates = { className: toClass };
-    const promotion = {
-      studentRecordId: selectedStudent.id,
-      studentId: selectedStudent.studentId,
-      fromClass,
-      toClass,
-      academicYear,
-      status: 'Promoted',
-      approvedBy: 'Academic Office',
-      approvedAtText: actionDateText,
-    };
-    const transfer = {
-      studentRecordId: selectedStudent.id,
-      studentId: selectedStudent.studentId,
-      transferType: 'Internal Class Transfer',
-      reason: promotionDraft.reason.trim() || `Promoted from ${fromClass} to ${toClass}`,
-      status: 'Not Requested',
-      academicYear,
-      requestedAtText: actionDateText,
-      certificateUrl: '',
-    };
-
-    setStudents((prev) => prev.map((student) => student.id === selectedStudent.id ? { ...student, ...updates } : student));
-    try {
-      const [promotionId, transferId] = await Promise.all([
-        createStudentPromotion(promotion),
-        createStudentTransfer(transfer),
-        updateStudent(selectedStudent.id, updates),
-      ]);
-      setPromotions((prev) => [{ id: promotionId || `local-promotion-${Date.now()}`, ...promotion }, ...prev]);
-      setTransfers((prev) => [{ id: transferId || `local-transfer-${Date.now()}`, ...transfer }, ...prev]);
-      toast.success('Promotion status updated');
-    } catch {
-      setPromotions((prev) => [{ id: `local-promotion-${Date.now()}`, ...promotion }, ...prev]);
-      setTransfers((prev) => [{ id: `local-transfer-${Date.now()}`, ...transfer }, ...prev]);
-      toast.success('Promotion updated locally. Check Firebase setup to persist it.');
-    } finally {
-      setPromotionDraft({ toClass: getNextClassName(toClass), reason: '' });
-    }
-  };
-
   return (
     <div className={`erp-shell ${themeMode === 'light' ? 'light-mode' : ''} min-h-screen bg-white text-slate-900`}>
         <div className="flex min-h-screen">
@@ -891,107 +508,28 @@ export default function StudentInformationManagement({ user, onLogout }) {
                   <div>
                     <div className="text-sm font-bold text-slate-500 mb-2">Academics / <span className="text-[#f39a5f]">Student Information Management</span></div>
                     <h1 className="text-2xl font-bold text-slate-900">Student Information Management</h1>
-                    <p className="text-sm text-slate-500 mt-1">Choose one student task at a time. All existing admission, profile, document, and promotion tools stay available inside the selected task.</p>
+                    <p className="text-sm text-slate-500 mt-1">List of all students. Click a student to view information and edit details.</p>
                     {!isFirebaseConfigured && <p className="text-xs text-orange-600 mt-2">Demo mode: add Firebase keys to persist records.</p>}
                     {loadError && <p className="text-xs text-rose-600 mt-2">{loadError}</p>}
                   </div>
                 </div>
 
-                {!activeStudentTask ? (
-                <>
-                  <StudentStats loading={loading} stats={stats} />
-                  <div className="grid md:grid-cols-2 xl:grid-cols-3 gap-4">
-                    {studentTaskOptions.map((task) => (
-                      <button
-                        key={task.id}
-                        onClick={task.onOpen}
-                        className="group min-h-44 text-left rounded-lg border border-slate-100 bg-white p-5 shadow-sm hover:-translate-y-1 transition-all"
-                      >
-                        <div className="flex items-start justify-between gap-4">
-                          <div className="h-12 w-12 rounded-lg bg-[#f5f5f6] text-[#34363d] flex items-center justify-center">
-                            {task.icon}
-                          </div>
-                          <ArrowRight size={18} className="text-slate-400 group-hover:text-[#fb8d49] transition-colors" />
-                        </div>
-                        <h2 className="text-lg font-bold text-slate-900 mt-5">{task.title}</h2>
-                        <p className="text-sm text-slate-500 mt-2 leading-6">{task.description}</p>
-                        <div className="flex flex-wrap gap-2 mt-4">
-                          {task.meta.map((item) => (
-                            <span key={item} className="rounded-full bg-[#f5f5f6] px-3 py-1 text-xs font-semibold text-slate-600">
-                              {item}
-                            </span>
-                          ))}
-                        </div>
-                        <div className="mt-4 text-xs font-bold uppercase tracking-wide text-[#fb8d49]">Open</div>
-                      </button>
-                    ))}
-                  </div>
-                </>
-                ) : !activeStudentBranch ? (
-                <>
-                  <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3 mb-5 rounded-lg bg-[#f5f5f6] p-4">
-                    <div>
-                      <div className="text-xs font-bold text-slate-500">Students / <span className="text-[#fb8d49]">{activeTask?.title}</span></div>
-                      <h2 className="text-lg font-bold text-slate-900 mt-1">Choose next step</h2>
-                    </div>
-                    <button
-                      onClick={goBackOneStudentStep}
-                      className="h-10 px-4 rounded-lg bg-white border border-slate-200 text-slate-700 font-semibold text-sm flex items-center gap-2"
-                    >
-                      <ArrowLeft size={15} /> Back
-                    </button>
-                  </div>
-
-                  <div className="grid md:grid-cols-2 gap-4">
-                    {activeBranches.map((branch) => (
-                      <button
-                        key={branch.id}
-                        onClick={branch.onOpen}
-                        disabled={branch.disabled}
-                        className="group min-h-36 text-left rounded-lg border border-slate-100 bg-white p-5 shadow-sm disabled:opacity-60 disabled:cursor-not-allowed"
-                      >
-                        <div className="flex items-start justify-between gap-4">
-                          <div className="h-11 w-11 rounded-lg bg-[#f5f5f6] text-[#34363d] flex items-center justify-center">
-                            {branch.icon}
-                          </div>
-                          <ArrowRight size={17} className="text-slate-400 group-hover:text-[#fb8d49] transition-colors" />
-                        </div>
-                        <h3 className="text-base font-bold text-slate-900 mt-4">{branch.title}</h3>
-                        <p className="text-sm text-slate-500 mt-2">{branch.disabled ? branch.disabledText : branch.description}</p>
-                      </button>
-                    ))}
-                  </div>
-                </>
-                ) : (
                 <>
                 <div className="erp-branch-focus flex flex-col lg:flex-row lg:items-center justify-between gap-4 mb-5 rounded-lg bg-[#f5f5f6] p-5 border border-slate-100">
                   <div className="flex items-center gap-4 min-w-0">
                     <div className="erp-branch-icon h-16 w-16 rounded-lg bg-white text-[#fb8d49] flex items-center justify-center shrink-0">
-                      {activeBranch?.icon || activeTask?.icon}
+                      <Users size={28} />
                     </div>
                     <div className="min-w-0">
-                      <div className="text-xs font-bold text-slate-500">Students / {activeTask?.title}</div>
-                      <h2 className="text-2xl font-extrabold text-slate-900 mt-1">{activeBranch?.title || tabs.find((tab) => tab.id === activeTab)?.label}</h2>
-                      <p className="text-sm text-slate-500 mt-1">
-                        {activeBranch?.description || 'Search, select, and continue.'}
-                      </p>
+                      <div className="text-xs font-bold text-slate-500">Students</div>
+                      <h2 className="text-2xl font-extrabold text-slate-900 mt-1">All Students</h2>
+                      <p className="text-sm text-slate-500 mt-1">Click any student name to display full information.</p>
                     </div>
                   </div>
                   <div className="flex flex-wrap gap-2">
                     <span className="h-10 px-4 rounded-full bg-white border border-slate-200 text-slate-700 font-bold text-xs flex items-center">
-                      {branchAccentText}
+                      Student list
                     </span>
-                    {activeStudentBranch === 'new-admission' && canCreateAdmission && (
-                      <button onClick={() => setShowModal(true)} className="h-10 px-4 rounded-full bg-[#fb9a5b] text-white font-semibold text-sm flex items-center gap-2">
-                        <Plus size={16} /> Open Form
-                      </button>
-                    )}
-                    <button
-                      onClick={goBackOneStudentStep}
-                      className="h-10 px-4 rounded-lg bg-white border border-slate-200 text-slate-700 font-semibold text-sm flex items-center gap-2"
-                    >
-                      <ArrowLeft size={15} /> Back
-                    </button>
                   </div>
                 </div>
 
@@ -1006,7 +544,6 @@ export default function StudentInformationManagement({ user, onLogout }) {
                         className="w-full h-11 rounded-lg bg-[#f0f0f2] border-0 pl-10 pr-4 text-sm outline-none focus:ring-2 focus:ring-orange-100"
                       />
                     </div>
-                    {activeStudentTask === 'profiles' && (
                     <div className="flex items-center gap-2 mb-4">
                       {[
                         ['active', 'Active Records'],
@@ -1025,12 +562,11 @@ export default function StudentInformationManagement({ user, onLogout }) {
                         </button>
                       ))}
                     </div>
-                    )}
 
                     <StudentTable
                       canArchive={canArchiveStudents}
                       canEdit={canEditStudents}
-                      showActions={branchShouldShowActions}
+                      showActions={false}
                       students={filteredStudents}
                       statusFilter={statusFilter}
                       selectedId={selectedId}
@@ -1045,151 +581,31 @@ export default function StudentInformationManagement({ user, onLogout }) {
                   <aside className="xl:w-[30%]">
                     {selectedStudent ? (
                       <div className="erp-selected-detail">
-                    <StudentProfileCard canEdit={branchShouldShowActions && canEditStudents} student={selectedStudent} onEdit={setEditingStudent} />
+                    <StudentProfileCard canEdit={canEditStudents} student={selectedStudent} onEdit={setEditingStudent} />
 
                     <div className="bg-white border border-slate-100 rounded-lg p-5 shadow-sm">
-                      <h3 className="font-bold mb-4">
-                        {activeTab === 'documents' ? 'Document Repository' : activeTab === 'promotion' ? 'Promotion & Transfer' : selectedDetailTitle}
-                      </h3>
-                      {activeTab === 'documents' && (
-                        <div className="space-y-3">
-                          {selectedDocumentLabels.map((item) => {
-                            const label = typeof item === 'string' ? item : item.fileName || item.documentType || 'Student Document';
-                            const status = typeof item === 'string' ? 'Active' : item.verificationStatus || 'Pending Review';
-                            return (
-                            <div key={label} className="rounded-lg bg-[#f5f5f6] px-3 py-2 text-sm">
-                              <div className="flex items-center justify-between gap-3">
-                                <span className="flex items-center gap-2 min-w-0">
-                                  <FileText size={16} className="shrink-0" />
-                                  <span className="truncate">{label}</span>
-                                </span>
-                                <StatusBadge value={status} />
-                              </div>
-                              {typeof item !== 'string' && (
-                                <div className="flex items-center gap-2 mt-2">
-                                  {item.fileUrl && (
-                                    <a
-                                      href={item.fileUrl}
-                                      target="_blank"
-                                      rel="noreferrer"
-                                      className="h-8 px-3 rounded-md bg-white border border-slate-200 text-xs font-semibold flex items-center gap-1"
-                                    >
-                                      <Download size={13} /> Open
-                                    </a>
-                                  )}
-                                  {canVerifyStudentDocuments && (
-                                    <>
-                                      <button
-                                        onClick={() => updateDocumentVerification(item, 'Verified')}
-                                        className="h-8 px-3 rounded-md bg-white border border-emerald-200 text-emerald-700 text-xs font-semibold flex items-center gap-1"
-                                      >
-                                        <CheckCircle size={13} /> Verify
-                                      </button>
-                                      <button
-                                        onClick={() => updateDocumentVerification(item, 'Rejected')}
-                                        className="h-8 px-3 rounded-md bg-white border border-rose-200 text-rose-700 text-xs font-semibold flex items-center gap-1"
-                                      >
-                                        <XCircle size={13} /> Reject
-                                      </button>
-                                    </>
-                                  )}
-                                </div>
-                              )}
-                            </div>
-                            );
-                          })}
-                          {!selectedDocumentLabels.length && (
-                            <div className="rounded-lg bg-[#f5f5f6] px-3 py-4 text-sm text-slate-500">
-                              No documents uploaded for this student yet.
-                            </div>
-                          )}
-                          {canManageStudentDocuments && (
-                            <>
-                              <label className="block">
-                                <span className="text-xs font-semibold text-slate-500 mb-1.5 block">Document Type</span>
-                                <input
-                                  value={documentType}
-                                  onChange={(event) => setDocumentType(event.target.value)}
-                                  placeholder="Aadhaar Card, Transfer Certificate, Marks Card..."
-                                  className="w-full h-10 rounded-lg border border-slate-200 px-3 text-sm outline-none focus:border-[#fb9a5b] focus:ring-2 focus:ring-orange-100"
-                                />
-                              </label>
-                              <input
-                                ref={documentInputRef}
-                                type="file"
-                                className="hidden"
-                                onChange={uploadDocument}
-                              />
-                              <button
-                                onClick={() => documentInputRef.current?.click()}
-                                disabled={documentUploading}
-                                className="w-full h-10 rounded-full bg-[#fb9a5b] text-white font-semibold text-sm flex items-center justify-center gap-2 disabled:bg-slate-300 disabled:cursor-not-allowed"
-                              >
-                                <Upload size={16} /> {documentUploading ? 'Uploading...' : 'Upload Document'}
-                              </button>
-                            </>
-                          )}
+                      <h3 className="font-bold mb-4">Student Information</h3>
+                      <div className="space-y-3 text-sm text-slate-600">
+                        <div className="rounded-lg bg-[#f5f5f6] p-3">
+                          Admission status: {latestAdmission?.status || selectedStudent.status}. Created on {selectedStudent.createdAtText || latestAdmission?.submittedAtText || 'today'}.
                         </div>
-                      )}
-                      {activeTab === 'promotion' && (
-                        <div className="space-y-3 text-sm">
-                          <div className="flex items-center justify-between h-11 rounded-lg bg-[#f5f5f6] px-3">
-                            <span>Promotion Status</span>
-                            <StatusBadge value={latestPromotion?.status || selectedStudent.promotionStatus || 'Pending Review'} />
-                          </div>
-                          <div className="flex items-center justify-between h-11 rounded-lg bg-[#f5f5f6] px-3">
-                            <span>Transfer Status</span>
-                            <StatusBadge value={latestTransfer?.status || selectedStudent.transferStatus || 'Not Requested'} />
-                          </div>
-                          {canPromoteStudents && (
-                            <>
-                              <label className="block">
-                                <span className="text-xs font-semibold text-slate-500 mb-1.5 block">Promote To</span>
-                                <input
-                                  value={promotionDraft.toClass || suggestedPromotionClass}
-                                  onChange={(event) => setPromotionDraft((prev) => ({ ...prev, toClass: event.target.value }))}
-                                  className="w-full h-10 rounded-lg border border-slate-200 px-3 text-sm outline-none focus:border-[#fb9a5b] focus:ring-2 focus:ring-orange-100"
-                                />
-                              </label>
-                              <label className="block">
-                                <span className="text-xs font-semibold text-slate-500 mb-1.5 block">Reason / Note</span>
-                                <textarea
-                                  value={promotionDraft.reason}
-                                  onChange={(event) => setPromotionDraft((prev) => ({ ...prev, reason: event.target.value }))}
-                                  className="w-full min-h-20 rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none focus:border-[#fb9a5b] focus:ring-2 focus:ring-orange-100"
-                                  placeholder={`Promoted from ${selectedStudent.className}`}
-                                />
-                              </label>
-                              <button onClick={promoteStudent} className="w-full h-10 rounded-full bg-[#fb9a5b] text-white font-semibold">
-                                Promote / Update Transfer
-                              </button>
-                            </>
-                          )}
-                        </div>
-                      )}
-                      {!['documents', 'promotion'].includes(activeTab) && (
-                        <div className="space-y-3 text-sm text-slate-600">
-                          <div className="rounded-lg bg-[#f5f5f6] p-3">
-                            Admission status: {latestAdmission?.status || selectedStudent.status}. Created on {selectedStudent.createdAtText || latestAdmission?.submittedAtText || 'today'}.
-                          </div>
-                          <div className="rounded-lg bg-[#f5f5f6] p-3">Profile management keeps guardian, class, contact, and academic details together.</div>
-                        </div>
-                      )}
+                        <div className="rounded-lg bg-[#f5f5f6] p-3">Guardian: {selectedStudent.guardianName || '-'}</div>
+                        <div className="rounded-lg bg-[#f5f5f6] p-3">Class: {selectedStudent.className} - {selectedStudent.section}</div>
+                      </div>
                     </div>
                       </div>
                     ) : (
                       <div className="bg-white border border-slate-100 rounded-lg p-6 shadow-sm text-sm text-slate-600 min-h-72 flex flex-col items-center justify-center text-center">
                         <div className="h-14 w-14 rounded-lg bg-[#f5f5f6] text-[#fb8d49] flex items-center justify-center mb-4">
-                          {activeBranch?.icon || <UserRound size={24} />}
+                          <UserRound size={24} />
                         </div>
-                        <h3 className="font-bold text-slate-900 mb-2">{selectedDetailTitle}</h3>
-                        <p>{filteredStudents.length ? selectedDetailHint : `No student records are available for academic year ${academicYear}.`}</p>
+                        <h3 className="font-bold text-slate-900 mb-2">Student Information</h3>
+                        <p>{filteredStudents.length ? 'Click a student row to display his or her information.' : `No student records are available for academic year ${academicYear}.`}</p>
                       </div>
                     )}
                   </aside>
                 </div>
                 </>
-                )}
                 </>
                 ) : activePage === 'reports' ? (
                   <StudentReportView
@@ -1198,7 +614,7 @@ export default function StudentInformationManagement({ user, onLogout }) {
                     admissions={admissions.filter((item) => item.academicYear === academicYear)}
                     documents={studentDocuments.filter((item) => item.academicYear === academicYear)}
                     promotions={promotions.filter((item) => item.academicYear === academicYear)}
-                    onBack={goBackOneStudentStep}
+                    onBack={() => setActivePage('dashboard')}
                   />
                 ) : activePage === 'faculty-staff' ? (
                   <FacultyStaffManagement currentUser={user} academicYear={academicYear} />

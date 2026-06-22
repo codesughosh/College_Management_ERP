@@ -2,6 +2,7 @@ import {
   createUserWithEmailAndPassword,
   getAuth,
   onAuthStateChanged,
+  sendPasswordResetEmail,
   signInWithEmailAndPassword,
   signOut,
   updateProfile,
@@ -37,6 +38,10 @@ export function subscribeToAuthState(callback) {
 export async function loginWithEmail(email, password) {
   const result = await signInWithEmailAndPassword(requireAuth(), email, password);
   return toAppUser(result.user);
+}
+
+export async function sendResetPasswordEmail(email) {
+  await sendPasswordResetEmail(requireAuth(), email);
 }
 
 export async function logoutUser() {

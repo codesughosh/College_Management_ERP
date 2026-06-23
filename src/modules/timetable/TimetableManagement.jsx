@@ -20,14 +20,14 @@ import TimetableGrid from './components/TimetableGrid';
 import TimetableSidePanel from './components/TimetableSidePanel';
 
 export default function TimetableManagement({ currentUser, academicYear = '2026-2027' }) {
-  const [students, setStudents] = useState(demoStudents);
-  const [staff, setStaff] = useState(demoStaffMembers);
-  const [classrooms, setClassrooms] = useState(demoClassrooms);
-  const [entries, setEntries] = useState(demoTimetableEntries);
-  const [publications, setPublications] = useState(demoTimetablePublications);
+  const [students, setStudents] = useState(isFirebaseConfigured ? [] : demoStudents);
+  const [staff, setStaff] = useState(isFirebaseConfigured ? [] : demoStaffMembers);
+  const [classrooms, setClassrooms] = useState(isFirebaseConfigured ? [] : demoClassrooms);
+  const [entries, setEntries] = useState(isFirebaseConfigured ? [] : demoTimetableEntries);
+  const [publications, setPublications] = useState(isFirebaseConfigured ? [] : demoTimetablePublications);
   const [selectedClass, setSelectedClass] = useState('All');
   const [search, setSearch] = useState('');
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(isFirebaseConfigured);
   const [loadError, setLoadError] = useState('');
   const [showEntryModal, setShowEntryModal] = useState(false);
   const [entryDefaults, setEntryDefaults] = useState({});
@@ -35,6 +35,7 @@ export default function TimetableManagement({ currentUser, academicYear = '2026-
 
   useEffect(() => {
     const loadTimetable = async () => {
+      if (!isFirebaseConfigured) return;
       try {
         const data = await getTimetableManagementData(academicYear);
         if (data.students.length) setStudents(data.students);

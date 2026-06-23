@@ -26,16 +26,16 @@ import AttendanceReports from './components/AttendanceReports';
 import AttendanceTable from './components/AttendanceTable';
 
 export default function AttendanceManagement({ currentUser, academicYear = '2026-2027' }) {
-  const [students, setStudents] = useState(demoAttendanceStudents);
-  const [staff, setStaff] = useState(demoAttendanceStaff);
-  const [studentAttendance, setStudentAttendance] = useState(demoStudentAttendance);
-  const [staffAttendance, setStaffAttendance] = useState(demoStaffAttendance);
-  const [notifications, setNotifications] = useState(demoAttendanceNotifications);
+  const [students, setStudents] = useState(isFirebaseConfigured ? [] : demoAttendanceStudents);
+  const [staff, setStaff] = useState(isFirebaseConfigured ? [] : demoAttendanceStaff);
+  const [studentAttendance, setStudentAttendance] = useState(isFirebaseConfigured ? [] : demoStudentAttendance);
+  const [staffAttendance, setStaffAttendance] = useState(isFirebaseConfigured ? [] : demoStaffAttendance);
+  const [notifications, setNotifications] = useState(isFirebaseConfigured ? [] : demoAttendanceNotifications);
   const [mode, setMode] = useState('students');
   const [reportScope, setReportScope] = useState('daily');
   const [search, setSearch] = useState('');
   const [selectedDate, setSelectedDate] = useState(formatDisplayDate());
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(isFirebaseConfigured);
   const [loadError, setLoadError] = useState('');
   const [activeAttendanceTask, setActiveAttendanceTask] = useState('');
   const [activeAttendanceBranch, setActiveAttendanceBranch] = useState('');
@@ -43,6 +43,7 @@ export default function AttendanceManagement({ currentUser, academicYear = '2026
 
   useEffect(() => {
     const loadAttendance = async () => {
+      if (!isFirebaseConfigured) return;
       try {
         const data = await getAttendanceManagementData(academicYear);
         if (data.students.length) setStudents(data.students.filter((student) => student.status !== 'Archived'));

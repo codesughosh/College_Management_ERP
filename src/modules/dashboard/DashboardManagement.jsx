@@ -21,6 +21,17 @@ const fallbackDashboardData = {
   examSchedules: demoExamSchedules,
 };
 
+const emptyDashboardData = {
+  students: [],
+  studentAdmissions: [],
+  staff: [],
+  feeAssignments: [],
+  feeCollections: [],
+  feeAdjustments: [],
+  managedDocuments: [],
+  examSchedules: [],
+};
+
 const MONTH_LABELS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
 function parseDashboardDate(value) {
@@ -118,10 +129,10 @@ export default function DashboardManagement({ academicYear = '2026-2027', curren
         setDashboardData(data);
         setLoadError('');
       } catch (error) {
-        console.warn('Using demo dashboard data because Firestore is not reachable.', error);
+        console.warn('Unable to load live dashboard data.', error);
         if (!mounted) return;
-        setDashboardData(fallbackDashboardData);
-        setLoadError('Unable to load live dashboard data. Showing demo/local records.');
+        setDashboardData(emptyDashboardData);
+        setLoadError('Unable to load live dashboard data.');
       } finally {
         if (mounted) setLoading(false);
       }
@@ -153,7 +164,7 @@ export default function DashboardManagement({ academicYear = '2026-2027', curren
     feeAdjustments = [],
     managedDocuments = [],
     examSchedules = [],
-  } = dashboardData || fallbackDashboardData;
+  } = dashboardData || emptyDashboardData;
   const activeStudents = students.filter((student) => student.status !== 'Archived');
   const facultyCount = staff.filter((member) => member.staffType === 'Faculty' && member.status !== 'Archived').length;
   const feeSummary = useMemo(
@@ -204,11 +215,11 @@ export default function DashboardManagement({ academicYear = '2026-2027', curren
   }).join(', ');
 
   const dashboardCards = [
-    canViewStudents && { color: '#2563eb', icon: <Users size={22} />, label: 'Students', value: activeStudents.length, helper: 'Active records', page: 'students' },
-    canViewStaff && { color: '#22c55e', icon: <GraduationCap size={22} />, label: 'Faculty', value: facultyCount, helper: 'Teaching staff', page: 'faculty-staff' },
-    canViewFees && { color: '#f59e0b', icon: <Wallet size={22} />, label: 'Collection', value: formatCurrency(feeSummary.totalCollected), helper: `${feeSummary.dueStudents} due students`, page: 'fees' },
-    canViewDocuments && { color: '#8b5cf6', icon: <FileText size={22} />, label: 'Documents', value: pendingDocuments.length, helper: 'Pending review', page: 'document-management' },
-    canViewExams && { color: '#ef4444', icon: <TrendingUp size={22} />, label: 'Exams', value: upcomingExams.length, helper: 'Upcoming exams', page: 'examination-results' },
+    canViewStudents && { color: '#2563eb', icon: <Users size={22} />, label: 'Students', value: loading ? '-' : activeStudents.length, helper: loading ? '-' : 'Active records', page: 'students' },
+    canViewStaff && { color: '#22c55e', icon: <GraduationCap size={22} />, label: 'Faculty', value: loading ? '-' : facultyCount, helper: loading ? '-' : 'Teaching staff', page: 'faculty-staff' },
+    canViewFees && { color: '#f59e0b', icon: <Wallet size={22} />, label: 'Collection', value: loading ? '-' : formatCurrency(feeSummary.totalCollected), helper: loading ? '-' : `${feeSummary.dueStudents} due students`, page: 'fees' },
+    canViewDocuments && { color: '#8b5cf6', icon: <FileText size={22} />, label: 'Documents', value: loading ? '-' : pendingDocuments.length, helper: loading ? '-' : 'Pending review', page: 'document-management' },
+    canViewExams && { color: '#ef4444', icon: <TrendingUp size={22} />, label: 'Exams', value: loading ? '-' : upcomingExams.length, helper: loading ? '-' : 'Upcoming exams', page: 'examination-results' },
   ].filter(Boolean);
 
   const quickActions = [
@@ -219,13 +230,13 @@ export default function DashboardManagement({ academicYear = '2026-2027', curren
 
   const pendingWork = [
     canViewDocuments && canVerifyDocuments && {
-      label: `${pendingDocuments.length} documents need review`,
-      helper: 'Open verification queue',
+      label: loading ? 'Documents need review' : `${pendingDocuments.length} documents need review`,
+      helper: loading ? '-' : 'Open verification queue',
       page: 'document-management',
     },
     canViewExams && {
-      label: `${upcomingExams.length} upcoming exams`,
-      helper: 'View exam schedule',
+      label: loading ? 'Upcoming exams' : `${upcomingExams.length} upcoming exams`,
+      helper: loading ? '-' : 'View exam schedule',
       page: 'examination-results',
     },
     canViewFees && feeSummary.dueStudents > 0 && {
@@ -276,7 +287,7 @@ export default function DashboardManagement({ academicYear = '2026-2027', curren
               <circle cx={highlightPoint[0]} cy={highlightPoint[1]} r="6" fill="#f97316" stroke="#ffffff" strokeWidth="3" />
               <g transform={`translate(${tooltipX} ${tooltipY})`}>
                 <rect x="0" y="0" width="112" height="32" rx="10" fill="white" opacity="0.96" />
-                <text x="10" y="21" fill="#111827" fontSize="14" fontWeight="700">{formatChartCurrency(highlightPoint[2])}</text>
+                <text x="10" y="21" fill="#111827" fontSize="14" fontWeight="700">{loading ? '-' : formatChartCurrency(highlightPoint[2])}</text>
               </g>
               {trendPoints.map(([x], index) => (
                 <line key={index} x1={x} x2={x} y1="145" y2="150" stroke="rgba(148,163,184,.5)" strokeWidth="2" />
@@ -318,7 +329,7 @@ export default function DashboardManagement({ academicYear = '2026-2027', curren
               <h2 className="font-bold text-slate-900">Admissions Pipeline</h2>
               <p className="text-xs text-slate-500 mt-1">Derived from student admission and status records.</p>
             </div>
-            <span className="rounded-full bg-[#f5f5f6] px-3 py-1 text-xs font-bold text-emerald-500">{admittedRate}%</span>
+            <span className="rounded-full bg-[#f5f5f6] px-3 py-1 text-xs font-bold text-emerald-500">{loading ? '-' : `${admittedRate}%`}</span>
           </div>
           <div className="grid md:grid-cols-[1fr_.85fr] gap-5 items-center">
             <div className="space-y-1">
@@ -339,7 +350,7 @@ export default function DashboardManagement({ academicYear = '2026-2027', curren
                 <div key={stage.label} className="flex items-center gap-3 text-sm">
                   <span className="h-3 w-3 rounded-sm" style={{ background: stage.color }} />
                   <span className="text-slate-600">{stage.label}</span>
-                  <b className="ml-auto text-slate-900">{stage.value}</b>
+                  <b className="ml-auto text-slate-900">{loading ? '-' : stage.value}</b>
                 </div>
               ))}
             </div>
@@ -359,7 +370,7 @@ export default function DashboardManagement({ academicYear = '2026-2027', curren
           <div className="grid md:grid-cols-[180px_1fr] gap-6 items-center">
             <div className="relative h-44 w-44 mx-auto rounded-full" style={{ background: `conic-gradient(${pieGradient})` }}>
               <div className="erp-dashboard-donut-hole absolute inset-8 rounded-full flex flex-col items-center justify-center">
-                <span className="text-3xl font-extrabold text-slate-900">{collectionRate}%</span>
+                <span className="text-3xl font-extrabold text-slate-900">{loading ? '-' : `${collectionRate}%`}</span>
                 <span className="text-xs text-slate-500">Collected</span>
               </div>
             </div>
@@ -368,7 +379,7 @@ export default function DashboardManagement({ academicYear = '2026-2027', curren
                 <div key={item.label} className="flex items-center gap-3 text-sm">
                   <span className="h-3 w-3 rounded-sm" style={{ background: item.color }} />
                   <span className="text-slate-600">{item.label}</span>
-                  <b className="ml-auto text-slate-900">{formatCurrency(item.value)}</b>
+                  <b className="ml-auto text-slate-900">{loading ? '-' : formatCurrency(item.value)}</b>
                 </div>
               ))}
             </div>

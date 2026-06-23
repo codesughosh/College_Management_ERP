@@ -28,11 +28,11 @@ import ReportFilters from './components/ReportFilters';
 import FeeVisualGraph from '../fees/components/FeeVisualGraph';
 
 export default function FinancialReports({ currentUser, academicYear = '2026-2027' }) {
-  const [structures, setStructures] = useState(demoFinancialStructures);
-  const [assignments, setAssignments] = useState(demoFinancialAssignments);
-  const [collections, setCollections] = useState(demoFinancialCollections);
-  const [adjustments, setAdjustments] = useState(demoFinancialAdjustments);
-  const [snapshots, setSnapshots] = useState(demoFinancialSnapshots);
+  const [structures, setStructures] = useState(isFirebaseConfigured ? [] : demoFinancialStructures);
+  const [assignments, setAssignments] = useState(isFirebaseConfigured ? [] : demoFinancialAssignments);
+  const [collections, setCollections] = useState(isFirebaseConfigured ? [] : demoFinancialCollections);
+  const [adjustments, setAdjustments] = useState(isFirebaseConfigured ? [] : demoFinancialAdjustments);
+  const [snapshots, setSnapshots] = useState(isFirebaseConfigured ? [] : demoFinancialSnapshots);
   const [activeReport, setActiveReport] = useState('collections');
   const [filters, setFilters] = useState({
     fromDate: '2026-06-01',
@@ -40,11 +40,12 @@ export default function FinancialReports({ currentUser, academicYear = '2026-202
     classKey: '',
     paymentMode: '',
   });
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(isFirebaseConfigured);
   const [loadError, setLoadError] = useState('');
 
   useEffect(() => {
     const loadReports = async () => {
+      if (!isFirebaseConfigured) return;
       try {
         const data = await getFinancialReportsData(academicYear);
         setStructures(data.feeStructures);

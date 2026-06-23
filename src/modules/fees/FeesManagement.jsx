@@ -33,13 +33,13 @@ import FeeStructureModal from './components/FeeStructureModal';
 import FeeStructurePanel from './components/FeeStructurePanel';
 
 export default function FeesManagement({ currentUser, academicYear = '2026-2027' }) {
-  const [students, setStudents] = useState(demoFeeStudents);
-  const [structures, setStructures] = useState(demoFeeStructures);
-  const [assignments, setAssignments] = useState(demoFeeAssignments);
-  const [collections, setCollections] = useState(demoFeeCollections);
-  const [adjustments, setAdjustments] = useState(demoFeeAdjustments);
+  const [students, setStudents] = useState(isFirebaseConfigured ? [] : demoFeeStudents);
+  const [structures, setStructures] = useState(isFirebaseConfigured ? [] : demoFeeStructures);
+  const [assignments, setAssignments] = useState(isFirebaseConfigured ? [] : demoFeeAssignments);
+  const [collections, setCollections] = useState(isFirebaseConfigured ? [] : demoFeeCollections);
+  const [adjustments, setAdjustments] = useState(isFirebaseConfigured ? [] : demoFeeAdjustments);
   const [search, setSearch] = useState('');
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(isFirebaseConfigured);
   const [loadError, setLoadError] = useState('');
   const [showStructureModal, setShowStructureModal] = useState(false);
   const [editingStructure, setEditingStructure] = useState(null);
@@ -52,6 +52,7 @@ export default function FeesManagement({ currentUser, academicYear = '2026-2027'
 
   useEffect(() => {
     const loadFees = async () => {
+      if (!isFirebaseConfigured) return;
       try {
         const data = await getFeesManagementData(academicYear);
         if (data.students.length) setStudents(data.students.filter((student) => student.status !== 'Archived'));

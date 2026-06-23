@@ -204,8 +204,8 @@ function StudentReportView({ academicYear, admissions, documents, promotions, st
 
 export default function StudentInformationManagement({ user, onLogout }) {
   const [themeMode, setThemeMode] = useState(() => localStorage.getItem('erpThemeMode') || 'dark');
-  const [students, setStudents] = useState(admissionStudents);
-  const [courses, setCourses] = useState(admissionCourses);
+  const [students, setStudents] = useState(isFirebaseConfigured ? [] : admissionStudents);
+  const [courses, setCourses] = useState(isFirebaseConfigured ? [] : admissionCourses);
   const [selectedCourseCode, setSelectedCourseCode] = useState('all');
   const [activePage, setActivePage] = useState('dashboard');
   const [search, setSearch] = useState('');
@@ -219,7 +219,7 @@ export default function StudentInformationManagement({ user, onLogout }) {
   const [editingStudent, setEditingStudent] = useState(null);
   const [statusFilter, setStatusFilter] = useState('active');
   const [academicYear, setAcademicYear] = useState('2025-2026');
-  const [institute, setInstitute] = useState(demoInstituteSettings);
+  const [institute, setInstitute] = useState(isFirebaseConfigured ? {} : demoInstituteSettings);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const currentRoleId = user?.roleId || 'admin';
   const activeModule = getModuleById(activePage);
@@ -272,6 +272,7 @@ export default function StudentInformationManagement({ user, onLogout }) {
 
   useEffect(() => {
     const loadShellSettings = async () => {
+      if (!isFirebaseConfigured) return;
       try {
         const data = await getSettingsData();
         if (data.institute) setInstitute(data.institute);
@@ -284,6 +285,7 @@ export default function StudentInformationManagement({ user, onLogout }) {
 
   useEffect(() => {
     const loadStudentInformation = async () => {
+      if (!isFirebaseConfigured) return;
       try {
         const data = await getStudentInformationData(academicYear);
         if (data.students.length || isFirebaseConfigured) {

@@ -29,7 +29,7 @@ export default function FacultyStaffManagement({ currentUser, academicYear = '20
   const [search, setSearch] = useState('');
   const [typeFilter, setTypeFilter] = useState('All');
   const [statusFilter, setStatusFilter] = useState('active');
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(isFirebaseConfigured);
   const [loadError, setLoadError] = useState('');
   const [showStaffModal, setShowStaffModal] = useState(false);
   const [editingStaff, setEditingStaff] = useState(null);
@@ -37,6 +37,7 @@ export default function FacultyStaffManagement({ currentUser, academicYear = '20
 
   useEffect(() => {
     const loadFacultyStaff = async () => {
+      if (!isFirebaseConfigured) return;
       try {
         const data = await getFacultyStaffData(academicYear);
         setStaffMembers(data.staff || []);

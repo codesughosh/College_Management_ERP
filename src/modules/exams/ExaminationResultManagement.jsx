@@ -22,15 +22,15 @@ import MarksEntryModal from './components/MarksEntryModal';
 import ResultsPanel from './components/ResultsPanel';
 
 export default function ExaminationResultManagement({ currentUser, academicYear = '2026-2027' }) {
-  const [students, setStudents] = useState(demoExamStudents);
-  const [staff, setStaff] = useState(demoExamStaff);
-  const [schedules, setSchedules] = useState(demoExamSchedules);
-  const [assessments, setAssessments] = useState(demoAssessments);
-  const [marks, setMarks] = useState(demoMarksEntries);
-  const [results, setResults] = useState(demoResults);
-  const [reportCards, setReportCards] = useState(demoReportCards);
+  const [students, setStudents] = useState(isFirebaseConfigured ? [] : demoExamStudents);
+  const [staff, setStaff] = useState(isFirebaseConfigured ? [] : demoExamStaff);
+  const [schedules, setSchedules] = useState(isFirebaseConfigured ? [] : demoExamSchedules);
+  const [assessments, setAssessments] = useState(isFirebaseConfigured ? [] : demoAssessments);
+  const [marks, setMarks] = useState(isFirebaseConfigured ? [] : demoMarksEntries);
+  const [results, setResults] = useState(isFirebaseConfigured ? [] : demoResults);
+  const [reportCards, setReportCards] = useState(isFirebaseConfigured ? [] : demoReportCards);
   const [search, setSearch] = useState('');
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(isFirebaseConfigured);
   const [loadError, setLoadError] = useState('');
   const [showScheduleModal, setShowScheduleModal] = useState(false);
   const [showMarksModal, setShowMarksModal] = useState(false);
@@ -41,6 +41,7 @@ export default function ExaminationResultManagement({ currentUser, academicYear 
 
   useEffect(() => {
     const loadExams = async () => {
+      if (!isFirebaseConfigured) return;
       try {
         const data = await getExaminationResultData(academicYear);
         if (data.students.length) setStudents(data.students.filter((student) => student.status !== 'Archived'));

@@ -17,17 +17,19 @@ import DocumentTable from './components/DocumentTable';
 import DocumentUploadModal from './components/DocumentUploadModal';
 
 export default function DocumentManagement({ currentUser, academicYear = '2026-2027' }) {
-  const [students, setStudents] = useState(demoDocumentStudents);
-  const [staff, setStaff] = useState(demoDocumentStaff);
-  const [documents, setDocuments] = useState(demoManagedDocuments);
+  const [students, setStudents] = useState(isFirebaseConfigured ? [] : demoDocumentStudents);
+  const [staff, setStaff] = useState(isFirebaseConfigured ? [] : demoDocumentStaff);
+  const [documents, setDocuments] = useState(isFirebaseConfigured ? [] : demoManagedDocuments);
   const [selectedId, setSelectedId] = useState('');
   const [filters, setFilters] = useState({ search: '', ownerType: '', category: '', status: '' });
+  const [loading, setLoading] = useState(isFirebaseConfigured);
   const [loadError, setLoadError] = useState('');
   const [showUploadModal, setShowUploadModal] = useState(false);
   const [uploading, setUploading] = useState(false);
 
   useEffect(() => {
     const loadDocuments = async () => {
+      if (!isFirebaseConfigured) return;
       try {
         const data = await getDocumentManagementData(academicYear);
         if (data.students.length) setStudents(data.students.filter((student) => student.status !== 'Archived'));
@@ -37,6 +39,8 @@ export default function DocumentManagement({ currentUser, academicYear = '2026-2
       } catch (error) {
         console.warn('Using demo documents because Firestore is not reachable.', error);
         setLoadError('Unable to load Firestore document records. Showing demo/local records.');
+      } finally {
+        setLoading(false);
       }
     };
     loadDocuments();
@@ -163,6 +167,7 @@ export default function DocumentManagement({ currentUser, academicYear = '2026-2
           <div className="text-sm font-bold text-slate-500 mb-2">Administration / <span className="text-[#f39a5f]">Document Management</span></div>
           <h1 className="text-2xl font-bold text-slate-900">Document Management</h1>
           <p className="text-sm text-slate-500 mt-1">Search documents first. Click one document to view metadata and verification actions.</p>
+          {loading && <p className="text-xs text-slate-500 mt-2">Loading live document records...</p>}
           {!isFirebaseConfigured && <p className="text-xs text-orange-600 mt-2">Demo mode: add Firebase keys to persist documents and upload files.</p>}
           {loadError && <p className="text-xs text-rose-600 mt-2">{loadError}</p>}
         </div>

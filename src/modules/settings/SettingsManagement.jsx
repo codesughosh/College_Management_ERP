@@ -10,16 +10,17 @@ import AcademicsManagement from '../academics/AcademicsManagement';
 import UserRoleManagement from '../userRoles/UserRoleManagement';
 
 export default function SettingsManagement({ currentUser }) {
-  const [institute, setInstitute] = useState(demoInstituteSettings);
-  const [academicYear, setAcademicYear] = useState(demoAcademicYearSettings);
-  const [idFormats, setIdFormats] = useState(demoIdFormatSettings);
-  const [moduleDefaults, setModuleDefaults] = useState(demoModuleDefaultSettings);
-  const [loading, setLoading] = useState(true);
+  const [institute, setInstitute] = useState(isFirebaseConfigured ? {} : demoInstituteSettings);
+  const [academicYear, setAcademicYear] = useState(isFirebaseConfigured ? {} : demoAcademicYearSettings);
+  const [idFormats, setIdFormats] = useState(isFirebaseConfigured ? {} : demoIdFormatSettings);
+  const [moduleDefaults, setModuleDefaults] = useState(isFirebaseConfigured ? {} : demoModuleDefaultSettings);
+  const [loading, setLoading] = useState(isFirebaseConfigured);
   const [loadError, setLoadError] = useState('');
   const [activeSection, setActiveSection] = useState('');
 
   useEffect(() => {
     const loadSettings = async () => {
+      if (!isFirebaseConfigured) return;
       try {
         const data = await getSettingsData();
         if (data.institute) setInstitute(data.institute);
@@ -47,21 +48,21 @@ export default function SettingsManagement({ currentUser }) {
       title: 'Institute Setup',
       description: 'College profile, contact, and address.',
       icon: <Building2 size={24} />,
-      meta: summary.instituteConfigured ? 'Ready' : 'Pending',
+      meta: loading ? '-' : summary.instituteConfigured ? 'Ready' : 'Pending',
     },
     {
       id: 'academic-year',
       title: 'Academic Year',
       description: 'Active year, start date, and end date.',
       icon: <CalendarDays size={24} />,
-      meta: summary.academicYear,
+      meta: loading ? '-' : summary.academicYear,
     },
     {
       id: 'academic-setup',
       title: 'Academic Setup',
       description: 'Programs, subjects, batches, and academic calendar setup.',
       icon: <BookOpen size={24} />,
-      meta: canViewAcademics ? 'Open' : 'No access',
+      meta: loading ? '-' : canViewAcademics ? 'Open' : 'No access',
       disabled: !canViewAcademics,
     },
     {
@@ -69,7 +70,7 @@ export default function SettingsManagement({ currentUser }) {
       title: 'People Setup',
       description: 'Users, roles, permissions, and admin access.',
       icon: <Users size={24} />,
-      meta: canManageUsers ? 'Admin' : 'No access',
+      meta: loading ? '-' : canManageUsers ? 'Admin' : 'No access',
       disabled: !canManageUsers,
     },
     {
@@ -77,14 +78,14 @@ export default function SettingsManagement({ currentUser }) {
       title: 'ID & Receipt Formats',
       description: 'Student, admission, employee, and receipt numbering.',
       icon: <Hash size={24} />,
-      meta: summary.idFormats,
+      meta: loading ? '-' : summary.idFormats,
     },
     {
       id: 'module-defaults',
       title: 'Module Defaults',
       description: 'Turn default ERP behaviors on or off.',
       icon: <Settings size={24} />,
-      meta: `${summary.enabledDefaults} on`,
+      meta: loading ? '-' : `${summary.enabledDefaults} on`,
     },
   ];
 

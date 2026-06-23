@@ -77,14 +77,15 @@ function CurriculumEventModal({ initialEvent = null, onClose, onSave }) {
 }
 
 export default function CurriculumManagement({ currentUser, academicYear = '2026-2027' }) {
-  const [events, setEvents] = useState(demoAcademicCalendarEvents);
-  const [selectedEvent, setSelectedEvent] = useState(demoAcademicCalendarEvents[0] || null);
+  const [events, setEvents] = useState(isFirebaseConfigured ? [] : demoAcademicCalendarEvents);
+  const [selectedEvent, setSelectedEvent] = useState(isFirebaseConfigured ? null : demoAcademicCalendarEvents[0] || null);
   const [showModal, setShowModal] = useState(false);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(isFirebaseConfigured);
   const [loadError, setLoadError] = useState('');
 
   useEffect(() => {
     const loadCurriculum = async () => {
+      if (!isFirebaseConfigured) return;
       try {
         const data = await getAcademicsData(academicYear);
         if (data.academicCalendarEvents.length) {

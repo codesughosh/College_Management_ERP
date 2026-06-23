@@ -31,19 +31,20 @@ import PerformanceCard from './components/PerformanceCard';
 import StudentSwitcher from './components/StudentSwitcher';
 
 export default function ParentPortal({ currentUser, academicYear = '2026-2027' }) {
-  const [students, setStudents] = useState(demoParentStudents);
-  const [attendance, setAttendance] = useState(demoParentAttendance);
-  const [marks, setMarks] = useState(demoParentMarks);
-  const [results, setResults] = useState(demoParentResults);
-  const [fees, setFees] = useState(demoParentFees);
-  const [notices, setNotices] = useState(demoParentNotices);
-  const [documents, setDocuments] = useState(demoParentDocuments);
-  const [selectedId, setSelectedId] = useState(demoParentStudents[0]?.id || '');
-  const [loading, setLoading] = useState(true);
+  const [students, setStudents] = useState(isFirebaseConfigured ? [] : demoParentStudents);
+  const [attendance, setAttendance] = useState(isFirebaseConfigured ? [] : demoParentAttendance);
+  const [marks, setMarks] = useState(isFirebaseConfigured ? [] : demoParentMarks);
+  const [results, setResults] = useState(isFirebaseConfigured ? [] : demoParentResults);
+  const [fees, setFees] = useState(isFirebaseConfigured ? [] : demoParentFees);
+  const [notices, setNotices] = useState(isFirebaseConfigured ? [] : demoParentNotices);
+  const [documents, setDocuments] = useState(isFirebaseConfigured ? [] : demoParentDocuments);
+  const [selectedId, setSelectedId] = useState(isFirebaseConfigured ? '' : demoParentStudents[0]?.id || '');
+  const [loading, setLoading] = useState(isFirebaseConfigured);
   const [loadError, setLoadError] = useState('');
 
   useEffect(() => {
     const loadPortal = async () => {
+      if (!isFirebaseConfigured) return;
       try {
         const data = await getParentPortalData(academicYear, currentUser);
         if (data.students.length) {

@@ -16,16 +16,17 @@ import NoticePreviewPanel from './components/NoticePreviewPanel';
 import NoticeTable from './components/NoticeTable';
 
 export default function NoticeBoardManagement({ currentUser, academicYear = '2026-2027' }) {
-  const [notices, setNotices] = useState(demoNoticeItems);
-  const [selectedId, setSelectedId] = useState(demoNoticeItems[0]?.id || '');
+  const [notices, setNotices] = useState(isFirebaseConfigured ? [] : demoNoticeItems);
+  const [selectedId, setSelectedId] = useState(isFirebaseConfigured ? '' : demoNoticeItems[0]?.id || '');
   const [filters, setFilters] = useState({ search: '', type: '', audience: '', status: '' });
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(isFirebaseConfigured);
   const [loadError, setLoadError] = useState('');
   const [showModal, setShowModal] = useState(false);
   const [editingNotice, setEditingNotice] = useState(null);
 
   useEffect(() => {
     const loadNotices = async () => {
+      if (!isFirebaseConfigured) return;
       try {
         const data = await getNoticeBoardData(academicYear);
         setNotices(data.noticeItems);

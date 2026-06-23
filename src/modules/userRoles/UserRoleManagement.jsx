@@ -24,11 +24,11 @@ function mergeRoles(firestoreRoles) {
 }
 
 export default function UserRoleManagement({ currentUser }) {
-  const [users, setUsers] = useState(demoUsers);
-  const [roles, setRoles] = useState(demoRoles);
+  const [users, setUsers] = useState(isFirebaseConfigured ? [] : demoUsers);
+  const [roles, setRoles] = useState(isFirebaseConfigured ? defaultRoles : demoRoles);
   const [selectedRoleId, setSelectedRoleId] = useState('admin');
   const [search, setSearch] = useState('');
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(isFirebaseConfigured);
   const [savingRole, setSavingRole] = useState(false);
   const [loadError, setLoadError] = useState('');
   const [showUserModal, setShowUserModal] = useState(false);
@@ -37,6 +37,7 @@ export default function UserRoleManagement({ currentUser }) {
 
   useEffect(() => {
     const loadUsersAndRoles = async () => {
+      if (!isFirebaseConfigured) return;
       try {
         const data = await getUserRoleData();
         setRoles(mergeRoles(data.roles));

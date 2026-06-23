@@ -16,17 +16,18 @@ const tabs = [
 ];
 
 export default function AcademicsManagement({ currentUser, academicYear = '2026-2027' }) {
-  const [programs, setPrograms] = useState(demoAcademicPrograms);
-  const [subjects, setSubjects] = useState(demoAcademicSubjects);
-  const [batches, setBatches] = useState(demoAcademicBatches);
-  const [events, setEvents] = useState(demoAcademicCalendarEvents);
+  const [programs, setPrograms] = useState(isFirebaseConfigured ? [] : demoAcademicPrograms);
+  const [subjects, setSubjects] = useState(isFirebaseConfigured ? [] : demoAcademicSubjects);
+  const [batches, setBatches] = useState(isFirebaseConfigured ? [] : demoAcademicBatches);
+  const [events, setEvents] = useState(isFirebaseConfigured ? [] : demoAcademicCalendarEvents);
   const [activeTab, setActiveTab] = useState('programs');
   const [search, setSearch] = useState('');
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(isFirebaseConfigured);
   const [loadError, setLoadError] = useState('');
 
   useEffect(() => {
     const loadAcademics = async () => {
+      if (!isFirebaseConfigured) return;
       try {
         const data = await getAcademicsData(academicYear);
         setPrograms(data.academicPrograms);

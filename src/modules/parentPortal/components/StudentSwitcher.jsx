@@ -14,7 +14,7 @@ export default function StudentSwitcher({ students, selectedId, onSelect }) {
         className="w-full h-11 rounded-lg border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-700 outline-none focus:border-[#fb9a5b] focus:ring-2 focus:ring-orange-100"
       >
         {students.map((student) => (
-          <option key={student.id} value={student.id}>
+          <option key={student.id} value={student.id} style={{ backgroundColor: '#ffffff', color: '#0f172a' }}>
             {[student.name, student.studentId].filter(Boolean).join(' - ')}
           </option>
         ))}

@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { AlertCircle, CalendarDays, FileText, GraduationCap, TrendingUp, Users, Wallet } from 'lucide-react';
+import { AlertCircle, FileText, GraduationCap, TrendingUp, Users, Wallet } from 'lucide-react';
 import { demoStudents } from '../students/demoStudents';
 import { demoStaffMembers } from '../facultyStaff/demoFacultyStaff';
 import { demoFeeAdjustments, demoFeeAssignments, demoFeeCollections } from '../fees/demoFees';
@@ -146,12 +146,9 @@ export default function DashboardManagement({ academicYear = '2026-2027', curren
 
   const currentRoleId = currentUser?.roleId || 'admin';
   const canViewStudents = canAccess(defaultRoles, currentRoleId, 'students.view');
-  const canCreateStudents = canAccess(defaultRoles, currentRoleId, 'students.create');
   const canViewStaff = canAccess(defaultRoles, currentRoleId, 'staff.view');
   const canViewFees = canAccess(defaultRoles, currentRoleId, 'fees.view');
-  const canCollectFees = canAccess(defaultRoles, currentRoleId, 'fees.collect');
   const canViewDocuments = canAccess(defaultRoles, currentRoleId, 'documents.view');
-  const canUploadDocuments = canAccess(defaultRoles, currentRoleId, 'documents.upload');
   const canVerifyDocuments = canAccess(defaultRoles, currentRoleId, 'documents.verify');
   const canViewExams = canAccess(defaultRoles, currentRoleId, 'exams.view');
   const canViewFinancialReports = canAccess(defaultRoles, currentRoleId, 'financialReports.view');
@@ -220,12 +217,6 @@ export default function DashboardManagement({ academicYear = '2026-2027', curren
     canViewFees && { color: '#f59e0b', icon: <Wallet size={22} />, label: 'Collection', value: loading ? '-' : formatCurrency(feeSummary.totalCollected), helper: loading ? '-' : `${feeSummary.dueStudents} due students`, page: 'fees' },
     canViewDocuments && { color: '#8b5cf6', icon: <FileText size={22} />, label: 'Documents', value: loading ? '-' : pendingDocuments.length, helper: loading ? '-' : 'Pending review', page: 'document-management' },
     canViewExams && { color: '#ef4444', icon: <TrendingUp size={22} />, label: 'Exams', value: loading ? '-' : upcomingExams.length, helper: loading ? '-' : 'Upcoming exams', page: 'examination-results' },
-  ].filter(Boolean);
-
-  const quickActions = [
-    canCreateStudents && { label: 'Add student', helper: 'Open admissions', icon: <GraduationCap size={18} />, page: 'students' },
-    canCollectFees && { label: 'Collect payment', helper: 'Search dues', icon: <Wallet size={18} />, page: 'fees' },
-    canUploadDocuments && { label: 'Upload document', helper: 'Repository', icon: <FileText size={18} />, page: 'document-management' },
   ].filter(Boolean);
 
   const pendingWork = [
@@ -387,28 +378,6 @@ export default function DashboardManagement({ academicYear = '2026-2027', curren
         </section>
         )}
       </div>
-
-      {!!quickActions.length && (
-      <div className="grid gap-5 mt-5">
-        <section className="rounded-lg border border-slate-100 bg-white p-5 shadow-sm">
-          <div className="flex items-center justify-between gap-3 mb-4">
-            <h2 className="font-bold text-slate-900">Quick Actions</h2>
-            <CalendarDays size={18} className="text-slate-400" />
-          </div>
-          <div className="grid sm:grid-cols-2 gap-3">
-            {quickActions.map((action) => (
-              <button key={action.label} onClick={() => onNavigate?.(action.page)} className="rounded-lg bg-[#f5f5f6] p-4 text-left flex items-center gap-3">
-                <span className="h-10 w-10 rounded-lg bg-white flex items-center justify-center text-[#fb8d49]">{action.icon}</span>
-                <span>
-                  <span className="block text-sm font-bold text-slate-900">{action.label}</span>
-                  <span className="block text-xs text-slate-500 mt-1">{action.helper}</span>
-                </span>
-              </button>
-            ))}
-          </div>
-        </section>
-      </div>
-      )}
 
       {canViewExams && (
       <div className="rounded-lg border border-slate-100 bg-white p-5 shadow-sm mt-5">

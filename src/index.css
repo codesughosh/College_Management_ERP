@@ -953,7 +953,7 @@ html{color-scheme:dark}::selection{background:rgba(0,255,136,.18);color:#eafff5}
 .erp-shell .erp-sidebar-brand-card {
   min-height:64px;
   position:relative;
-  padding:10px 12px!important;
+  padding:10px 46px 10px 12px!important;
   display:flex;
   align-items:center;
   gap:12px;
@@ -999,23 +999,33 @@ html{color-scheme:dark}::selection{background:rgba(0,255,136,.18);color:#eafff5}
 }
 
 .erp-shell .erp-sidebar-collapse-button {
+  position:absolute;
+  right:10px;
+  top:50%;
   width:34px;
   height:34px;
-  border-radius:14px!important;
+  border-radius:999px!important;
   display:flex;
   align-items:center;
   justify-content:center;
-  color:var(--erp-muted)!important;
-  background:transparent!important;
-  border:0!important;
-  box-shadow:none!important;
+  color:#02100d!important;
+  background:var(--erp-accent)!important;
+  border:1px solid rgba(0,255,136,.65)!important;
+  box-shadow:0 0 0 3px rgba(0,255,136,.10),0 10px 24px rgba(0,255,136,.18)!important;
   flex:0 0 auto;
+  transform:translateY(-50%)!important;
 }
 
 .erp-shell .erp-sidebar-collapse-button:hover {
-  color:var(--erp-accent)!important;
-  background:rgba(0,255,136,.08)!important;
-  transform:none!important;
+  color:#02100d!important;
+  background:var(--erp-accent-hover)!important;
+  transform:translateY(-50%) scale(1.04)!important;
+}
+
+.erp-shell .erp-sidebar-collapse-button svg {
+  width:18px;
+  height:18px;
+  stroke-width:3;
 }
 
 .erp-shell .erp-sidebar-menu-card {
@@ -1145,7 +1155,7 @@ html{color-scheme:dark}::selection{background:rgba(0,255,136,.18);color:#eafff5}
 .erp-shell .erp-sidebar.is-collapsed .erp-sidebar-brand-card {
   justify-content:center;
   border-radius:999px!important;
-  padding-block:10px!important;
+  padding:10px!important;
 }
 
 .erp-shell .erp-sidebar.is-collapsed .erp-sidebar-logo {
@@ -1160,12 +1170,15 @@ html{color-scheme:dark}::selection{background:rgba(0,255,136,.18);color:#eafff5}
 
 .erp-shell .erp-sidebar.is-collapsed .erp-sidebar-collapse-button {
   position:absolute;
-  right:18px;
-  top:58px;
-  width:28px;
-  height:28px;
-  background:#050d12!important;
-  border:1px solid var(--erp-border)!important;
+  right:-13px;
+  top:50%;
+  width:30px;
+  height:30px;
+  background:var(--erp-accent)!important;
+  border:2px solid #050d12!important;
+  box-shadow:0 0 0 1px rgba(0,255,136,.55),0 10px 22px rgba(0,0,0,.28)!important;
+  transform:translateY(-50%)!important;
+  z-index:5;
 }
 
 .erp-shell .erp-sidebar.is-collapsed .erp-sidebar-nav .erp-sidebar-item {
@@ -1204,16 +1217,26 @@ html{color-scheme:dark}::selection{background:rgba(0,255,136,.18);color:#eafff5}
 }
 
 .erp-shell.light-mode .erp-sidebar-brand-subtitle,
-.erp-shell.light-mode .erp-sidebar-collapse-button,
 .erp-shell.light-mode .erp-sidebar-nav .erp-sidebar-item,
 .erp-shell.light-mode .erp-sidebar-theme-switch button {
   color:#65728a!important;
 }
 
-.erp-shell.light-mode .erp-sidebar-collapse-button:hover,
 .erp-shell.light-mode .erp-sidebar-nav .erp-sidebar-item:hover {
   color:#111827!important;
   background:#eef2f7!important;
+}
+
+.erp-shell.light-mode .erp-sidebar-collapse-button {
+  color:#ffffff!important;
+  background:#111827!important;
+  border-color:#111827!important;
+  box-shadow:0 0 0 3px rgba(17,24,39,.10),0 12px 24px rgba(15,23,42,.18)!important;
+}
+
+.erp-shell.light-mode .erp-sidebar-collapse-button:hover {
+  color:#ffffff!important;
+  background:#4f46e5!important;
 }
 
 .erp-shell.light-mode .erp-sidebar-nav .erp-sidebar-item.is-active {
@@ -1270,8 +1293,10 @@ html{color-scheme:dark}::selection{background:rgba(0,255,136,.18);color:#eafff5}
 }
 
 .erp-shell.light-mode .erp-sidebar.is-collapsed .erp-sidebar-collapse-button {
-  background:#f8fafc!important;
-  border-color:#e5e7eb!important;
+  color:#ffffff!important;
+  background:#111827!important;
+  border-color:#f8fafc!important;
+  box-shadow:0 0 0 1px rgba(17,24,39,.35),0 10px 22px rgba(15,23,42,.18)!important;
 }
 
 /* Final light-mode sidebar cascade guard: legacy generic nav/span rules above must not reshape the new sidebar items. */

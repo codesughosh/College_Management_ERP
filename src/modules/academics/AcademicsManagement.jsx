@@ -1,12 +1,12 @@
 import { useEffect, useMemo, useState } from 'react';
-import { BookOpen, CalendarDays, GraduationCap, Layers, Plus, Search } from 'lucide-react';
+import { Plus, Search } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { createAcademicBatch, createAcademicCalendarEvent, createAcademicProgram, createAcademicSubject, getAcademicsData } from '../../firebase/db';
 import { isFirebaseConfigured } from '../../firebase/config';
 import { canAccess, defaultRoles } from '../userRoles/rolePermissions';
 import StatusBadge from '../students/components/StatusBadge';
 import { demoAcademicBatches, demoAcademicCalendarEvents, demoAcademicPrograms, demoAcademicSubjects } from './demoAcademics';
-import { filterAcademicItems, formatDisplayDate, summarizeAcademics, validateBatch, validateCalendarEvent, validateProgram, validateSubject } from './academicUtils';
+import { filterAcademicItems, formatDisplayDate, validateBatch, validateCalendarEvent, validateProgram, validateSubject } from './academicUtils';
 
 const tabs = [
   ['programs', 'Programs'],
@@ -22,7 +22,6 @@ export default function AcademicsManagement({ currentUser, academicYear = '2026-
   const [events, setEvents] = useState(isFirebaseConfigured ? [] : demoAcademicCalendarEvents);
   const [activeTab, setActiveTab] = useState('programs');
   const [search, setSearch] = useState('');
-  const [loading, setLoading] = useState(isFirebaseConfigured);
   const [loadError, setLoadError] = useState('');
 
   useEffect(() => {
@@ -37,8 +36,6 @@ export default function AcademicsManagement({ currentUser, academicYear = '2026-
       } catch (error) {
         console.warn('Using demo academic data because Firestore is not reachable.', error);
         setLoadError('Unable to load Firestore academic records. Showing demo/local records.');
-      } finally {
-        setLoading(false);
       }
     };
     loadAcademics();
@@ -46,18 +43,10 @@ export default function AcademicsManagement({ currentUser, academicYear = '2026-
 
   const currentRoleId = currentUser?.roleId || 'admin';
   const canManage = canAccess(defaultRoles, currentRoleId, 'academics.manage');
-  const summary = summarizeAcademics(programs, subjects, batches, events);
   const activeRows = useMemo(() => {
     const map = { programs, subjects, batches, calendar: events };
     return filterAcademicItems(map[activeTab] || [], search);
   }, [activeTab, batches, events, programs, search, subjects]);
-
-  const stats = [
-    { label: 'Programs', value: summary.programs, icon: <GraduationCap size={22} /> },
-    { label: 'Subjects', value: summary.subjects, icon: <BookOpen size={22} /> },
-    { label: 'Batches', value: summary.batches, icon: <Layers size={22} /> },
-    { label: 'Published Events', value: summary.publishedEvents, icon: <CalendarDays size={22} /> },
-  ];
 
   const createQuickRecord = async () => {
     if (!canManage) {
@@ -117,15 +106,6 @@ export default function AcademicsManagement({ currentUser, academicYear = '2026-
         <button onClick={createQuickRecord} disabled={!canManage} className="h-10 px-5 rounded-full bg-[#fb9a5b] text-white font-semibold text-sm flex items-center gap-2 disabled:bg-slate-300">
           <Plus size={16} /> Create {tabs.find(([id]) => id === activeTab)?.[1]}
         </button>
-      </div>
-
-      <div className="grid sm:grid-cols-2 xl:grid-cols-4 gap-4 py-5">
-        {stats.map(({ label, value, icon }) => (
-          <div key={label} className="bg-[#f5f5f6] rounded-lg p-4 flex items-center gap-4">
-            <div className="h-12 w-12 bg-white rounded-lg flex items-center justify-center text-[#34363d] shadow-sm">{icon}</div>
-            <div><div className="text-xs text-slate-500">{label}</div><div className="text-xl font-bold">{loading ? '...' : value}</div></div>
-          </div>
-        ))}
       </div>
 
       <div className="flex flex-wrap items-center gap-2 mb-4">

@@ -622,6 +622,7 @@ export async function getParentPortalData(academicYear = '', currentUser = {}) {
       documentsByRecordId,
       documentsByStudentId,
       noticeItems,
+      academicSubjects,
     ] = await Promise.all([
       listCollectionWhereIn('studentAttendanceRecords', 'entityRecordId', studentRecordIds, yearConstraints),
       listCollectionWhereIn('studentAttendanceRecords', 'entityId', studentIds, yearConstraints),
@@ -634,6 +635,7 @@ export async function getParentPortalData(academicYear = '', currentUser = {}) {
       listCollectionWhereIn('managedDocuments', 'ownerRecordId', studentRecordIds, [where('ownerType', '==', 'Student'), ...yearConstraints]),
       listCollectionWhereIn('managedDocuments', 'ownerId', studentIds, [where('ownerType', '==', 'Student'), ...yearConstraints]),
       listCollection('noticeItems', yearConstraints),
+      listCollection('academicSubjects', yearConstraints),
     ]);
 
     return {
@@ -644,10 +646,11 @@ export async function getParentPortalData(academicYear = '', currentUser = {}) {
       feeAssignments: mergeById([feesByRecordId, feesByStudentId]),
       noticeItems: filterByAcademicYear(noticeItems, academicYear),
       managedDocuments: mergeById([documentsByRecordId, documentsByStudentId]),
+      academicSubjects: filterByAcademicYear(academicSubjects, academicYear),
     };
   }
 
-  const [students, studentAttendance, marksEntries, studentResults, feeAssignments, noticeItems, managedDocuments] = await Promise.all([
+  const [students, studentAttendance, marksEntries, studentResults, feeAssignments, noticeItems, managedDocuments, academicSubjects] = await Promise.all([
     listCollection('students', yearConstraints),
     listCollection('studentAttendanceRecords', yearConstraints),
     listCollection('marksEntries', yearConstraints),
@@ -655,9 +658,10 @@ export async function getParentPortalData(academicYear = '', currentUser = {}) {
     listCollection('feeAssignments', yearConstraints),
     listCollection('noticeItems', yearConstraints),
     listCollection('managedDocuments', yearConstraints),
+    listCollection('academicSubjects', yearConstraints),
   ]);
 
-  return { students: filterByAcademicYear(students, academicYear), studentAttendance: filterByAcademicYear(studentAttendance, academicYear), marksEntries: filterByAcademicYear(marksEntries, academicYear), studentResults: filterByAcademicYear(studentResults, academicYear), feeAssignments: filterByAcademicYear(feeAssignments, academicYear), noticeItems: filterByAcademicYear(noticeItems, academicYear), managedDocuments: filterByAcademicYear(managedDocuments, academicYear) };
+  return { students: filterByAcademicYear(students, academicYear), studentAttendance: filterByAcademicYear(studentAttendance, academicYear), marksEntries: filterByAcademicYear(marksEntries, academicYear), studentResults: filterByAcademicYear(studentResults, academicYear), feeAssignments: filterByAcademicYear(feeAssignments, academicYear), noticeItems: filterByAcademicYear(noticeItems, academicYear), managedDocuments: filterByAcademicYear(managedDocuments, academicYear), academicSubjects: filterByAcademicYear(academicSubjects, academicYear) };
 }
 
 export async function getAcademicsData(academicYear = '') {

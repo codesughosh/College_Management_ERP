@@ -10,7 +10,7 @@ import {
 } from '../src/modules/parentPortal/parentPortalUtils.js';
 
 const students = [
-  { id: 's1', studentId: 'STU-1', name: 'One', guardianEmail: 'parent@test.com', status: 'Active' },
+  { id: 's1', studentId: 'STU-1', name: 'One', guardianEmail: 'parent@test.com', status: 'Active', program: 'BSC Nursing' },
   { id: 's2', studentId: 'STU-2', name: 'Two', guardianEmail: 'other@test.com', status: 'Active' },
 ];
 
@@ -25,17 +25,23 @@ assert.equal(getParentLinkedStudents(students, { roleId: 'admin' }).length, 2);
 assert.equal(getParentLinkedStudents(students, { roleId: 'parent', linkedStudentIds: [] }).length, 0);
 
 const records = [
-  { id: 'r1', entityRecordId: 's1', entityId: 'STU-1', status: 'Present', dateText: '18 Jun 2026' },
+  { id: 'r1', entityRecordId: 's1', entityId: 'STU-1', status: 'Present', subject: 'Nursing Foundation', dateText: '18 Jun 2026' },
   { id: 'r2', studentRecordId: 's2', studentId: 'STU-2', status: 'Absent', dateText: '18 Jun 2026' },
 ];
 assert.equal(recordsForStudent(records, students[0]).length, 1);
-assert.deepEqual(buildParentAttendance(recordsForStudent(records, students[0])), {
+assert.deepEqual(buildParentAttendance(recordsForStudent(records, students[0]), students[0]), {
   total: 1,
   present: 1,
   absent: 0,
   leave: 0,
   percentage: 100,
-  recent: [records[0]],
+  subjectRows: [
+    { subject: 'Anatomy & Physiology', total: 0, present: 0, absent: 0, leave: 0, percentage: 0, status: 'Not Marked' },
+    { subject: 'Nursing Foundation', total: 1, present: 1, absent: 0, leave: 0, percentage: 100, status: '100%' },
+    { subject: 'Nutrition', total: 0, present: 0, absent: 0, leave: 0, percentage: 0, status: 'Not Marked' },
+    { subject: 'Biochemistry', total: 0, present: 0, absent: 0, leave: 0, percentage: 0, status: 'Not Marked' },
+    { subject: 'Psychology', total: 0, present: 0, absent: 0, leave: 0, percentage: 0, status: 'Not Marked' },
+  ],
 });
 
 const performance = buildAcademicPerformance(

@@ -1,5 +1,3 @@
-import StatusBadge from '../../students/components/StatusBadge';
-
 export default function AttendanceCard({ attendance }) {
   return (
     <div className="bg-white border border-slate-100 rounded-lg p-5 shadow-sm">
@@ -13,13 +11,22 @@ export default function AttendanceCard({ attendance }) {
         <div className="border-l-2 border-slate-300 pl-3"><span className="block text-xs text-slate-500">Leave</span><b>{attendance.leave}</b></div>
       </div>
       <div className="divide-y divide-slate-100 border-t border-slate-100">
-        {attendance.recent.slice(0, 4).map((item) => (
-          <div key={item.id} className="flex items-center justify-between py-3 text-sm">
-            <span>{item.dateText}</span>
-            <StatusBadge value={item.status} />
+        {attendance.subjectRows.map((item) => (
+          <div key={item.subject} className="grid grid-cols-[1fr_auto] gap-4 py-3 text-sm">
+            <div className="min-w-0">
+              <div className="font-semibold text-slate-900 truncate">{item.subject}</div>
+              <div className="mt-1 flex flex-wrap gap-3 text-xs text-slate-500">
+                <span>Present: {item.present}</span>
+                <span>Absent: {item.absent}</span>
+                <span>Leave: {item.leave}</span>
+              </div>
+            </div>
+            <span className={`self-start rounded-md border px-2.5 py-1 text-[11px] font-semibold ${item.total ? 'border-emerald-200 bg-emerald-50 text-emerald-700' : 'border-slate-200 bg-slate-50 text-slate-600'}`}>
+              {item.status}
+            </span>
           </div>
         ))}
-        {!attendance.recent.length && <div className="text-sm text-slate-500">No attendance records available.</div>}
+        {!attendance.subjectRows.length && <div className="text-sm text-slate-500">No subjects found for this course.</div>}
       </div>
     </div>
   );

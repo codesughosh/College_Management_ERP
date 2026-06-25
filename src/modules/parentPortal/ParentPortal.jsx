@@ -15,6 +15,9 @@ import {
   visibleStudentDocuments,
 } from './parentPortalUtils';
 import {
+  demoAcademicSubjects,
+} from '../academics/demoAcademics';
+import {
   demoParentAttendance,
   demoParentDocuments,
   demoParentFees,
@@ -38,6 +41,7 @@ export default function ParentPortal({ currentUser, academicYear = '2026-2027' }
   const [fees, setFees] = useState(isFirebaseConfigured ? [] : demoParentFees);
   const [notices, setNotices] = useState(isFirebaseConfigured ? [] : demoParentNotices);
   const [documents, setDocuments] = useState(isFirebaseConfigured ? [] : demoParentDocuments);
+  const [academicSubjects, setAcademicSubjects] = useState(isFirebaseConfigured ? [] : demoAcademicSubjects);
   const [selectedId, setSelectedId] = useState(isFirebaseConfigured ? '' : demoParentStudents[0]?.id || '');
   const [loading, setLoading] = useState(isFirebaseConfigured);
   const [loadError, setLoadError] = useState('');
@@ -58,6 +62,7 @@ export default function ParentPortal({ currentUser, academicYear = '2026-2027' }
         setFees(data.feeAssignments);
         setNotices(data.noticeItems);
         setDocuments(data.managedDocuments);
+        setAcademicSubjects(data.academicSubjects || []);
       } catch (error) {
         console.warn('Using demo parent portal data because Firestore is not reachable.', error);
         setLoadError('Unable to load Firestore parent portal records. Showing demo/local records.');
@@ -72,7 +77,7 @@ export default function ParentPortal({ currentUser, academicYear = '2026-2027' }
   const canView = canAccess(defaultRoles, currentRoleId, 'parentPortal.view');
   const selectedStudent = students.find((student) => student.id === selectedId) || students[0];
 
-  const studentAttendance = useMemo(() => buildParentAttendance(recordsForStudent(attendance, selectedStudent)), [attendance, selectedStudent]);
+  const studentAttendance = useMemo(() => buildParentAttendance(recordsForStudent(attendance, selectedStudent), selectedStudent, academicSubjects), [academicSubjects, attendance, selectedStudent]);
   const performance = useMemo(() => buildAcademicPerformance(recordsForStudent(marks, selectedStudent), recordsForStudent(results, selectedStudent)), [marks, results, selectedStudent]);
   const feeStatus = useMemo(() => buildFeeStatus(recordsForStudent(fees, selectedStudent)), [fees, selectedStudent]);
   const parentNotices = useMemo(() => visibleParentNotices(notices), [notices]);

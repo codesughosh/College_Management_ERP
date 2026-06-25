@@ -1,8 +1,8 @@
-import { GraduationCap, Moon, Sun } from 'lucide-react';
+import { ChevronLeft, ChevronRight, GraduationCap, Moon, Sun } from 'lucide-react';
 import { getEnabledModules } from '../../moduleRegistry';
 import { canAccess, defaultRoles } from '../../userRoles/rolePermissions';
 
-export default function Sidebar({ activePage, collapsed = false, currentUser, institute, onNavigate, onThemeToggle, themeMode = 'dark' }) {
+export default function Sidebar({ activePage, collapsed = false, currentUser, institute, onNavigate, onThemeToggle, onToggleCollapse, themeMode = 'dark' }) {
   const currentRoleId = currentUser?.roleId || 'admin';
   const isSuperAdmin = currentRoleId === 'super-admin';
   const collegeName = institute?.name || currentUser?.selectedCollege?.name || 'College';
@@ -32,82 +32,78 @@ export default function Sidebar({ activePage, collapsed = false, currentUser, in
       };
     });
 
+  const selectTheme = (nextTheme) => {
+    if (nextTheme !== themeMode) onThemeToggle?.();
+  };
+
+  const renderNavButton = ({ id, label, icon, status }) => {
+    const active = activePage === id;
+    return (
+      <button
+        key={id}
+        onClick={() => onNavigate(id)}
+        className={`erp-sidebar-item ${active ? 'is-active' : ''}`}
+        title={collapsed ? label : undefined}
+      >
+        <span className="erp-sidebar-item-icon">{icon}</span>
+        {!collapsed && <span className="erp-sidebar-item-label">{label}</span>}
+        {!collapsed && status === 'planned' && <span className="erp-sidebar-item-badge">Soon</span>}
+        {!collapsed && status === 'demo' && <span className="erp-sidebar-item-badge">Demo</span>}
+      </button>
+    );
+  };
+
   return (
     <aside className={`erp-sidebar ${collapsed ? 'is-collapsed' : ''} bg-white border-r border-slate-200 shrink-0 hidden lg:flex flex-col transition-all duration-300`}>
-      <div className={collapsed ? 'px-5 pt-5 pb-4' : 'px-9 pt-5 pb-4'}>
-        <div className={`flex items-center ${collapsed ? 'justify-center' : 'gap-3'}`}>
-          <div className="h-12 w-12 rounded-full border-2 border-emerald-700 flex items-center justify-center text-emerald-700 shrink-0">
+      <div className="erp-sidebar-sticky">
+        <div className="erp-sidebar-brand-card">
+          <div className="erp-sidebar-logo">
             <GraduationCap className="erp-sidebar-logo-icon" size={26} />
           </div>
           {!collapsed && (
-            <div className="leading-tight">
-              <div className="text-[13px] font-bold text-slate-900">{collegeName}</div>
-              <div className="text-[10px] text-slate-500">ERP Management Suite</div>
+            <div className="erp-sidebar-brand-copy">
+              <div className="erp-sidebar-brand-name">{collegeName}</div>
+              <div className="erp-sidebar-brand-subtitle">ERP Management Suite</div>
             </div>
           )}
+          <button
+            type="button"
+            onClick={onToggleCollapse}
+            className="erp-sidebar-collapse-button"
+            title={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+          >
+            {collapsed ? <ChevronRight size={18} /> : <ChevronLeft size={18} />}
+          </button>
+        </div>
+
+        <div className="erp-sidebar-menu-card">
+          <nav className="erp-sidebar-nav">
+            {navItems.map(renderNavButton)}
+            {footerItems.map(renderNavButton)}
+          </nav>
+        </div>
+
+        <div className="erp-sidebar-theme-switch" aria-label="Theme mode">
+          <button
+            type="button"
+            onClick={() => selectTheme('light')}
+            className={themeMode === 'light' ? 'is-active' : ''}
+            title="Light mode"
+          >
+            <Sun size={18} />
+            {!collapsed && <span>Light</span>}
+          </button>
+          <button
+            type="button"
+            onClick={() => selectTheme('dark')}
+            className={themeMode === 'dark' ? 'is-active' : ''}
+            title="Dark mode"
+          >
+            <Moon size={18} />
+            {!collapsed && <span>Dark</span>}
+          </button>
         </div>
       </div>
-
-      <nav className={`${collapsed ? 'px-4' : 'px-9'} py-3 flex flex-col flex-1`}>
-        {navItems.map(({ id, label, icon, status }) => {
-          const active = activePage === id;
-          return (
-            <button
-              key={id}
-              onClick={() => onNavigate(id)}
-              className={`h-16 flex items-center text-[15px] ${
-                collapsed ? 'justify-center' : 'justify-between'
-              } ${active ? 'text-slate-800' : 'text-slate-600'}`}
-              title={collapsed ? label : undefined}
-            >
-              <span className={`flex items-center ${collapsed ? 'justify-center h-11 w-11' : 'gap-3'} ${active ? 'bg-[#e7e7ea] rounded-md px-3 py-3 w-full' : ''}`}>
-                {icon}
-                {!collapsed && label}
-                {!collapsed && status === 'planned' && <span className="ml-auto text-[9px] uppercase text-slate-400">Soon</span>}
-                {!collapsed && status === 'demo' && <span className="ml-auto text-[9px] uppercase text-slate-400">Demo</span>}
-              </span>
-            </button>
-          );
-        })}
-      </nav>
-
-      <nav className={`${collapsed ? 'px-4' : 'px-9'} pb-5 flex flex-col mt-auto`}>
-          <button
-            onClick={onThemeToggle}
-            className={`h-14 flex items-center text-[15px] text-slate-600 ${collapsed ? 'justify-center' : 'justify-between'}`}
-            title={collapsed ? 'Theme mode' : undefined}
-          >
-            <span className={`flex items-center ${collapsed ? 'justify-center h-11 w-11' : 'gap-3'}`}>
-              {themeMode === 'dark' ? <Sun className="erp-sidebar-icon" size={18} /> : <Moon className="erp-sidebar-icon" size={18} />}
-              {!collapsed && (
-                <>
-                  <span>{themeMode === 'dark' ? 'Light Mode' : 'Dark Mode'}</span>
-                  <span className="ml-auto h-6 w-11 rounded-full bg-[#e7e7ea] border border-slate-200 p-0.5 flex items-center">
-                    <span className={`h-5 w-5 rounded-full bg-white shadow-sm transition-transform ${themeMode === 'dark' ? 'translate-x-0' : 'translate-x-5'}`} />
-                  </span>
-                </>
-              )}
-            </span>
-          </button>
-          {footerItems.map(({ id, label, icon }) => {
-            const active = activePage === id;
-            return (
-              <button
-                key={id}
-                onClick={() => onNavigate(id)}
-                className={`h-14 flex items-center text-[15px] ${
-                  collapsed ? 'justify-center' : 'justify-between'
-                } ${active ? 'text-slate-800' : 'text-slate-600'}`}
-                title={collapsed ? label : undefined}
-              >
-                <span className={`flex items-center ${collapsed ? 'justify-center h-11 w-11' : 'gap-3'} ${active ? 'bg-[#e7e7ea] rounded-md px-3 py-3 w-full' : ''}`}>
-                  {icon}
-                  {!collapsed && label}
-                </span>
-              </button>
-            );
-          })}
-        </nav>
     </aside>
   );
 }

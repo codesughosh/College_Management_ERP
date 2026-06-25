@@ -553,6 +553,7 @@ export default function StudentInformationManagement({ user, onLogout }) {
             institute={institute}
             onNavigate={setActivePage}
             onThemeToggle={() => setThemeMode((prev) => (prev === 'dark' ? 'light' : 'dark'))}
+            onToggleCollapse={() => setSidebarCollapsed((prev) => !prev)}
             themeMode={themeMode}
           />
           <main className="flex-1 min-w-0 bg-[#f0f1f3] flex flex-col">

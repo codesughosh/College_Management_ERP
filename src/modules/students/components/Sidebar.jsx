@@ -5,7 +5,7 @@ import { canAccess, defaultRoles } from '../../userRoles/rolePermissions';
 export default function Sidebar({ activePage, collapsed = false, currentUser, institute, onNavigate, onThemeToggle, onToggleCollapse, themeMode = 'dark' }) {
   const currentRoleId = currentUser?.roleId || 'admin';
   const isSuperAdmin = currentRoleId === 'super-admin';
-  const collegeName = institute?.name || currentUser?.selectedCollege?.name || '-';
+  const collegeName = institute?.name || '-';
   const navItems = getEnabledModules()
     .filter((module) => !module.permission || canAccess(defaultRoles, currentRoleId, module.permission))
     .filter((module) => !module.footer)

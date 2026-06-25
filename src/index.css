@@ -976,7 +976,7 @@ html{color-scheme:dark}::selection{background:rgba(0,255,136,.18);color:#eafff5}
 
 .erp-shell .erp-sidebar-brand-name {
   color:var(--erp-text)!important;
-  font-size:14px;
+  font-size:13px;
   font-weight:800;
   overflow:hidden;
   text-overflow:ellipsis;
@@ -989,7 +989,7 @@ html{color-scheme:dark}::selection{background:rgba(0,255,136,.18);color:#eafff5}
 .erp-shell .erp-sidebar-brand-subtitle {
   margin-top:4px;
   color:var(--erp-muted)!important;
-  font-size:10px;
+  font-size:9px;
 }
 
 .erp-shell .erp-sidebar-collapse-button {
@@ -1086,15 +1086,15 @@ html{color-scheme:dark}::selection{background:rgba(0,255,136,.18);color:#eafff5}
 .erp-shell .erp-sidebar-item-label {
   min-width:0;
   flex:1;
-  font-size:15px;
-  font-weight:700;
+  font-size:13.5px;
+  font-weight:650;
   white-space:nowrap;
   overflow:hidden;
   text-overflow:ellipsis;
 }
 
 .erp-shell .erp-sidebar-item-badge {
-  font-size:9px;
+  font-size:8px;
   font-weight:800;
   text-transform:uppercase;
   color:currentColor!important;
@@ -1121,8 +1121,8 @@ html{color-scheme:dark}::selection{background:rgba(0,255,136,.18);color:#eafff5}
   color:var(--erp-muted)!important;
   background:rgba(255,255,255,.035)!important;
   box-shadow:none!important;
-  font-size:12px;
-  font-weight:800;
+  font-size:11px;
+  font-weight:750;
 }
 
 .erp-shell .erp-sidebar-theme-switch button.is-active {

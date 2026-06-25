@@ -544,8 +544,8 @@ export default function StudentInformationManagement({ user, onLogout }) {
   };
 
   return (
-    <div className={`erp-shell ${themeMode === 'light' ? 'light-mode' : ''} min-h-screen bg-white text-slate-900`}>
-        <div className="flex min-h-screen">
+    <div className={`erp-shell ${themeMode === 'light' ? 'light-mode' : ''} h-screen overflow-hidden bg-white text-slate-900`}>
+        <div className="flex h-screen overflow-hidden">
           <Sidebar
             activePage={activePage}
             collapsed={sidebarCollapsed}
@@ -556,7 +556,7 @@ export default function StudentInformationManagement({ user, onLogout }) {
             onToggleCollapse={() => setSidebarCollapsed((prev) => !prev)}
             themeMode={themeMode}
           />
-          <main className="flex-1 min-w-0 bg-[#f0f1f3] flex flex-col">
+          <main className="flex-1 min-w-0 h-screen overflow-hidden bg-[#f0f1f3] flex flex-col">
             <TopHeader
               academicYear={academicYear}
               academicYears={academicYearOptions}
@@ -572,7 +572,7 @@ export default function StudentInformationManagement({ user, onLogout }) {
               onLogout={onLogout}
             />
 
-            <div className="flex-1 p-4 lg:p-5">
+            <div className="flex-1 min-h-0 overflow-y-auto p-4 lg:p-5">
               <section className="erp-workspace bg-white min-h-full p-5 lg:p-7">
                 <ModuleErrorBoundary resetKey={activePage}>
                 {!canOpenActiveModule ? (

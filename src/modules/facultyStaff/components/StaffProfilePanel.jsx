@@ -18,6 +18,7 @@ export default function StaffProfilePanel({
   leaveRecords,
   onAttendance,
   onLeaveDecision,
+  showActions = true,
   staffMember,
 }) {
   const relatedLeaves = leaveRecords.slice(0, 4);
@@ -46,6 +47,7 @@ export default function StaffProfilePanel({
             <DetailItem label="Type" value={staffMember.staffType} />
             <DetailItem label="Qualification" value={staffMember.qualification} full />
           </div>
+          {showActions && (
           <div className="grid grid-cols-2 gap-2 mt-5">
             {['Present', 'Absent'].map((status) => (
               <button
@@ -58,6 +60,7 @@ export default function StaffProfilePanel({
               </button>
             ))}
           </div>
+          )}
         </div>
       </div>
 
@@ -111,7 +114,7 @@ export default function StaffProfilePanel({
               </div>
               <div className="text-xs text-slate-500 mt-1">{leave.fromDate} to {leave.toDate}</div>
               <div className="text-xs text-slate-600 mt-1">{leave.reason}</div>
-              {leave.status === 'Pending Review' && canManageLeave && (
+              {showActions && leave.status === 'Pending Review' && canManageLeave && (
                 <div className="flex gap-2 mt-3">
                   <button onClick={() => onLeaveDecision(leave, 'Approved')} className="h-8 px-3 rounded-md bg-white border border-emerald-200 text-emerald-700 text-xs font-semibold flex items-center gap-1">
                     <CheckCircle size={13} /> Approve

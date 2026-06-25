@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Plus, Search, Users } from 'lucide-react';
+import { ArrowLeft, Plus, Search, Users } from 'lucide-react';
 import toast from 'react-hot-toast';
 import {
   archiveStaffMember,
@@ -19,6 +19,48 @@ import LeaveModal from './components/LeaveModal';
 import StaffModal from './components/StaffModal';
 import StaffProfilePanel from './components/StaffProfilePanel';
 import StaffTable from './components/StaffTable';
+
+function StaffDetailPage({
+  attendanceRecords,
+  canManageLeave,
+  canMarkAttendance,
+  leaveRecords,
+  onAttendance,
+  onBack,
+  onLeaveDecision,
+  staffMember,
+}) {
+  return (
+    <div>
+      <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-4 pb-6 border-b border-slate-100 mb-5">
+        <div>
+          <div className="text-sm font-bold text-slate-500 mb-2">Academics / <span className="text-[#f39a5f]">Staff Details</span></div>
+          <h1 className="text-2xl font-bold text-slate-900">{staffMember.name}</h1>
+          <p className="text-sm text-slate-500 mt-1">{staffMember.employeeId} / {staffMember.staffType}</p>
+        </div>
+        <button
+          type="button"
+          onClick={onBack}
+          className="h-10 px-4 rounded-full bg-[#33373e] text-white font-semibold text-sm flex items-center gap-2 self-start xl:self-auto"
+        >
+          <ArrowLeft size={16} /> Back
+        </button>
+      </div>
+
+      <StaffProfilePanel
+        attendanceRecords={attendanceRecords}
+        canManageLeave={canManageLeave}
+        canMarkAttendance={canMarkAttendance}
+        className="w-full"
+        leaveRecords={leaveRecords}
+        onAttendance={onAttendance}
+        onLeaveDecision={onLeaveDecision}
+        showActions={false}
+        staffMember={staffMember}
+      />
+    </div>
+  );
+}
 
 export default function FacultyStaffManagement({ currentUser, academicYear = '2026-2027' }) {
   const [staffMembers, setStaffMembers] = useState(isFirebaseConfigured ? [] : demoStaffMembers);
@@ -273,24 +315,36 @@ export default function FacultyStaffManagement({ currentUser, academicYear = '20
 
   return (
     <div>
+      {selectedStaff ? (
+        <StaffDetailPage
+          attendanceRecords={selectedAttendance}
+          canManageLeave={canManageLeave}
+          canMarkAttendance={canMarkAttendance}
+          leaveRecords={selectedLeaves}
+          onAttendance={markAttendance}
+          onBack={() => setSelectedId('')}
+          onLeaveDecision={decideLeave}
+          staffMember={selectedStaff}
+        />
+      ) : (
+      <>
       <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-4 pb-6 border-b border-slate-100">
         <div>
           <div className="text-sm font-bold text-slate-500 mb-2">Academics / <span className="text-[#f39a5f]">Faculty & Staff Management</span></div>
           <h1 className="text-2xl font-bold text-slate-900">Faculty & Staff Management</h1>
-          <p className="text-sm text-slate-500 mt-1">List of all faculty and staff. Click a record to view information and actions.</p>
+          <p className="text-sm text-slate-500 mt-1">Browse faculty and staff records.</p>
           {!isFirebaseConfigured && <p className="text-xs text-orange-600 mt-2">Demo mode: add Firebase keys to persist records.</p>}
           {loadError && <p className="text-xs text-rose-600 mt-2">{loadError}</p>}
         </div>
       </div>
 
-      <>
       <div className="erp-branch-focus flex flex-col lg:flex-row lg:items-center justify-between gap-4 my-5 rounded-lg bg-[#f5f5f6] p-5 border border-slate-100">
         <div className="flex items-center gap-4 min-w-0">
           <div className="erp-branch-icon h-16 w-16 rounded-lg bg-white text-[#fb8d49] flex items-center justify-center shrink-0"><Users size={28} /></div>
           <div className="min-w-0">
             <div className="text-xs font-bold text-slate-500">Faculty & Staff</div>
             <h2 className="text-2xl font-extrabold text-slate-900 mt-1">All Faculty & Staff</h2>
-            <p className="text-sm text-slate-500 mt-1">Click any record to view full information.</p>
+            <p className="text-sm text-slate-500 mt-1">Browse active and archived records.</p>
           </div>
         </div>
         <div className="flex flex-wrap gap-2">
@@ -350,47 +404,11 @@ export default function FacultyStaffManagement({ currentUser, academicYear = '20
         </div>
       </div>
       </>
+      )}
 
       {showStaffModal && <StaffModal departments={departments} onClose={() => setShowStaffModal(false)} onSave={saveStaff} />}
       {editingStaff && <StaffModal mode="edit" initialStaff={editingStaff} departments={departments} onClose={() => setEditingStaff(null)} onSave={updateStaff} />}
       {leaveStaff && <LeaveModal staffMember={leaveStaff} onClose={() => setLeaveStaff(null)} onSave={saveLeave} />}
-      {selectedStaff && (
-        <div
-          className="erp-student-modal-overlay fixed inset-0 z-50 flex items-center justify-center p-4"
-          onClick={() => setSelectedId('')}
-        >
-          <div
-            className="erp-student-modal-panel relative w-full max-w-4xl max-h-[90vh] overflow-y-auto bg-white rounded-xl shadow-2xl border border-slate-200"
-            onClick={(event) => event.stopPropagation()}
-          >
-            <button
-              type="button"
-              onClick={() => setSelectedId('')}
-              className="absolute right-4 top-4 z-10 h-10 w-10 rounded-full bg-white/90 border border-slate-200 text-slate-600 hover:bg-slate-100 flex items-center justify-center text-xl leading-none"
-              title="Close staff details"
-            >
-              x
-            </button>
-            <div className="p-4 lg:p-5">
-              <StaffProfilePanel
-                staffMember={selectedStaff}
-                leaveRecords={selectedLeaves}
-                attendanceRecords={selectedAttendance}
-                canManageLeave={canManageLeave}
-                canMarkAttendance={canMarkAttendance}
-                onAttendance={markAttendance}
-                onLeaveDecision={decideLeave}
-                className="w-full"
-              />
-              <div className="grid sm:grid-cols-3 gap-2">
-                <button onClick={() => setEditingStaff(selectedStaff)} disabled={!canEditStaff} className="h-10 rounded-lg bg-[#33373e] text-white text-sm font-semibold disabled:bg-slate-300">Edit</button>
-                <button onClick={() => selectedStaff.status === 'Archived' ? restoreStaff(selectedStaff) : archiveStaff(selectedStaff)} disabled={!canArchiveStaff} className="h-10 rounded-lg bg-[#33373e] text-white text-sm font-semibold disabled:bg-slate-300">{selectedStaff.status === 'Archived' ? 'Restore' : 'Archive'}</button>
-                <button onClick={() => setLeaveStaff(selectedStaff)} disabled={!canManageLeave} className="h-10 rounded-lg bg-[#33373e] text-white text-sm font-semibold disabled:bg-slate-300">Leave Request</button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

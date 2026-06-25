@@ -26,7 +26,7 @@ function DetailGrid({ fields, student, title }) {
   );
 }
 
-export default function StudentProfileCard({ canEdit = true, student, onEdit }) {
+export default function StudentProfileCard({ canEdit = true, showSummaryTabs = true, student, onEdit }) {
   const summaryTabs = [
     { label: 'Profile', value: 'Open', icon: <UserRound size={14} /> },
     { label: 'Attendance', value: '84%', icon: <Bell size={14} /> },
@@ -55,6 +55,7 @@ export default function StudentProfileCard({ canEdit = true, student, onEdit }) 
       </div>
 
       <div className="p-5">
+        {showSummaryTabs && (
         <div className="flex flex-wrap gap-2 mb-5">
           {summaryTabs.map((tab, index) => (
             <button
@@ -70,6 +71,7 @@ export default function StudentProfileCard({ canEdit = true, student, onEdit }) 
             </button>
           ))}
         </div>
+        )}
 
         <div className="flex items-center justify-between gap-3 mb-4">
           <h3 className="font-bold text-slate-900">Basic Details</h3>

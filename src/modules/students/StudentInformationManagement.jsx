@@ -1,5 +1,6 @@
 import { Component, useEffect, useMemo, useState } from 'react';
 import {
+  ArrowLeft,
   Download,
   Search,
   Users,
@@ -582,18 +583,23 @@ export default function StudentInformationManagement({ user, onLogout }) {
                 ) : activePage === 'dashboard' ? (
                   <DashboardManagement academicYear={academicYear} currentUser={user} onNavigate={setActivePage} />
                 ) : activePage === 'students' ? (
+                selectedStudent ? (
+                  <StudentDetailPage
+                    latestAdmission={latestAdmission}
+                    student={selectedStudent}
+                    onBack={() => setSelectedId('')}
+                  />
+                ) : (
                 <>
                 <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-4 pb-6 border-b border-slate-100">
                   <div>
                     <div className="text-sm font-bold text-slate-500 mb-2">Academics / <span className="text-[#f39a5f]">Student Information Management</span></div>
                     <h1 className="text-2xl font-bold text-slate-900">Student Information Management</h1>
-                    <p className="text-sm text-slate-500 mt-1">List of all students. Click a student to view information and edit details.</p>
                     {!isFirebaseConfigured && <p className="text-xs text-orange-600 mt-2">Demo mode: add Firebase keys to persist records.</p>}
                     {loadError && <p className="text-xs text-rose-600 mt-2">{loadError}</p>}
                   </div>
                 </div>
 
-                <>
                 <div className="erp-branch-focus flex flex-col lg:flex-row lg:items-center justify-between gap-4 mb-5 rounded-lg bg-[#f5f5f6] p-5 border border-slate-100">
                   <div className="flex items-center gap-4 min-w-0">
                     <div className="erp-branch-icon h-16 w-16 rounded-lg bg-white text-[#fb8d49] flex items-center justify-center shrink-0">
@@ -604,13 +610,8 @@ export default function StudentInformationManagement({ user, onLogout }) {
                       <h2 className="text-2xl font-extrabold text-slate-900 mt-1">
                         {selectedCourseCode === 'all' ? 'All Students' : courses.find((course) => course.courseCode === selectedCourseCode)?.courseName || 'Selected Course'}
                       </h2>
-                      <p className="text-sm text-slate-500 mt-1">Click any student name to display full admission information.</p>
+                      <p className="text-sm text-slate-500 mt-1">Browse active and archived records.</p>
                     </div>
-                  </div>
-                  <div className="flex flex-wrap gap-2">
-                    <span className="h-10 px-4 rounded-full bg-white border border-slate-200 text-slate-700 font-bold text-xs flex items-center">
-                      Student list
-                    </span>
                   </div>
                 </div>
 
@@ -661,7 +662,7 @@ export default function StudentInformationManagement({ user, onLogout }) {
 
                 </div>
                 </>
-                </>
+                )
                 ) : activePage === 'reports' ? (
                   <StudentReportView
                     academicYear={academicYear}
@@ -740,40 +741,40 @@ export default function StudentInformationManagement({ user, onLogout }) {
           onSave={saveStudentProfile}
         />
       )}
-      {selectedStudent && activePage === 'students' && (
-        <div
-          className="erp-student-modal-overlay fixed inset-0 z-50 flex items-center justify-center p-4"
-          onClick={() => setSelectedId('')}
-        >
-          <div
-            className="erp-student-modal-panel relative w-full max-w-6xl max-h-[90vh] overflow-y-auto bg-white rounded-xl shadow-2xl border border-slate-200"
-            onClick={(event) => event.stopPropagation()}
-          >
-            <button
-              type="button"
-              onClick={() => setSelectedId('')}
-              className="absolute right-4 top-4 z-10 h-10 w-10 rounded-full bg-white/90 border border-slate-200 text-slate-600 hover:bg-slate-100 flex items-center justify-center text-xl leading-none"
-              title="Close student details"
-            >
-              x
-            </button>
-            <div className="p-4 lg:p-5">
-              <StudentProfileCard canEdit={canEditStudents} student={selectedStudent} onEdit={setEditingStudent} />
+    </div>
+  );
+}
 
-              <div className="bg-white border border-slate-100 rounded-lg p-5 shadow-sm">
-                <h3 className="font-bold mb-4">Student Timeline</h3>
-                <div className="grid sm:grid-cols-3 gap-3 text-sm text-slate-600">
-                  <div className="rounded-lg bg-[#f5f5f6] p-3">
-                    Admission status: {latestAdmission?.status || selectedStudent.status}. Created on {selectedStudent.createdAtText || latestAdmission?.submittedAtText || 'today'}.
-                  </div>
-                  <div className="rounded-lg bg-[#f5f5f6] p-3">Documents available: {selectedStudent.documents?.length || 0}</div>
-                  <div className="rounded-lg bg-[#f5f5f6] p-3">Payment and attendance summaries stay linked to their own modules.</div>
-                </div>
-              </div>
-            </div>
-          </div>
+function StudentDetailPage({ latestAdmission, onBack, student }) {
+  return (
+    <div>
+      <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-4 pb-6 border-b border-slate-100 mb-5">
+        <div>
+          <div className="text-sm font-bold text-slate-500 mb-2">Academics / <span className="text-[#f39a5f]">Student Details</span></div>
+          <h1 className="text-2xl font-bold text-slate-900">{student.name}</h1>
+          <p className="text-sm text-slate-500 mt-1">{student.admissionNo} / {student.studentId}</p>
         </div>
-      )}
+        <button
+          type="button"
+          onClick={onBack}
+          className="h-10 px-4 rounded-full bg-[#33373e] text-white font-semibold text-sm flex items-center gap-2 self-start xl:self-auto"
+        >
+          <ArrowLeft size={16} /> Back
+        </button>
+      </div>
+
+      <StudentProfileCard canEdit={false} showSummaryTabs={false} student={student} />
+
+      <div className="bg-white border border-slate-100 rounded-lg p-5 shadow-sm">
+        <h3 className="font-bold mb-4">Student Timeline</h3>
+        <div className="grid sm:grid-cols-3 gap-3 text-sm text-slate-600">
+          <div className="rounded-lg bg-[#f5f5f6] p-3">
+            Admission status: {latestAdmission?.status || student.status}. Created on {student.createdAtText || latestAdmission?.submittedAtText || 'today'}.
+          </div>
+          <div className="rounded-lg bg-[#f5f5f6] p-3">Documents available: {student.documents?.length || 0}</div>
+          <div className="rounded-lg bg-[#f5f5f6] p-3">Payment and attendance summaries stay linked to their own modules.</div>
+        </div>
+      </div>
     </div>
   );
 }

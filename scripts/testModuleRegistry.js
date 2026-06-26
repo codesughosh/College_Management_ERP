@@ -17,7 +17,7 @@ assert.deepEqual(modulesWithoutPermission, []);
 const adminSidebarVisible = enabled
   .filter((module) => canAccess(defaultRoles, 'admin', module.permission))
   .filter((module) => !module.footer)
-  .filter((module) => !module.hideFromSidebar)
+  .filter((module) => !module.hideFromSidebar || module.id === 'parent-portal')
   .map((module) => module.id);
 assert.deepEqual(adminSidebarVisible, [
   'dashboard',
@@ -29,6 +29,7 @@ assert.deepEqual(adminSidebarVisible, [
   'document-management',
   'fees',
   'financial-reports',
+  'parent-portal',
 ]);
 
 const footerVisible = enabled.filter((module) => module.footer).map((module) => module.id);
@@ -66,6 +67,7 @@ assert.equal(facultyVisible.includes('notice-board'), true);
 assert.equal(facultyVisible.includes('document-management'), false);
 assert.equal(facultyVisible.includes('fees'), false);
 assert.equal(facultyVisible.includes('financial-reports'), false);
+assert.equal(facultyVisible.includes('parent-portal'), false);
 
 const adminVisible = enabled.filter((module) => canAccess(defaultRoles, 'admin', module.permission)).map((module) => module.id);
 assert.deepEqual(adminVisible, [
@@ -78,6 +80,7 @@ assert.deepEqual(adminVisible, [
   'document-management',
   'fees',
   'financial-reports',
+  'parent-portal',
   'settings',
 ]);
 

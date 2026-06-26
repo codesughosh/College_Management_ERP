@@ -5,11 +5,12 @@ import { canAccess, defaultRoles } from '../../userRoles/rolePermissions';
 export default function Sidebar({ activePage, collapsed = false, currentUser, institute, onNavigate, onThemeToggle, onToggleCollapse, themeMode = 'dark' }) {
   const currentRoleId = currentUser?.roleId || 'admin';
   const isSuperAdmin = currentRoleId === 'super-admin';
+  const canShowHiddenModule = (module) => isSuperAdmin || (module.id === 'parent-portal' && canAccess(defaultRoles, currentRoleId, 'parentPortal.view'));
   const collegeName = institute?.name || '-';
   const navItems = getEnabledModules()
     .filter((module) => !module.permission || canAccess(defaultRoles, currentRoleId, module.permission))
     .filter((module) => !module.footer)
-    .filter((module) => isSuperAdmin || !module.hideFromSidebar)
+    .filter((module) => !module.hideFromSidebar || canShowHiddenModule(module))
     .map((module) => {
       const Icon = module.icon;
       return {

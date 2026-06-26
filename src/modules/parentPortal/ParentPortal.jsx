@@ -75,7 +75,9 @@ export default function ParentPortal({ currentUser, academicYear = '2026-2027' }
 
   const currentRoleId = currentUser?.roleId || 'admin';
   const canView = canAccess(defaultRoles, currentRoleId, 'parentPortal.view');
-  const selectedStudent = students.find((student) => student.id === selectedId) || students[0];
+  const canViewAllStudents = canAccess(defaultRoles, currentRoleId, 'parentPortal.viewAll');
+  const visibleStudents = useMemo(() => getParentLinkedStudents(students, currentUser), [students, currentUser]);
+  const selectedStudent = visibleStudents.find((student) => student.id === selectedId) || visibleStudents[0];
 
   const studentAttendance = useMemo(() => buildParentAttendance(recordsForStudent(attendance, selectedStudent), selectedStudent, academicSubjects), [academicSubjects, attendance, selectedStudent]);
   const performance = useMemo(() => buildAcademicPerformance(recordsForStudent(marks, selectedStudent), recordsForStudent(results, selectedStudent)), [marks, results, selectedStudent]);
@@ -109,7 +111,9 @@ export default function ParentPortal({ currentUser, academicYear = '2026-2027' }
           {!isFirebaseConfigured && <p className="text-xs text-orange-600 mt-2">Demo mode: add Firebase keys to persist and load parent portal records.</p>}
           {loadError && <p className="text-xs text-rose-600 mt-2">{loadError}</p>}
         </div>
-        <StudentSwitcher students={students} selectedId={selectedStudent?.id} onSelect={setSelectedId} />
+        {canViewAllStudents && (
+          <StudentSwitcher students={visibleStudents} selectedId={selectedStudent?.id} onSelect={setSelectedId} />
+        )}
       </div>
 
       {selectedStudent ? (
@@ -151,7 +155,9 @@ export default function ParentPortal({ currentUser, academicYear = '2026-2027' }
         </>
       ) : (
         <div className="rounded-lg bg-[#f5f5f6] p-6 text-sm text-slate-600 mt-5">
-          No linked student records were found for this parent account.
+          {canViewAllStudents
+            ? 'No student records were found for parent portal review.'
+            : 'No linked student record was found for this parent account.'}
         </div>
       )}
     </div>

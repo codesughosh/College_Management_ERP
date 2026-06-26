@@ -15,8 +15,9 @@ import { documentCategories, documentOwnerTypes, documentStatuses, filterDocumen
 import DocumentPreviewPanel from './components/DocumentPreviewPanel';
 import DocumentTable from './components/DocumentTable';
 import DocumentUploadModal from './components/DocumentUploadModal';
+import { filterStudentScopedRecords, filterStudentsByCourse } from '../shared/courseFilters';
 
-export default function DocumentManagement({ currentUser, academicYear = '2026-2027', ownerFilter = null }) {
+export default function DocumentManagement({ currentUser, academicYear = '2026-2027', ownerFilter = null, scopedStudents = [], selectedCourse = null, selectedCourseCode = 'all' }) {
   const [students, setStudents] = useState(isFirebaseConfigured ? [] : demoDocumentStudents);
   const [staff, setStaff] = useState(isFirebaseConfigured ? [] : demoDocumentStaff);
   const [documents, setDocuments] = useState(isFirebaseConfigured ? [] : demoManagedDocuments);
@@ -51,6 +52,7 @@ export default function DocumentManagement({ currentUser, academicYear = '2026-2
   const canUpload = canAccess(defaultRoles, currentRoleId, 'documents.upload');
   const canVerify = canAccess(defaultRoles, currentRoleId, 'documents.verify');
   const canArchive = canAccess(defaultRoles, currentRoleId, 'documents.archive');
+  const courseStudents = scopedStudents.length ? scopedStudents : filterStudentsByCourse(students, selectedCourseCode, selectedCourse);
   const ownerFilterKey = ownerFilter
     ? [ownerFilter.ownerType, ownerFilter.ownerRecordId, ownerFilter.ownerId].join('|')
     : '';
@@ -79,6 +81,10 @@ export default function DocumentManagement({ currentUser, academicYear = '2026-2
     const existingIds = new Set(documents.map((item) => item.id));
     return [...documents, ...routedDocuments.filter((item) => !existingIds.has(item.id))];
   }, [documents, routedDocuments]);
+  const courseDocuments = useMemo(
+    () => filterStudentScopedRecords(allDocuments, courseStudents, selectedCourseCode, selectedCourse),
+    [allDocuments, courseStudents, selectedCourse, selectedCourseCode]
+  );
   const activeFilters = useMemo(() => ({
     ...filters,
     ...(isOwnerFilterActive ? {
@@ -87,7 +93,7 @@ export default function DocumentManagement({ currentUser, academicYear = '2026-2
       ownerType: ownerFilter.ownerType || '',
     } : {}),
   }), [filters, isOwnerFilterActive, ownerFilter]);
-  const visibleDocuments = useMemo(() => filterDocuments(allDocuments, activeFilters), [activeFilters, allDocuments]);
+  const visibleDocuments = useMemo(() => filterDocuments(courseDocuments, activeFilters), [activeFilters, courseDocuments]);
   const normalizedDocuments = useMemo(() => visibleDocuments.map((item) => ({
     ...item,
     ownerName: resolveOwnerName(item, students, staff),
@@ -98,7 +104,7 @@ export default function DocumentManagement({ currentUser, academicYear = '2026-2
   const selectedDocument = selectedDocumentId ? normalizedDocuments.find((item) => item.id === selectedDocumentId) || null : null;
 
   const buildDocumentPayload = (form, fileData = {}) => {
-    const ownerList = form.ownerType === 'Student' ? students : staff;
+    const ownerList = form.ownerType === 'Student' ? courseStudents : staff;
     const owner = ownerList.find((item) => item.id === form.ownerRecordId);
     const ownerId = form.ownerType === 'Student' ? owner?.studentId : owner?.employeeId;
     return {
@@ -291,7 +297,7 @@ export default function DocumentManagement({ currentUser, academicYear = '2026-2
         )}
       </div>
 
-      {showUploadModal && <DocumentUploadModal students={students} staff={staff} onClose={() => setShowUploadModal(false)} onSave={saveDocument} />}
+      {showUploadModal && <DocumentUploadModal students={courseStudents} staff={staff} onClose={() => setShowUploadModal(false)} onSave={saveDocument} />}
     </div>
   );
 }

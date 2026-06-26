@@ -7,6 +7,7 @@ import { canAccess, defaultRoles } from '../userRoles/rolePermissions';
 import StatusBadge from '../students/components/StatusBadge';
 import { demoAcademicBatches, demoAcademicPrograms, demoAcademicSubjects } from './demoAcademics';
 import { filterAcademicItems, formatDisplayDate, validateBatch, validateProgram, validateSubject } from './academicUtils';
+import { filterByCourse } from '../shared/courseFilters';
 
 const tabs = [
   ['programs', 'Programs'],
@@ -14,7 +15,7 @@ const tabs = [
   ['batches', 'Batches'],
 ];
 
-export default function AcademicsManagement({ currentUser, academicYear = '2026-2027' }) {
+export default function AcademicsManagement({ currentUser, academicYear = '2026-2027', selectedCourse = null, selectedCourseCode = 'all' }) {
   const [programs, setPrograms] = useState(isFirebaseConfigured ? [] : demoAcademicPrograms);
   const [subjects, setSubjects] = useState(isFirebaseConfigured ? [] : demoAcademicSubjects);
   const [batches, setBatches] = useState(isFirebaseConfigured ? [] : demoAcademicBatches);
@@ -41,9 +42,13 @@ export default function AcademicsManagement({ currentUser, academicYear = '2026-
   const currentRoleId = currentUser?.roleId || 'admin';
   const canManage = canAccess(defaultRoles, currentRoleId, 'academics.manage');
   const activeRows = useMemo(() => {
-    const map = { programs, subjects, batches };
+    const map = {
+      programs: filterByCourse(programs, selectedCourseCode, selectedCourse),
+      subjects: filterByCourse(subjects, selectedCourseCode, selectedCourse),
+      batches: filterByCourse(batches, selectedCourseCode, selectedCourse),
+    };
     return filterAcademicItems(map[activeTab] || [], search);
-  }, [activeTab, batches, programs, search, subjects]);
+  }, [activeTab, batches, programs, search, selectedCourse, selectedCourseCode, subjects]);
 
   const createQuickRecord = async () => {
     if (!canManage) {

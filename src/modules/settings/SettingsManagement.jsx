@@ -9,7 +9,7 @@ import { buildNextId, formatDisplayDate, summarizeSettings, validateAcademicYear
 import AcademicsManagement from '../academics/AcademicsManagement';
 import UserRoleManagement from '../userRoles/UserRoleManagement';
 
-export default function SettingsManagement({ currentUser }) {
+export default function SettingsManagement({ currentUser, selectedCourse = null, selectedCourseCode = 'all' }) {
   const [institute, setInstitute] = useState(isFirebaseConfigured ? {} : demoInstituteSettings);
   const [academicYear, setAcademicYear] = useState(isFirebaseConfigured ? {} : demoAcademicYearSettings);
   const [idFormats, setIdFormats] = useState(isFirebaseConfigured ? {} : demoIdFormatSettings);
@@ -189,7 +189,7 @@ export default function SettingsManagement({ currentUser }) {
               <ArrowLeft size={15} /> Back
             </button>
           </div>
-          <AcademicsManagement currentUser={currentUser} academicYear={academicYear.name || '2026-2027'} />
+          <AcademicsManagement currentUser={currentUser} academicYear={academicYear.name || '2026-2027'} selectedCourse={selectedCourse} selectedCourseCode={selectedCourseCode} />
         </div>
       )}
 

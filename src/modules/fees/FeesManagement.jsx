@@ -32,8 +32,9 @@ import FeeCollectionModal from './components/FeeCollectionModal';
 import FeeReportsPanel from './components/FeeReportsPanel';
 import FeeStructureModal from './components/FeeStructureModal';
 import FeeStructurePanel from './components/FeeStructurePanel';
+import { filterByCourse, filterStudentScopedRecords, filterStudentsByCourse } from '../shared/courseFilters';
 
-export default function FeesManagement({ currentUser, academicYear = '2026-2027' }) {
+export default function FeesManagement({ currentUser, academicYear = '2026-2027', scopedStudents = [], selectedCourse = null, selectedCourseCode = 'all' }) {
   const [students, setStudents] = useState(isFirebaseConfigured ? [] : demoFeeStudents);
   const [structures, setStructures] = useState(isFirebaseConfigured ? [] : demoFeeStructures);
   const [assignments, setAssignments] = useState(isFirebaseConfigured ? [] : demoFeeAssignments);
@@ -102,36 +103,59 @@ export default function FeesManagement({ currentUser, academicYear = '2026-2027'
   const canAssign = canAccess(defaultRoles, currentRoleId, 'fees.assign');
   const canCollect = canAccess(defaultRoles, currentRoleId, 'fees.collect');
   const canAdjust = canAccess(defaultRoles, currentRoleId, 'fees.adjust');
-  const classOptions = getClassOptions(students);
-  const summary = summarizeFees(assignments, collections, adjustments);
+  const courseStudents = useMemo(
+    () => scopedStudents.length ? scopedStudents : filterStudentsByCourse(students, selectedCourseCode, selectedCourse),
+    [scopedStudents, selectedCourse, selectedCourseCode, students]
+  );
+  const courseStructures = useMemo(
+    () => filterByCourse(structures, selectedCourseCode, selectedCourse),
+    [selectedCourse, selectedCourseCode, structures]
+  );
+  const courseAssignments = useMemo(
+    () => filterStudentScopedRecords(assignments, courseStudents, selectedCourseCode, selectedCourse),
+    [assignments, courseStudents, selectedCourse, selectedCourseCode]
+  );
+  const courseAssignmentIds = useMemo(() => new Set(courseAssignments.map((item) => item.id).filter(Boolean)), [courseAssignments]);
+  const courseCollections = useMemo(
+    () => filterStudentScopedRecords(collections, courseStudents, selectedCourseCode, selectedCourse)
+      .filter((item) => selectedCourseCode === 'all' || !item.assignmentId || courseAssignmentIds.has(item.assignmentId)),
+    [collections, courseAssignmentIds, courseStudents, selectedCourse, selectedCourseCode]
+  );
+  const courseAdjustments = useMemo(
+    () => filterStudentScopedRecords(adjustments, courseStudents, selectedCourseCode, selectedCourse)
+      .filter((item) => selectedCourseCode === 'all' || !item.assignmentId || courseAssignmentIds.has(item.assignmentId)),
+    [adjustments, courseAssignmentIds, courseStudents, selectedCourse, selectedCourseCode]
+  );
+  const classOptions = getClassOptions(courseStudents);
+  const summary = summarizeFees(courseAssignments, courseCollections, courseAdjustments);
 
   const visibleAssignments = useMemo(() => {
     const term = search.trim().toLowerCase();
     const branchAssignments = activeFeeBranch === 'due-list'
-      ? assignments.filter((assignment) => Number(assignment.dueAmount || 0) > 0)
-      : assignments;
+      ? courseAssignments.filter((assignment) => Number(assignment.dueAmount || 0) > 0)
+      : courseAssignments;
     if (!term) return branchAssignments;
     return branchAssignments.filter((assignment) =>
       [assignment.studentName, assignment.studentId, assignment.classKey, assignment.status, assignment.academicYear]
         .filter(Boolean)
         .some((value) => value.toLowerCase().includes(term))
     );
-  }, [activeFeeBranch, assignments, search]);
+  }, [activeFeeBranch, courseAssignments, search]);
 
   const visibleCollections = useMemo(() => {
     const term = search.trim().toLowerCase();
-    if (!term) return collections;
-    return collections.filter((collection) =>
+    if (!term) return courseCollections;
+    return courseCollections.filter((collection) =>
       [collection.studentName, collection.studentId, collection.classKey, collection.paymentMode, collection.referenceNo, collection.paymentDate]
         .filter(Boolean)
         .some((value) => value.toLowerCase().includes(term))
     );
-  }, [collections, search]);
+  }, [courseCollections, search]);
 
-  const payableAssignments = assignments.filter((item) => Number(item.dueAmount || 0) > 0);
-  const selectedAssignment = selectedAssignmentId ? assignments.find((item) => item.id === selectedAssignmentId) || null : null;
+  const payableAssignments = courseAssignments.filter((item) => Number(item.dueAmount || 0) > 0);
+  const selectedAssignment = selectedAssignmentId ? courseAssignments.find((item) => item.id === selectedAssignmentId) || null : null;
 
-  const getAssignmentStudent = (assignment) => students.find((student) => (
+  const getAssignmentStudent = (assignment) => courseStudents.find((student) => (
     student.id === assignment.studentRecordId || student.studentId === assignment.studentId
   ));
 
@@ -197,14 +221,14 @@ export default function FeesManagement({ currentUser, academicYear = '2026-2027'
       title: 'Payment Setup',
       description: 'Create, edit, and assign fee structures.',
       icon: <Settings size={22} />,
-      meta: [`${structures.length} active`, canSetup ? 'Setup enabled' : 'View only'],
+      meta: [`${courseStructures.length} active`, canSetup ? 'Setup enabled' : 'View only'],
     },
     {
       id: 'adjustments',
       title: 'Adjustments',
       description: 'Approve waivers and fee corrections.',
       icon: <Wallet size={22} />,
-      meta: [`${adjustments.length} approved`, canAdjust ? 'Adjust enabled' : 'View only'],
+      meta: [`${courseAdjustments.length} approved`, canAdjust ? 'Adjust enabled' : 'View only'],
     },
     {
       id: 'due-tracking',
@@ -290,12 +314,12 @@ export default function FeesManagement({ currentUser, academicYear = '2026-2027'
       toast.error('You do not have permission to assign fees.');
       return;
     }
-    const targetStudents = students.filter((student) => getStudentClassKey(student) === structure.classKey);
+    const targetStudents = courseStudents.filter((student) => getStudentClassKey(student) === structure.classKey);
     if (!targetStudents.length) {
       toast.error('No active students found for this class.');
       return;
     }
-    const existingKeys = new Set(assignments.map((item) => `${item.studentRecordId}-${item.feeStructureId}`));
+    const existingKeys = new Set(courseAssignments.map((item) => `${item.studentRecordId}-${item.feeStructureId}`));
     const payloads = targetStudents
       .filter((student) => !existingKeys.has(`${student.id}-${structure.id}`))
       .map((student) => ({
@@ -332,7 +356,7 @@ export default function FeesManagement({ currentUser, academicYear = '2026-2027'
       toast.error('You do not have permission to record collections.');
       return;
     }
-    const assignment = assignments.find((item) => item.id === form.assignmentId);
+    const assignment = courseAssignments.find((item) => item.id === form.assignmentId);
     const validationMessage = validateFeeCollection(form, assignment);
     if (validationMessage) {
       toast.error(validationMessage);
@@ -340,7 +364,7 @@ export default function FeesManagement({ currentUser, academicYear = '2026-2027'
     }
     const amount = Number(form.amount || 0);
     if (form.entryMode === 'manual') {
-      const student = students.find((item) => item.id === form.studentRecordId);
+      const student = courseStudents.find((item) => item.id === form.studentRecordId);
       const collection = {
         assignmentId: '',
         studentRecordId: student?.id || '',
@@ -414,7 +438,7 @@ export default function FeesManagement({ currentUser, academicYear = '2026-2027'
       toast.error('You do not have permission to approve adjustments.');
       return;
     }
-    const assignment = assignments.find((item) => item.id === form.assignmentId);
+    const assignment = courseAssignments.find((item) => item.id === form.assignmentId);
     const validationMessage = validateFeeAdjustment(form, assignment);
     if (validationMessage) {
       toast.error(validationMessage);
@@ -461,7 +485,7 @@ export default function FeesManagement({ currentUser, academicYear = '2026-2027'
   };
 
   const sendDueReminder = (assignmentId) => {
-    const assignment = assignments.find((item) => item.id === assignmentId);
+    const assignment = courseAssignments.find((item) => item.id === assignmentId);
     if (!assignment) return;
     const student = getAssignmentStudent(assignment);
     const phone = formatWhatsAppPhone(student?.parentPhone || student?.guardianPhone || student?.phone);
@@ -575,11 +599,11 @@ export default function FeesManagement({ currentUser, academicYear = '2026-2027'
               </div>
               <div>
                 <div className="text-xs font-bold text-slate-500 uppercase">Total Payments</div>
-                <div className="text-2xl font-extrabold text-slate-900 mt-1">{collections.length}</div>
+                <div className="text-2xl font-extrabold text-slate-900 mt-1">{courseCollections.length}</div>
               </div>
               <div>
                 <div className="text-xs font-bold text-slate-500 uppercase">This Year</div>
-                <div className="text-2xl font-extrabold text-slate-900 mt-1">{collections.filter((item) => item.academicYear === academicYear).length}</div>
+                <div className="text-2xl font-extrabold text-slate-900 mt-1">{courseCollections.filter((item) => item.academicYear === academicYear).length}</div>
               </div>
             </div>
             <button
@@ -609,10 +633,10 @@ export default function FeesManagement({ currentUser, academicYear = '2026-2027'
         </div>
       ) : ['create-structure', 'manage-structures'].includes(activeFeeBranch) ? (
         <div className="max-w-3xl">
-          <FeeStructurePanel structures={structures} canEdit={canSetup || canAssign} onEdit={setEditingStructure} onAssign={assignStructureToStudents} />
+          <FeeStructurePanel structures={courseStructures} canEdit={canSetup || canAssign} onEdit={setEditingStructure} onAssign={assignStructureToStudents} />
         </div>
       ) : activeFeeBranch === 'adjustment-history' ? (
-        <FeeReportsPanel collections={[]} adjustments={adjustments} />
+        <FeeReportsPanel collections={[]} adjustments={courseAdjustments} />
       ) : (
       <div className="flex flex-col xl:flex-row gap-5">
         <div className="xl:w-[68%] min-w-0">
@@ -682,7 +706,7 @@ export default function FeesManagement({ currentUser, academicYear = '2026-2027'
           initialAssignmentId={collectionAssignmentId}
           onClose={() => setShowCollectionModal(false)}
           onSave={saveCollection}
-          students={students}
+          students={courseStudents}
         />
       )}
       {showAdjustmentModal && <FeeAdjustmentModal assignments={payableAssignments} initialAssignmentId={collectionAssignmentId} onClose={() => setShowAdjustmentModal(false)} onSave={saveAdjustment} />}

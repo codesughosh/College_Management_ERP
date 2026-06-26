@@ -32,8 +32,9 @@ import ParentDocumentsPanel from './components/ParentDocumentsPanel';
 import ParentNoticePanel from './components/ParentNoticePanel';
 import PerformanceCard from './components/PerformanceCard';
 import StudentSwitcher from './components/StudentSwitcher';
+import { filterStudentsByCourse } from '../shared/courseFilters';
 
-export default function ParentPortal({ currentUser, academicYear = '2026-2027' }) {
+export default function ParentPortal({ currentUser, academicYear = '2026-2027', selectedCourse = null, selectedCourseCode = 'all' }) {
   const [students, setStudents] = useState(isFirebaseConfigured ? [] : demoParentStudents);
   const [attendance, setAttendance] = useState(isFirebaseConfigured ? [] : demoParentAttendance);
   const [marks, setMarks] = useState(isFirebaseConfigured ? [] : demoParentMarks);
@@ -76,7 +77,8 @@ export default function ParentPortal({ currentUser, academicYear = '2026-2027' }
   const currentRoleId = currentUser?.roleId || 'admin';
   const canView = canAccess(defaultRoles, currentRoleId, 'parentPortal.view');
   const canViewAllStudents = canAccess(defaultRoles, currentRoleId, 'parentPortal.viewAll');
-  const visibleStudents = useMemo(() => getParentLinkedStudents(students, currentUser), [students, currentUser]);
+  const courseStudents = useMemo(() => filterStudentsByCourse(students, selectedCourseCode, selectedCourse), [selectedCourse, selectedCourseCode, students]);
+  const visibleStudents = useMemo(() => getParentLinkedStudents(courseStudents, currentUser), [courseStudents, currentUser]);
   const selectedStudent = visibleStudents.find((student) => student.id === selectedId) || visibleStudents[0];
 
   const studentAttendance = useMemo(() => buildParentAttendance(recordsForStudent(attendance, selectedStudent), selectedStudent, academicSubjects), [academicSubjects, attendance, selectedStudent]);

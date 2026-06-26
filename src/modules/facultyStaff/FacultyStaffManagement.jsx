@@ -19,6 +19,7 @@ import LeaveModal from './components/LeaveModal';
 import StaffModal from './components/StaffModal';
 import StaffProfilePanel from './components/StaffProfilePanel';
 import StaffTable from './components/StaffTable';
+import { filterByCourse } from '../shared/courseFilters';
 
 function StaffDetailPage({
   attendanceRecords,
@@ -68,7 +69,7 @@ function StaffDetailPage({
   );
 }
 
-export default function FacultyStaffManagement({ currentUser, academicYear = '2026-2027', onOpenDocuments }) {
+export default function FacultyStaffManagement({ currentUser, academicYear = '2026-2027', onOpenDocuments, selectedCourse = null, selectedCourseCode = 'all' }) {
   const [staffMembers, setStaffMembers] = useState(isFirebaseConfigured ? [] : demoStaffMembers);
   const [departments, setDepartments] = useState(isFirebaseConfigured ? [] : demoDepartments);
   const [leaveRecords, setLeaveRecords] = useState(isFirebaseConfigured ? [] : demoLeaveRecords);
@@ -118,7 +119,8 @@ export default function FacultyStaffManagement({ currentUser, academicYear = '20
     loadFacultyStaff();
   }, [academicYear]);
 
-  const selectedStaff = selectedId ? staffMembers.find((member) => member.id === selectedId) || null : null;
+  const courseStaffMembers = filterByCourse(staffMembers, selectedCourseCode, selectedCourse);
+  const selectedStaff = selectedId ? courseStaffMembers.find((member) => member.id === selectedId) || null : null;
   const selectedLeaves = leaveRecords.filter((record) => relationMatchesStaff(record, selectedStaff));
   const selectedAttendance = attendanceRecords.filter((record) => relationMatchesStaff(record, selectedStaff));
 
@@ -140,8 +142,8 @@ export default function FacultyStaffManagement({ currentUser, academicYear = '20
   const filteredStaff = useMemo(() => {
     const term = search.trim().toLowerCase();
     const byStatus = statusFilter === 'archived'
-      ? staffMembers.filter((member) => member.status === 'Archived')
-      : staffMembers.filter((member) => member.status !== 'Archived');
+      ? courseStaffMembers.filter((member) => member.status === 'Archived')
+      : courseStaffMembers.filter((member) => member.status !== 'Archived');
     const byType = typeFilter === 'All' ? byStatus : byStatus.filter((member) => member.staffType === typeFilter);
     if (!term) return byType;
     return byType.filter((member) =>
@@ -149,7 +151,7 @@ export default function FacultyStaffManagement({ currentUser, academicYear = '20
         .filter(Boolean)
         .some((value) => value.toLowerCase().includes(term))
     );
-  }, [search, staffMembers, statusFilter, typeFilter]);
+  }, [courseStaffMembers, search, statusFilter, typeFilter]);
 
   const currentRoleId = currentUser?.roleId || 'admin';
   const canCreateStaff = canAccess(defaultRoles, currentRoleId, 'staff.create');

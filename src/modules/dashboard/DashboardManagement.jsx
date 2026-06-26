@@ -9,6 +9,7 @@ import { getDashboardData } from '../../firebase/db';
 import { isFirebaseConfigured } from '../../firebase/config';
 import { formatCurrency, summarizeFees } from '../fees/feeUtils';
 import { canAccess, defaultRoles } from '../userRoles/rolePermissions';
+import { filterByCourse, filterStudentScopedRecords, filterStudentsByCourse } from '../shared/courseFilters';
 
 const fallbackDashboardData = {
   students: demoStudents,
@@ -108,7 +109,7 @@ function DashboardCard({ color = '#38bdf8', icon, label, value, helper, onClick 
   );
 }
 
-export default function DashboardManagement({ academicYear = '2026-2027', currentUser, onNavigate }) {
+export default function DashboardManagement({ academicYear = '2026-2027', currentUser, onNavigate, scopedStudents = [], selectedCourse = null, selectedCourseCode = 'all' }) {
   const [dashboardData, setDashboardData] = useState(isFirebaseConfigured ? null : fallbackDashboardData);
   const [loading, setLoading] = useState(isFirebaseConfigured);
   const [loadError, setLoadError] = useState('');
@@ -162,17 +163,27 @@ export default function DashboardManagement({ academicYear = '2026-2027', curren
     managedDocuments = [],
     examSchedules = [],
   } = dashboardData || emptyDashboardData;
-  const activeStudents = students.filter((student) => student.status !== 'Archived');
+  const courseStudents = scopedStudents.length ? scopedStudents : filterStudentsByCourse(students, selectedCourseCode, selectedCourse);
+  const courseAdmissions = filterStudentScopedRecords(studentAdmissions, courseStudents, selectedCourseCode, selectedCourse);
+  const courseFeeAssignments = filterStudentScopedRecords(feeAssignments, courseStudents, selectedCourseCode, selectedCourse);
+  const courseAssignmentIds = new Set(courseFeeAssignments.map((item) => item.id).filter(Boolean));
+  const courseFeeCollections = filterStudentScopedRecords(feeCollections, courseStudents, selectedCourseCode, selectedCourse)
+    .filter((item) => !item.assignmentId || courseAssignmentIds.has(item.assignmentId) || selectedCourseCode === 'all');
+  const courseFeeAdjustments = filterStudentScopedRecords(feeAdjustments, courseStudents, selectedCourseCode, selectedCourse)
+    .filter((item) => !item.assignmentId || courseAssignmentIds.has(item.assignmentId) || selectedCourseCode === 'all');
+  const courseDocuments = filterStudentScopedRecords(managedDocuments, courseStudents, selectedCourseCode, selectedCourse);
+  const courseExamSchedules = filterByCourse(examSchedules, selectedCourseCode, selectedCourse);
+  const activeStudents = courseStudents.filter((student) => student.status !== 'Archived');
   const facultyCount = staff.filter((member) => member.staffType === 'Faculty' && member.status !== 'Archived').length;
-  const feeSummary = useMemo(
-    () => summarizeFees(feeAssignments, feeCollections, feeAdjustments),
-    [feeAssignments, feeCollections, feeAdjustments]
+  const courseFeeSummary = useMemo(
+    () => summarizeFees(courseFeeAssignments, courseFeeCollections, courseFeeAdjustments),
+    [courseFeeAdjustments, courseFeeAssignments, courseFeeCollections]
   );
-  const pendingDocuments = managedDocuments.filter((item) => item.verificationStatus === 'Pending Review');
-  const upcomingExams = examSchedules
+  const pendingDocuments = courseDocuments.filter((item) => item.verificationStatus === 'Pending Review');
+  const upcomingExams = courseExamSchedules
     .filter((item) => item.status !== 'Archived')
     .sort((first, second) => String(first.examDate || '').localeCompare(String(second.examDate || '')));
-  const collectionTrend = useMemo(() => buildCollectionTrend(feeCollections), [feeCollections]);
+  const collectionTrend = useMemo(() => buildCollectionTrend(courseFeeCollections), [courseFeeCollections]);
   const maxTrendValue = Math.max(...collectionTrend.map((item) => item.value), 1);
   const trendPoints = collectionTrend.map((item, index) => {
     const x = 16 + (index / Math.max(collectionTrend.length - 1, 1)) * 328;
@@ -187,21 +198,21 @@ export default function DashboardManagement({ academicYear = '2026-2027', curren
   const highlightPoint = trendPoints[highlightIndex];
   const tooltipX = Math.min(highlightPoint[0] + 12, 232);
   const tooltipY = Math.max(highlightPoint[1] - 34, 8);
-  const admissionStages = useMemo(
-    () => buildAdmissionStages(students, studentAdmissions),
-    [students, studentAdmissions]
+  const courseAdmissionStages = useMemo(
+    () => buildAdmissionStages(courseStudents, courseAdmissions),
+    [courseAdmissions, courseStudents]
   );
-  const admittedRate = admissionStages[0].value
-    ? Math.round((admissionStages[2].value / admissionStages[0].value) * 100)
+  const admittedRate = courseAdmissionStages[0].value
+    ? Math.round((courseAdmissionStages[2].value / courseAdmissionStages[0].value) * 100)
     : 0;
   const paymentSplit = [
-    { label: 'Collected', value: feeSummary.totalCollected, color: '#22c55e' },
-    { label: 'Pending', value: feeSummary.totalOutstanding, color: '#f59e0b' },
-    { label: 'Adjusted', value: feeSummary.totalAdjusted, color: '#ef4444' },
+    { label: 'Collected', value: courseFeeSummary.totalCollected, color: '#22c55e' },
+    { label: 'Pending', value: courseFeeSummary.totalOutstanding, color: '#f59e0b' },
+    { label: 'Adjusted', value: courseFeeSummary.totalAdjusted, color: '#ef4444' },
   ];
   const splitTotal = Math.max(paymentSplit.reduce((sum, item) => sum + item.value, 0), 1);
-  const collectionRate = feeSummary.totalAssigned
-    ? Math.round((feeSummary.totalCollected / feeSummary.totalAssigned) * 100)
+  const collectionRate = courseFeeSummary.totalAssigned
+    ? Math.round((courseFeeSummary.totalCollected / courseFeeSummary.totalAssigned) * 100)
     : 0;
   let pieCursor = 0;
   const pieGradient = paymentSplit.map((item) => {
@@ -214,7 +225,7 @@ export default function DashboardManagement({ academicYear = '2026-2027', curren
   const dashboardCards = [
     canViewStudents && { color: '#2563eb', icon: <Users size={22} />, label: 'Students', value: loading ? '-' : activeStudents.length, helper: loading ? '-' : 'Active records', page: 'students' },
     canViewStaff && { color: '#22c55e', icon: <GraduationCap size={22} />, label: 'Faculty', value: loading ? '-' : facultyCount, helper: loading ? '-' : 'Teaching staff', page: 'faculty-staff' },
-    canViewFees && { color: '#f59e0b', icon: <Wallet size={22} />, label: 'Collection', value: loading ? '-' : formatCurrency(feeSummary.totalCollected), helper: loading ? '-' : `${feeSummary.dueStudents} due students`, page: 'fees' },
+    canViewFees && { color: '#f59e0b', icon: <Wallet size={22} />, label: 'Collection', value: loading ? '-' : formatCurrency(courseFeeSummary.totalCollected), helper: loading ? '-' : `${courseFeeSummary.dueStudents} due students`, page: 'fees' },
     canViewDocuments && { color: '#8b5cf6', icon: <FileText size={22} />, label: 'Documents', value: loading ? '-' : pendingDocuments.length, helper: loading ? '-' : 'Pending review', page: 'document-management' },
     canViewExams && { color: '#ef4444', icon: <TrendingUp size={22} />, label: 'Exams', value: loading ? '-' : upcomingExams.length, helper: loading ? '-' : 'Upcoming exams', page: 'examination-results' },
   ].filter(Boolean);
@@ -230,8 +241,8 @@ export default function DashboardManagement({ academicYear = '2026-2027', curren
       helper: loading ? '-' : 'View exam schedule',
       page: 'examination-results',
     },
-    canViewFees && feeSummary.dueStudents > 0 && {
-      label: `${feeSummary.dueStudents} students have pending dues`,
+    canViewFees && courseFeeSummary.dueStudents > 0 && {
+      label: `${courseFeeSummary.dueStudents} students have pending dues`,
       helper: 'Open payment due list',
       page: 'fees',
     },
@@ -324,7 +335,7 @@ export default function DashboardManagement({ academicYear = '2026-2027', curren
           </div>
           <div className="grid md:grid-cols-[1fr_.85fr] gap-5 items-center">
             <div className="space-y-1">
-              {admissionStages.map((stage, index) => (
+              {courseAdmissionStages.map((stage, index) => (
                 <div
                   key={stage.label}
                   className="mx-auto h-10"
@@ -337,7 +348,7 @@ export default function DashboardManagement({ academicYear = '2026-2027', curren
               ))}
             </div>
             <div className="space-y-3">
-              {admissionStages.map((stage) => (
+              {courseAdmissionStages.map((stage) => (
                 <div key={stage.label} className="flex items-center gap-3 text-sm">
                   <span className="h-3 w-3 rounded-sm" style={{ background: stage.color }} />
                   <span className="text-slate-600">{stage.label}</span>

@@ -20,8 +20,9 @@ import ExamScheduleModal from './components/ExamScheduleModal';
 import ExamScheduleTable from './components/ExamScheduleTable';
 import MarksEntryModal from './components/MarksEntryModal';
 import ResultsPanel from './components/ResultsPanel';
+import { filterByCourse, filterStudentScopedRecords, filterStudentsByCourse } from '../shared/courseFilters';
 
-export default function ExaminationResultManagement({ currentUser, academicYear = '2026-2027' }) {
+export default function ExaminationResultManagement({ currentUser, academicYear = '2026-2027', scopedStudents = [], selectedCourse = null, selectedCourseCode = 'all' }) {
   const [students, setStudents] = useState(isFirebaseConfigured ? [] : demoExamStudents);
   const [staff, setStaff] = useState(isFirebaseConfigured ? [] : demoExamStaff);
   const [schedules, setSchedules] = useState(isFirebaseConfigured ? [] : demoExamSchedules);
@@ -93,21 +94,28 @@ export default function ExaminationResultManagement({ currentUser, academicYear 
   const canGenerateResults = canAccess(defaultRoles, currentRoleId, 'exams.results');
   const canGenerateReportCards = canAccess(defaultRoles, currentRoleId, 'exams.reportCards');
 
-  const classOptions = getClassOptions(students);
+  const courseStudents = scopedStudents.length ? scopedStudents : filterStudentsByCourse(students, selectedCourseCode, selectedCourse);
+  const courseSchedules = filterByCourse(schedules, selectedCourseCode, selectedCourse);
+  const courseScheduleIds = new Set(courseSchedules.map((item) => item.id).filter(Boolean));
+  const courseMarks = filterStudentScopedRecords(marks, courseStudents, selectedCourseCode, selectedCourse)
+    .filter((item) => selectedCourseCode === 'all' || !item.examScheduleId || courseScheduleIds.has(item.examScheduleId));
+  const courseResults = filterStudentScopedRecords(results, courseStudents, selectedCourseCode, selectedCourse);
+  const courseReportCards = filterStudentScopedRecords(reportCards, courseStudents, selectedCourseCode, selectedCourse);
+  const classOptions = getClassOptions(courseStudents);
   const faculty = staff.filter((member) => member.staffType === 'Faculty');
   const filteredSchedules = useMemo(() => {
     const term = search.trim().toLowerCase();
-    if (!term) return schedules;
-    return schedules.filter((schedule) =>
+    if (!term) return courseSchedules;
+    return courseSchedules.filter((schedule) =>
       [schedule.examName, schedule.classKey, schedule.subject, schedule.facultyName]
         .filter(Boolean)
         .some((value) => value.toLowerCase().includes(term))
     );
-  }, [schedules, search]);
+  }, [courseSchedules, search]);
 
-  const selectedSchedule = selectedScheduleId ? schedules.find((schedule) => schedule.id === selectedScheduleId) || null : null;
+  const selectedSchedule = selectedScheduleId ? courseSchedules.find((schedule) => schedule.id === selectedScheduleId) || null : null;
   const selectedScheduleMarks = selectedSchedule
-    ? marks.filter((mark) => mark.examScheduleId === selectedSchedule.id)
+    ? courseMarks.filter((mark) => mark.examScheduleId === selectedSchedule.id)
     : [];
 
   const openExamTask = (taskId) => {
@@ -147,21 +155,21 @@ export default function ExaminationResultManagement({ currentUser, academicYear 
       title: 'Exam Schedules',
       description: 'Create and review exam schedules.',
       icon: <ClipboardList size={22} />,
-      meta: [`${schedules.length} schedules`, canSchedule ? 'Schedule enabled' : 'View only'],
+      meta: [`${courseSchedules.length} schedules`, canSchedule ? 'Schedule enabled' : 'View only'],
     },
     {
       id: 'marks',
       title: 'Marks Entry',
       description: 'Enter and review student marks.',
       icon: <GraduationCap size={22} />,
-      meta: [`${marks.length} entries`, canEnterMarks ? 'Entry enabled' : 'View only'],
+      meta: [`${courseMarks.length} entries`, canEnterMarks ? 'Entry enabled' : 'View only'],
     },
     {
       id: 'results',
       title: 'Results & Cards',
       description: 'Generate results and report cards.',
       icon: <FileText size={22} />,
-      meta: [`${results.length} results`, `${reportCards.length} cards`],
+      meta: [`${courseResults.length} results`, `${courseReportCards.length} cards`],
     },
   ];
 
@@ -239,7 +247,7 @@ export default function ExaminationResultManagement({ currentUser, academicYear 
       toast.error('You do not have permission to manage assessments.');
       return;
     }
-    const base = schedules[0];
+    const base = courseSchedules[0];
     if (!base) {
       toast.error('Create an exam schedule first.');
       return;
@@ -268,8 +276,8 @@ export default function ExaminationResultManagement({ currentUser, academicYear 
       toast.error('You do not have permission to enter marks.');
       return;
     }
-    const schedule = schedules.find((item) => item.id === form.examScheduleId);
-    const student = students.find((item) => item.id === form.studentRecordId);
+    const schedule = courseSchedules.find((item) => item.id === form.examScheduleId);
+    const student = courseStudents.find((item) => item.id === form.studentRecordId);
     const validationMessage = validateMarksEntry({ ...form, maxMarks: schedule?.maxMarks || form.maxMarks });
     if (validationMessage) {
       toast.error(validationMessage);
@@ -291,7 +299,7 @@ export default function ExaminationResultManagement({ currentUser, academicYear 
       status: 'Entered',
       enteredAtText: formatDisplayDate(),
     };
-    const existing = marks.find((item) => item.examScheduleId === payload.examScheduleId && item.studentRecordId === payload.studentRecordId);
+    const existing = courseMarks.find((item) => item.examScheduleId === payload.examScheduleId && item.studentRecordId === payload.studentRecordId);
     try {
       if (existing) {
         await updateMarksEntry(existing.id, payload);
@@ -316,8 +324,8 @@ export default function ExaminationResultManagement({ currentUser, academicYear 
       toast.error('You do not have permission to generate results.');
       return;
     }
-    const generated = students.map((student) => {
-      const studentMarks = marks.filter((item) => item.studentRecordId === student.id);
+    const generated = courseStudents.map((student) => {
+      const studentMarks = courseMarks.filter((item) => item.studentRecordId === student.id);
       const summary = summarizeStudentMarks(studentMarks);
       return {
         studentRecordId: student.id,
@@ -346,7 +354,7 @@ export default function ExaminationResultManagement({ currentUser, academicYear 
       toast.error('You do not have permission to generate report cards.');
       return;
     }
-    const cards = results.map((result) => ({
+    const cards = courseResults.map((result) => ({
       studentRecordId: result.studentRecordId,
       studentId: result.studentId,
       examName: result.examName,
@@ -448,7 +456,7 @@ export default function ExaminationResultManagement({ currentUser, academicYear 
 
       {['generate-results', 'report-cards', 'internal-assessment'].includes(activeExamBranch) ? (
         <div className="max-w-3xl">
-          <ResultsPanel marks={marks} results={results} reportCards={reportCards} />
+          <ResultsPanel marks={courseMarks} results={courseResults} reportCards={courseReportCards} />
           <div className="grid sm:grid-cols-2 gap-3 mt-5">
             {activeExamBranch === 'internal-assessment' && (
               <button onClick={createAssessment} disabled={!canAssess} className="h-11 rounded-full bg-[#fb9a5b] text-white font-semibold text-sm disabled:bg-slate-300">Create Assessment</button>
@@ -506,7 +514,7 @@ export default function ExaminationResultManagement({ currentUser, academicYear 
 
       {showScheduleModal && <ExamScheduleModal classOptions={classOptions} faculty={faculty} onClose={() => setShowScheduleModal(false)} onSave={saveSchedule} />}
       {editingSchedule && <ExamScheduleModal mode="edit" initialSchedule={editingSchedule} classOptions={classOptions} faculty={faculty} onClose={() => setEditingSchedule(null)} onSave={saveSchedule} />}
-      {showMarksModal && <MarksEntryModal schedules={schedules} students={students} onClose={() => setShowMarksModal(false)} onSave={saveMarks} />}
+      {showMarksModal && <MarksEntryModal schedules={courseSchedules} students={courseStudents} onClose={() => setShowMarksModal(false)} onSave={saveMarks} />}
     </div>
   );
 }

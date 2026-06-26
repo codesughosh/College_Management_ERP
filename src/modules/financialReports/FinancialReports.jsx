@@ -26,8 +26,9 @@ import CollectionReportTable from './components/CollectionReportTable';
 import OutstandingReportTable from './components/OutstandingReportTable';
 import ReportFilters from './components/ReportFilters';
 import FeeVisualGraph from '../fees/components/FeeVisualGraph';
+import { filterByCourse, filterStudentScopedRecords } from '../shared/courseFilters';
 
-export default function FinancialReports({ currentUser, academicYear = '2026-2027' }) {
+export default function FinancialReports({ currentUser, academicYear = '2026-2027', scopedStudents = [], selectedCourse = null, selectedCourseCode = 'all' }) {
   const [structures, setStructures] = useState(isFirebaseConfigured ? [] : demoFinancialStructures);
   const [assignments, setAssignments] = useState(isFirebaseConfigured ? [] : demoFinancialAssignments);
   const [collections, setCollections] = useState(isFirebaseConfigured ? [] : demoFinancialCollections);
@@ -71,16 +72,23 @@ export default function FinancialReports({ currentUser, academicYear = '2026-202
   const canView = canAccess(defaultRoles, currentRoleId, 'financialReports.view');
   const canExport = canAccess(defaultRoles, currentRoleId, 'financialReports.export');
   const canSnapshot = canAccess(defaultRoles, currentRoleId, 'financialReports.snapshots');
+  const courseStructures = filterByCourse(structures, selectedCourseCode, selectedCourse);
+  const courseAssignments = filterStudentScopedRecords(assignments, scopedStudents, selectedCourseCode, selectedCourse);
+  const courseAssignmentIds = new Set(courseAssignments.map((item) => item.id).filter(Boolean));
+  const courseCollections = filterStudentScopedRecords(collections, scopedStudents, selectedCourseCode, selectedCourse)
+    .filter((item) => selectedCourseCode === 'all' || !item.assignmentId || courseAssignmentIds.has(item.assignmentId));
+  const courseAdjustments = filterStudentScopedRecords(adjustments, scopedStudents, selectedCourseCode, selectedCourse)
+    .filter((item) => selectedCourseCode === 'all' || !item.assignmentId || courseAssignmentIds.has(item.assignmentId));
 
   const classOptions = useMemo(() => [...new Set([
-    ...structures.map((item) => item.classKey),
-    ...assignments.map((item) => item.classKey),
-  ].filter(Boolean))].sort(), [structures, assignments]);
-  const paymentModes = useMemo(() => [...new Set(collections.map((item) => item.paymentMode).filter(Boolean))].sort(), [collections]);
-  const collectionReport = useMemo(() => buildCollectionReport(collections, filters), [collections, filters]);
-  const outstandingReport = useMemo(() => buildOutstandingReport(assignments), [assignments]);
-  const classAnalytics = useMemo(() => buildClassAnalytics(assignments, collections, adjustments), [assignments, collections, adjustments]);
-  const summary = useMemo(() => buildFinancialSummary(assignments, collections, adjustments, filters), [assignments, collections, adjustments, filters]);
+    ...courseStructures.map((item) => item.classKey),
+    ...courseAssignments.map((item) => item.classKey),
+  ].filter(Boolean))].sort(), [courseStructures, courseAssignments]);
+  const paymentModes = useMemo(() => [...new Set(courseCollections.map((item) => item.paymentMode).filter(Boolean))].sort(), [courseCollections]);
+  const collectionReport = useMemo(() => buildCollectionReport(courseCollections, filters), [courseCollections, filters]);
+  const outstandingReport = useMemo(() => buildOutstandingReport(courseAssignments), [courseAssignments]);
+  const classAnalytics = useMemo(() => buildClassAnalytics(courseAssignments, courseCollections, courseAdjustments), [courseAdjustments, courseAssignments, courseCollections]);
+  const summary = useMemo(() => buildFinancialSummary(courseAssignments, courseCollections, courseAdjustments, filters), [courseAdjustments, courseAssignments, courseCollections, filters]);
 
   const stats = [
     { label: 'Assigned Fees', value: formatCurrency(summary.totalAssigned), icon: <Wallet size={22} /> },
@@ -103,10 +111,10 @@ export default function FinancialReports({ currentUser, academicYear = '2026-202
     };
     try {
       const id = await createFinancialReportSnapshot(payload);
-      setSnapshots((prev) => [{ id: id || `local-financial-snapshot-${Date.now()}`, ...payload }, ...prev]);
+      setSnapshots((prev) => [{ id: id || `local-financial-snapshot-${Date.now()}`, ...payload, courseCode: selectedCourseCode }, ...prev]);
       toast.success('Financial summary saved');
     } catch {
-      setSnapshots((prev) => [{ id: `local-financial-snapshot-${Date.now()}`, ...payload }, ...prev]);
+      setSnapshots((prev) => [{ id: `local-financial-snapshot-${Date.now()}`, ...payload, courseCode: selectedCourseCode }, ...prev]);
       toast.success('Financial summary saved locally');
     }
   };
@@ -159,7 +167,7 @@ export default function FinancialReports({ currentUser, academicYear = '2026-202
         ))}
       </div>
 
-      <FeeVisualGraph assignments={assignments} collections={collections} summary={summary} />
+      <FeeVisualGraph assignments={courseAssignments} collections={courseCollections} summary={summary} />
 
       <div className="flex flex-col xl:flex-row gap-5">
         <div className="xl:w-[68%] min-w-0">

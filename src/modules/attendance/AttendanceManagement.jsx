@@ -23,6 +23,7 @@ import {
 } from './demoAttendance';
 import AttendanceReports from './components/AttendanceReports';
 import AttendanceTable from './components/AttendanceTable';
+import { filterStudentScopedRecords, filterStudentsByCourse } from '../shared/courseFilters';
 
 function getTodayInputValue() {
   const today = new Date();
@@ -36,7 +37,7 @@ function formatInputDate(inputDate) {
   return formatDisplayDate(new Date(`${inputDate}T00:00:00`));
 }
 
-export default function AttendanceManagement({ currentUser, academicYear = '2026-2027' }) {
+export default function AttendanceManagement({ currentUser, academicYear = '2026-2027', scopedStudents = [], selectedCourse = null, selectedCourseCode = 'all' }) {
   const [students, setStudents] = useState(isFirebaseConfigured ? [] : demoAttendanceStudents);
   const [staff, setStaff] = useState(isFirebaseConfigured ? [] : demoAttendanceStaff);
   const [studentAttendance, setStudentAttendance] = useState(isFirebaseConfigured ? [] : demoStudentAttendance);
@@ -103,19 +104,21 @@ export default function AttendanceManagement({ currentUser, academicYear = '2026
   const canNotifyParents = canAccess(defaultRoles, currentRoleId, 'attendance.notifyParents');
   const canViewReports = canAccess(defaultRoles, currentRoleId, 'attendance.reports');
 
-  const activeRecords = mode === 'students' ? studentAttendance : staffAttendance;
+  const courseStudents = scopedStudents.length ? scopedStudents : filterStudentsByCourse(students, selectedCourseCode, selectedCourse);
+  const courseStudentAttendance = filterStudentScopedRecords(studentAttendance, courseStudents, selectedCourseCode, selectedCourse);
+  const activeRecords = mode === 'students' ? courseStudentAttendance : staffAttendance;
   const selectedDate = formatInputDate(selectedDateInput);
   const selectedDateRecords = activeRecords.filter((record) => record.dateText === selectedDate);
   const activeEntities = useMemo(() => {
     const term = search.trim().toLowerCase();
-    const source = mode === 'students' ? students : staff;
+    const source = mode === 'students' ? courseStudents : staff;
     if (!term) return source;
     return source.filter((entity) =>
       [entity.name, entity.studentId, entity.employeeId, entity.className, entity.department]
         .filter(Boolean)
         .some((value) => value.toLowerCase().includes(term))
     );
-  }, [mode, search, staff, students]);
+  }, [courseStudents, mode, search, staff]);
 
   const summary = summarizeAttendance(selectedDateRecords);
   const stats = [
@@ -168,7 +171,7 @@ export default function AttendanceManagement({ currentUser, academicYear = '2026
       title: 'Student Attendance',
       description: 'Mark students and follow up absentees.',
       icon: <Users size={22} />,
-      meta: [`${students.length} students`, canMarkStudents ? 'Mark enabled' : 'View only'],
+      meta: [`${courseStudents.length} students`, canMarkStudents ? 'Mark enabled' : 'View only'],
       onOpen: () => openAttendanceTask('students', 'students'),
     },
     {

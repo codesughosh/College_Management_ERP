@@ -7,6 +7,7 @@ import { canAccess, defaultRoles } from '../userRoles/rolePermissions';
 import StatusBadge from '../students/components/StatusBadge';
 import { demoAcademicCalendarEvents } from '../academics/demoAcademics';
 import { formatDisplayDate, validateCalendarEvent } from '../academics/academicUtils';
+import { filterByCourse } from '../shared/courseFilters';
 
 const eventTypes = ['Academic', 'Exam', 'Holiday', 'Admission', 'Activity'];
 const audiences = ['All', 'Students', 'Faculty', 'Parents'];
@@ -76,7 +77,7 @@ function CurriculumEventModal({ initialEvent = null, onClose, onSave }) {
   );
 }
 
-export default function CurriculumManagement({ currentUser, academicYear = '2026-2027' }) {
+export default function CurriculumManagement({ currentUser, academicYear = '2026-2027', selectedCourse = null, selectedCourseCode = 'all' }) {
   const [events, setEvents] = useState(isFirebaseConfigured ? [] : demoAcademicCalendarEvents);
   const [selectedEvent, setSelectedEvent] = useState(isFirebaseConfigured ? null : demoAcademicCalendarEvents[0] || null);
   const [showModal, setShowModal] = useState(false);
@@ -102,7 +103,8 @@ export default function CurriculumManagement({ currentUser, academicYear = '2026
   const currentRoleId = currentUser?.roleId || 'admin';
   const canManage = canAccess(defaultRoles, currentRoleId, 'academics.manage');
 
-  const sortedEvents = useMemo(() => [...events].sort((a, b) => String(a.eventDate).localeCompare(String(b.eventDate))), [events]);
+  const courseEvents = useMemo(() => filterByCourse(events, selectedCourseCode, selectedCourse), [events, selectedCourse, selectedCourseCode]);
+  const sortedEvents = useMemo(() => [...courseEvents].sort((a, b) => String(a.eventDate).localeCompare(String(b.eventDate))), [courseEvents]);
 
   const saveEvent = async (form) => {
     if (!canManage) {
@@ -113,6 +115,8 @@ export default function CurriculumManagement({ currentUser, academicYear = '2026
       ...form,
       title: form.title.trim(),
       academicYear,
+      courseCode: selectedCourseCode === 'all' ? '' : selectedCourseCode,
+      courseName: selectedCourse?.courseName || '',
       createdAtText: formatDisplayDate(),
     };
     const validationMessage = validateCalendarEvent(payload);
@@ -142,7 +146,7 @@ export default function CurriculumManagement({ currentUser, academicYear = '2026
       return;
     }
     const updates = { status: 'Published', publishedAtText: formatDisplayDate() };
-    const publishable = events.filter((item) => item.status !== 'Published');
+    const publishable = courseEvents.filter((item) => item.status !== 'Published');
     if (!publishable.length) {
       toast.success('Curriculum is already published');
       return;

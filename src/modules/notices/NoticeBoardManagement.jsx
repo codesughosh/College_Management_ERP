@@ -14,8 +14,9 @@ import { filterNotices, formatDisplayDate, noticeAudiences, noticeTypes, validat
 import NoticeModal from './components/NoticeModal';
 import NoticePreviewPanel from './components/NoticePreviewPanel';
 import NoticeTable from './components/NoticeTable';
+import { filterByCourse } from '../shared/courseFilters';
 
-export default function NoticeBoardManagement({ currentUser, academicYear = '2026-2027' }) {
+export default function NoticeBoardManagement({ currentUser, academicYear = '2026-2027', selectedCourse = null, selectedCourseCode = 'all' }) {
   const [notices, setNotices] = useState(isFirebaseConfigured ? [] : demoNoticeItems);
   const [selectedId, setSelectedId] = useState(isFirebaseConfigured ? '' : demoNoticeItems[0]?.id || '');
   const [filters, setFilters] = useState({ search: '', type: '', audience: '', status: '' });
@@ -42,8 +43,9 @@ export default function NoticeBoardManagement({ currentUser, academicYear = '202
   const canCreate = canAccess(defaultRoles, currentRoleId, 'notices.create');
   const canEdit = canAccess(defaultRoles, currentRoleId, 'notices.edit');
   const canArchive = canAccess(defaultRoles, currentRoleId, 'notices.archive');
-  const visibleNotices = useMemo(() => filterNotices(notices, filters), [notices, filters]);
-  const selectedNotice = notices.find((item) => item.id === selectedId) || visibleNotices[0] || notices[0];
+  const courseNotices = useMemo(() => filterByCourse(notices, selectedCourseCode, selectedCourse), [notices, selectedCourse, selectedCourseCode]);
+  const visibleNotices = useMemo(() => filterNotices(courseNotices, filters), [courseNotices, filters]);
+  const selectedNotice = courseNotices.find((item) => item.id === selectedId) || visibleNotices[0] || courseNotices[0];
 
   const buildPayload = (form) => ({
     ...form,
@@ -51,6 +53,8 @@ export default function NoticeBoardManagement({ currentUser, academicYear = '202
     referenceNo: form.referenceNo.trim() || `${form.type.split(' ')[0].toUpperCase()}-${Date.now()}`,
     body: form.body.trim(),
     createdByName: currentUser?.name || 'Admin Office',
+    courseCode: selectedCourseCode === 'all' ? '' : selectedCourseCode,
+    courseName: selectedCourse?.courseName || '',
   });
 
   const saveNotice = async (form) => {

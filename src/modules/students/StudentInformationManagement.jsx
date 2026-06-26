@@ -44,6 +44,7 @@ import AcademicsManagement from '../academics/AcademicsManagement';
 import CurriculumManagement from '../curriculum/CurriculumManagement';
 import SettingsManagement from '../settings/SettingsManagement';
 import { demoInstituteSettings } from '../settings/demoSettings';
+import { filterStudentScopedRecords } from '../shared/courseFilters';
 
 function csvValue(value) {
   return `"${String(value ?? '').replace(/"/g, '""')}"`;
@@ -341,6 +342,19 @@ export default function StudentInformationManagement({ user, onLogout }) {
       ? yearStudents
       : yearStudents.filter((student) => student.courseCode === selectedCourseCode || student.program === selectedCourseCode)
   ), [selectedCourseCode, yearStudents]);
+  const selectedCourse = useMemo(() => courses.find((course) => course.courseCode === selectedCourseCode) || null, [courses, selectedCourseCode]);
+  const courseScopedAdmissions = useMemo(
+    () => filterStudentScopedRecords(admissions.filter((item) => item.academicYear === academicYear), courseStudents, selectedCourseCode, selectedCourse),
+    [academicYear, admissions, courseStudents, selectedCourse, selectedCourseCode]
+  );
+  const courseScopedDocuments = useMemo(
+    () => filterStudentScopedRecords(studentDocuments.filter((item) => item.academicYear === academicYear), courseStudents, selectedCourseCode, selectedCourse),
+    [academicYear, courseStudents, selectedCourse, selectedCourseCode, studentDocuments]
+  );
+  const courseScopedPromotions = useMemo(
+    () => filterStudentScopedRecords(promotions.filter((item) => item.academicYear === academicYear), courseStudents, selectedCourseCode, selectedCourse),
+    [academicYear, courseStudents, promotions, selectedCourse, selectedCourseCode]
+  );
 
   const selectedStudent = selectedId ? courseStudents.find((student) => student.id === selectedId) || null : null;
   const selectedAdmissions = admissions.filter((record) => relationMatches(record, selectedStudent) && recordBelongsToYear(record));
@@ -626,7 +640,7 @@ export default function StudentInformationManagement({ user, onLogout }) {
                     You do not have permission to open this module.
                   </div>
                 ) : activePage === 'dashboard' ? (
-                  <DashboardManagement academicYear={academicYear} currentUser={user} onNavigate={navigateToModule} />
+                  <DashboardManagement academicYear={academicYear} currentUser={user} selectedCourse={selectedCourse} selectedCourseCode={selectedCourseCode} scopedStudents={courseStudents} onNavigate={navigateToModule} />
                 ) : activePage === 'students' ? (
                 selectedStudent ? (
                   <StudentDetailPage
@@ -716,45 +730,51 @@ export default function StudentInformationManagement({ user, onLogout }) {
                   <StudentReportView
                     academicYear={academicYear}
                     students={courseStudents}
-                    admissions={admissions.filter((item) => item.academicYear === academicYear)}
-                    documents={studentDocuments.filter((item) => item.academicYear === academicYear)}
-                    promotions={promotions.filter((item) => item.academicYear === academicYear)}
+                    admissions={courseScopedAdmissions}
+                    documents={courseScopedDocuments}
+                    promotions={courseScopedPromotions}
                     onBack={goBackOneStudentStep}
                   />
                 ) : activePage === 'faculty-staff' ? (
                   <FacultyStaffManagement
                     currentUser={user}
                     academicYear={academicYear}
+                    selectedCourse={selectedCourse}
+                    selectedCourseCode={selectedCourseCode}
+                    scopedStudents={courseStudents}
                     onOpenDocuments={openOwnerDocuments}
                   />
                 ) : activePage === 'academics' ? (
-                  <AcademicsManagement currentUser={user} academicYear={academicYear} />
+                  <AcademicsManagement currentUser={user} academicYear={academicYear} selectedCourse={selectedCourse} selectedCourseCode={selectedCourseCode} />
                 ) : activePage === 'calendar' ? (
-                  <CurriculumManagement currentUser={user} academicYear={academicYear} />
+                  <CurriculumManagement currentUser={user} academicYear={academicYear} selectedCourse={selectedCourse} selectedCourseCode={selectedCourseCode} />
                 ) : activePage === 'attendance' ? (
-                  <AttendanceManagement currentUser={user} academicYear={academicYear} />
+                  <AttendanceManagement currentUser={user} academicYear={academicYear} selectedCourse={selectedCourse} selectedCourseCode={selectedCourseCode} scopedStudents={courseStudents} />
                 ) : activePage === 'timetable' ? (
-                  <TimetableManagement currentUser={user} academicYear={academicYear} />
+                  <TimetableManagement currentUser={user} academicYear={academicYear} selectedCourse={selectedCourse} selectedCourseCode={selectedCourseCode} scopedStudents={courseStudents} />
                 ) : activePage === 'examination-results' ? (
-                  <ExaminationResultManagement currentUser={user} academicYear={academicYear} />
+                  <ExaminationResultManagement currentUser={user} academicYear={academicYear} selectedCourse={selectedCourse} selectedCourseCode={selectedCourseCode} scopedStudents={courseStudents} />
                 ) : activePage === 'fees' ? (
-                  <FeesManagement currentUser={user} academicYear={academicYear} />
+                  <FeesManagement currentUser={user} academicYear={academicYear} selectedCourse={selectedCourse} selectedCourseCode={selectedCourseCode} scopedStudents={courseStudents} />
                 ) : activePage === 'financial-reports' ? (
-                  <FinancialReports currentUser={user} academicYear={academicYear} />
+                  <FinancialReports currentUser={user} academicYear={academicYear} selectedCourse={selectedCourse} selectedCourseCode={selectedCourseCode} scopedStudents={courseStudents} />
                 ) : activePage === 'notice-board' ? (
-                  <NoticeBoardManagement currentUser={user} academicYear={academicYear} />
+                  <NoticeBoardManagement currentUser={user} academicYear={academicYear} selectedCourse={selectedCourse} selectedCourseCode={selectedCourseCode} />
                 ) : activePage === 'document-management' ? (
                   <DocumentManagement
                     currentUser={user}
                     academicYear={academicYear}
+                    selectedCourse={selectedCourse}
+                    selectedCourseCode={selectedCourseCode}
+                    scopedStudents={courseStudents}
                     ownerFilter={location.state?.documentOwner}
                   />
                 ) : activePage === 'parent-portal' ? (
-                  <ParentPortal currentUser={user} academicYear={academicYear} />
+                  <ParentPortal currentUser={user} academicYear={academicYear} selectedCourse={selectedCourse} selectedCourseCode={selectedCourseCode} />
                 ) : activePage === 'user-roles' ? (
                   <UserRoleManagement currentUser={user} />
                 ) : activePage === 'settings' ? (
-                  <SettingsManagement currentUser={user} />
+                  <SettingsManagement currentUser={user} selectedCourse={selectedCourse} selectedCourseCode={selectedCourseCode} />
                 ) : (
                   <DemoModulePage page={activePage} onOpenStudents={() => navigateToModule('students')} />
                 )}

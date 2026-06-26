@@ -15,8 +15,9 @@ import { demoClassrooms, demoTimetableEntries } from './demoTimetable';
 import { formatDisplayDate, getClassOptions, hasTimetableConflict, validateTimetableEntry } from './timetableUtils';
 import TimetableEntryModal from './components/TimetableEntryModal';
 import TimetableGrid from './components/TimetableGrid';
+import { filterByCourse, filterStudentsByCourse } from '../shared/courseFilters';
 
-export default function TimetableManagement({ currentUser, academicYear = '2026-2027' }) {
+export default function TimetableManagement({ currentUser, academicYear = '2026-2027', scopedStudents = [], selectedCourse = null, selectedCourseCode = 'all' }) {
   const [students, setStudents] = useState(isFirebaseConfigured ? [] : demoStudents);
   const [staff, setStaff] = useState(isFirebaseConfigured ? [] : demoStaffMembers);
   const [classrooms, setClassrooms] = useState(isFirebaseConfigured ? [] : demoClassrooms);
@@ -50,17 +51,19 @@ export default function TimetableManagement({ currentUser, academicYear = '2026-
   const canEdit = canAccess(defaultRoles, currentRoleId, 'timetable.edit');
 
   const faculty = staff.filter((member) => member.staffType === 'Faculty' && member.status !== 'Archived');
-  const classOptions = getClassOptions(students);
+  const courseStudents = scopedStudents.length ? scopedStudents : filterStudentsByCourse(students, selectedCourseCode, selectedCourse);
+  const courseEntries = filterByCourse(entries, selectedCourseCode, selectedCourse);
+  const classOptions = getClassOptions(courseStudents);
   const filteredEntries = useMemo(() => {
     const term = search.trim().toLowerCase();
-    const byClass = selectedClass === 'All' ? entries : entries.filter((entry) => entry.classKey === selectedClass);
+    const byClass = selectedClass === 'All' ? courseEntries : courseEntries.filter((entry) => entry.classKey === selectedClass);
     if (!term) return byClass;
     return byClass.filter((entry) =>
       [entry.subject, entry.classKey, entry.facultyName, entry.classroomName, entry.day]
         .filter(Boolean)
         .some((value) => value.toLowerCase().includes(term))
     );
-  }, [entries, search, selectedClass]);
+  }, [courseEntries, search, selectedClass]);
 
   const buildEntryPayload = (form) => {
     const facultyMember = faculty.find((item) => item.id === form.facultyId);
@@ -91,7 +94,7 @@ export default function TimetableManagement({ currentUser, academicYear = '2026-
     }
 
     const payload = buildEntryPayload(form);
-    if (hasTimetableConflict(entries, payload, editingEntry?.id)) {
+    if (hasTimetableConflict(courseEntries, payload, editingEntry?.id)) {
       toast.error('Conflict detected for class, faculty, or classroom in the same slot.');
       return;
     }

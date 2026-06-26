@@ -27,6 +27,24 @@ import OutstandingReportTable from './components/OutstandingReportTable';
 import ReportFilters from './components/ReportFilters';
 import FeeVisualGraph from '../fees/components/FeeVisualGraph';
 import { filterByCourse, filterStudentScopedRecords } from '../shared/courseFilters';
+import { getStudentClassKey } from '../fees/feeUtils';
+
+const defaultPaymentModes = ['Cash', 'Cheque', 'Bank Transfer', 'UPI Manual Entry', 'Card Swipe Offline'];
+
+function csvValue(value) {
+  return `"${String(value ?? '').replace(/"/g, '""')}"`;
+}
+
+function downloadCsv(filename, rows = []) {
+  const csv = rows.map((row) => row.map(csvValue).join(',')).join('\n');
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = filename;
+  link.click();
+  URL.revokeObjectURL(url);
+}
 
 export default function FinancialReports({ currentUser, academicYear = '2026-2027', scopedStudents = [], selectedCourse = null, selectedCourseCode = 'all' }) {
   const [structures, setStructures] = useState(isFirebaseConfigured ? [] : demoFinancialStructures);
@@ -72,19 +90,23 @@ export default function FinancialReports({ currentUser, academicYear = '2026-202
   const canView = canAccess(defaultRoles, currentRoleId, 'financialReports.view');
   const canExport = canAccess(defaultRoles, currentRoleId, 'financialReports.export');
   const canSnapshot = canAccess(defaultRoles, currentRoleId, 'financialReports.snapshots');
-  const courseStructures = filterByCourse(structures, selectedCourseCode, selectedCourse);
-  const courseAssignments = filterStudentScopedRecords(assignments, scopedStudents, selectedCourseCode, selectedCourse);
-  const courseAssignmentIds = new Set(courseAssignments.map((item) => item.id).filter(Boolean));
-  const courseCollections = filterStudentScopedRecords(collections, scopedStudents, selectedCourseCode, selectedCourse)
-    .filter((item) => selectedCourseCode === 'all' || !item.assignmentId || courseAssignmentIds.has(item.assignmentId));
-  const courseAdjustments = filterStudentScopedRecords(adjustments, scopedStudents, selectedCourseCode, selectedCourse)
-    .filter((item) => selectedCourseCode === 'all' || !item.assignmentId || courseAssignmentIds.has(item.assignmentId));
+  const courseStructures = useMemo(() => filterByCourse(structures, selectedCourseCode, selectedCourse), [selectedCourse, selectedCourseCode, structures]);
+  const courseAssignments = useMemo(() => filterStudentScopedRecords(assignments, scopedStudents, selectedCourseCode, selectedCourse), [assignments, scopedStudents, selectedCourse, selectedCourseCode]);
+  const courseAssignmentIds = useMemo(() => new Set(courseAssignments.map((item) => item.id).filter(Boolean)), [courseAssignments]);
+  const courseCollections = useMemo(() => filterStudentScopedRecords(collections, scopedStudents, selectedCourseCode, selectedCourse)
+    .filter((item) => selectedCourseCode === 'all' || !item.assignmentId || courseAssignmentIds.has(item.assignmentId)), [collections, courseAssignmentIds, scopedStudents, selectedCourse, selectedCourseCode]);
+  const courseAdjustments = useMemo(() => filterStudentScopedRecords(adjustments, scopedStudents, selectedCourseCode, selectedCourse)
+    .filter((item) => selectedCourseCode === 'all' || !item.assignmentId || courseAssignmentIds.has(item.assignmentId)), [adjustments, courseAssignmentIds, scopedStudents, selectedCourse, selectedCourseCode]);
 
   const classOptions = useMemo(() => [...new Set([
     ...courseStructures.map((item) => item.classKey),
     ...courseAssignments.map((item) => item.classKey),
-  ].filter(Boolean))].sort(), [courseStructures, courseAssignments]);
-  const paymentModes = useMemo(() => [...new Set(courseCollections.map((item) => item.paymentMode).filter(Boolean))].sort(), [courseCollections]);
+    ...scopedStudents.map((student) => getStudentClassKey(student)),
+  ].filter(Boolean))].sort(), [courseStructures, courseAssignments, scopedStudents]);
+  const paymentModes = useMemo(() => [...new Set([
+    ...defaultPaymentModes,
+    ...courseCollections.map((item) => item.paymentMode).filter(Boolean),
+  ])].sort(), [courseCollections]);
   const collectionReport = useMemo(() => buildCollectionReport(courseCollections, filters), [courseCollections, filters]);
   const outstandingReport = useMemo(() => buildOutstandingReport(courseAssignments), [courseAssignments]);
   const classAnalytics = useMemo(() => buildClassAnalytics(courseAssignments, courseCollections, courseAdjustments), [courseAdjustments, courseAssignments, courseCollections]);
@@ -124,7 +146,40 @@ export default function FinancialReports({ currentUser, academicYear = '2026-202
       toast.error('You do not have permission to export reports.');
       return;
     }
-    toast.success('Report export prepared for the selected filters.');
+    const timestamp = new Date().toISOString().slice(0, 10);
+    const courseLabel = selectedCourseCode === 'all' ? 'all-courses' : selectedCourseCode.toLowerCase();
+
+    if (activeReport === 'collections') {
+      downloadCsv(`financial-collections-${courseLabel}-${timestamp}.csv`, [
+        ['Student', 'Student ID', 'Class', 'Date', 'Mode', 'Reference', 'Amount'],
+        ...collectionReport.rows.map((item) => [
+          item.studentName,
+          item.studentId,
+          item.classKey || '-',
+          item.paymentDate || '-',
+          item.paymentMode || '-',
+          item.referenceNo || '-',
+          item.amount || 0,
+        ]),
+      ]);
+      toast.success('Collection report exported');
+      return;
+    }
+
+    downloadCsv(`financial-outstanding-${courseLabel}-${timestamp}.csv`, [
+      ['Student', 'Student ID', 'Class', 'Due Date', 'Aging', 'Assigned', 'Paid', 'Outstanding'],
+      ...outstandingReport.rows.map((item) => [
+        item.studentName,
+        item.studentId,
+        item.classKey || '-',
+        item.dueDate || '-',
+        item.dueBucket || '-',
+        item.totalAmount || 0,
+        item.paidAmount || 0,
+        item.dueAmount || 0,
+      ]),
+    ]);
+    toast.success('Outstanding report exported');
   };
 
   if (!canView) {

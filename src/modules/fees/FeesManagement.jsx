@@ -216,16 +216,6 @@ export default function FeesManagement({ currentUser, academicYear = '2026-2027'
   const activeTask = feeTaskOptions.find((task) => task.id === activeFeeTask);
   const activeBranches = feeBranchOptions[activeFeeTask] || [];
   const activeBranch = activeBranches.find((branch) => branch.id === activeFeeBranch);
-  const branchAccentText = activeFeeTask === 'collections'
-    ? 'Collection work'
-    : activeFeeTask === 'structures'
-      ? 'Structure setup'
-      : activeFeeTask === 'adjustments'
-        ? 'Adjustment work'
-        : activeFeeTask === 'due-tracking'
-          ? 'Parent reminders'
-          : 'Payment view';
-
   const saveStructure = async (form) => {
     if (!canSetup) {
       toast.error('You do not have permission to manage fee structures.');
@@ -520,7 +510,6 @@ export default function FeesManagement({ currentUser, academicYear = '2026-2027'
           </div>
         </div>
         <div className="flex flex-wrap gap-2">
-          <span className="h-10 px-4 rounded-full bg-white border border-slate-200 text-slate-700 font-bold text-xs flex items-center">{branchAccentText}</span>
           {activeFeeBranch === 'create-structure' && canSetup && (
             <button onClick={() => setShowStructureModal(true)} className="h-10 px-4 rounded-full bg-[#fb9a5b] text-white font-semibold text-sm flex items-center gap-2"><Plus size={16} /> Open Form</button>
           )}

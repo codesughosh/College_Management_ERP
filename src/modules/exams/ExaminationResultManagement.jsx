@@ -184,12 +184,6 @@ export default function ExaminationResultManagement({ currentUser, academicYear 
   const activeTask = examTaskOptions.find((task) => task.id === activeExamTask);
   const activeBranches = examBranchOptions[activeExamTask] || [];
   const activeBranch = activeBranches.find((branch) => branch.id === activeExamBranch);
-  const branchAccentText = activeExamTask === 'schedules'
-    ? 'Schedule work'
-    : activeExamTask === 'marks'
-      ? 'Marks work'
-      : 'Result work';
-
   const buildSchedulePayload = (form) => {
     const facultyMember = faculty.find((item) => item.id === form.facultyId);
     return {
@@ -448,7 +442,6 @@ export default function ExaminationResultManagement({ currentUser, academicYear 
           </div>
         </div>
         <div className="flex flex-wrap gap-2">
-          <span className="h-10 px-4 rounded-full bg-white border border-slate-200 text-slate-700 font-bold text-xs flex items-center">{branchAccentText}</span>
           {activeExamBranch === 'create-schedule' && canSchedule && (
             <button onClick={() => setShowScheduleModal(true)} className="h-10 px-4 rounded-full bg-[#fb9a5b] text-white font-semibold text-sm flex items-center gap-2"><Plus size={16} /> Open Form</button>
           )}

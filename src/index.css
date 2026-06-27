@@ -2101,3 +2101,37 @@ html{color-scheme:dark}::selection{background:rgba(0,255,136,.18);color:#eafff5}
   justify-content:center!important;
   padding:0!important;
 }
+
+/* Final collapsed sidebar icon fix: keep the icon hit area centered and unclipped. */
+.erp-shell .erp-sidebar.is-collapsed .erp-sidebar-nav .erp-sidebar-item {
+  display:flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  overflow:visible!important;
+}
+
+.erp-shell .erp-sidebar.is-collapsed .erp-sidebar-nav .erp-sidebar-item > .erp-sidebar-item-icon,
+.erp-shell.light-mode .erp-sidebar.is-collapsed .erp-sidebar-menu-card > nav.erp-sidebar-nav > button.erp-sidebar-item > span.erp-sidebar-item-icon {
+  width:100%!important;
+  height:100%!important;
+  min-width:0!important;
+  min-height:0!important;
+  flex:1 1 auto!important;
+  display:flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  padding:0!important;
+  margin:0!important;
+  border:0!important;
+  background:transparent!important;
+  box-shadow:none!important;
+  overflow:visible!important;
+}
+
+.erp-shell .erp-sidebar.is-collapsed .erp-sidebar-nav .erp-sidebar-item > .erp-sidebar-item-icon svg,
+.erp-shell.light-mode .erp-sidebar.is-collapsed .erp-sidebar-menu-card > nav.erp-sidebar-nav > button.erp-sidebar-item > span.erp-sidebar-item-icon svg {
+  width:24px!important;
+  height:24px!important;
+  display:block!important;
+  flex:0 0 auto!important;
+}

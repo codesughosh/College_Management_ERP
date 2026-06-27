@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
 import {
+  filterTimetableEntriesByCourse,
   getClassOptions,
   getTimeSlotOptions,
   hasTimetableConflict,
@@ -72,6 +73,15 @@ assert.deepEqual(
     { label: '09:00 - 10:00', startTime: '09:00', endTime: '10:00' },
     { label: '02:00 - 03:00', startTime: '14:00', endTime: '15:00' },
   ]
+);
+
+assert.deepEqual(
+  filterTimetableEntriesByCourse([
+    { id: 'mlt-lateral', courseCode: 'MLTLAT', courseName: 'II B Sc MLT' },
+    { id: 'mlt-regular', courseCode: 'MLTREG', courseName: 'I B Sc MLT' },
+    { id: 'atot-regular', courseCode: 'ATOTREG', courseName: 'I B Sc Anaesthesia and Operation Theater Technology' },
+  ], 'MLTLAT').map((entry) => entry.id),
+  ['mlt-lateral']
 );
 
 console.log('Timetable tests passed.');

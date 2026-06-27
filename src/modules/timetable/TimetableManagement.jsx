@@ -12,10 +12,10 @@ import { canAccess, defaultRoles } from '../userRoles/rolePermissions';
 import { demoStaffMembers } from '../facultyStaff/demoFacultyStaff';
 import { demoStudents } from '../students/demoStudents';
 import { demoClassrooms, demoTimetableEntries } from './demoTimetable';
-import { formatDisplayDate, getClassOptions, getTimeSlotOptions, hasTimetableConflict, normalizeTimeSlotFields, validateTimetableEntry } from './timetableUtils';
+import { filterTimetableEntriesByCourse, formatDisplayDate, getClassOptions, getTimeSlotOptions, hasTimetableConflict, normalizeTimeSlotFields, validateTimetableEntry } from './timetableUtils';
 import TimetableEntryModal from './components/TimetableEntryModal';
 import TimetableGrid from './components/TimetableGrid';
-import { filterByCourse, filterStudentsByCourse } from '../shared/courseFilters';
+import { filterStudentsByCourse } from '../shared/courseFilters';
 
 export default function TimetableManagement({ currentUser, academicYear = '2026-2027', scopedStudents = [], selectedCourse = null, selectedCourseCode = 'all' }) {
   const [students, setStudents] = useState(isFirebaseConfigured ? [] : demoStudents);
@@ -53,9 +53,11 @@ export default function TimetableManagement({ currentUser, academicYear = '2026-
   const faculty = staff.filter((member) => member.staffType === 'Faculty' && member.status !== 'Archived');
   const courseStudents = scopedStudents.length ? scopedStudents : filterStudentsByCourse(students, selectedCourseCode, selectedCourse);
   const parentCourseCodes = new Set(courseStudents.map((student) => student.courseCode).filter(Boolean));
-  const courseEntries = currentRoleId === 'parent' && selectedCourseCode === 'all' && parentCourseCodes.size
-    ? entries.filter((entry) => parentCourseCodes.has(entry.courseCode))
-    : filterByCourse(entries, selectedCourseCode, selectedCourse);
+  const courseEntries = filterTimetableEntriesByCourse(
+    entries,
+    selectedCourseCode,
+    currentRoleId === 'parent' ? [...parentCourseCodes] : []
+  );
   const classOptions = getClassOptions(courseStudents);
   const timeSlotOptions = getTimeSlotOptions(courseEntries);
   const filteredEntries = useMemo(() => {

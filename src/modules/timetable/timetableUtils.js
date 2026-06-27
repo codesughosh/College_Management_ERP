@@ -91,6 +91,14 @@ export function getClassOptions(students) {
   return [...new Set(students.filter((student) => student.status !== 'Archived').map(getClassKey))].sort();
 }
 
+export function filterTimetableEntriesByCourse(entries = [], selectedCourseCode = 'all', courseCodes = []) {
+  if (!selectedCourseCode || selectedCourseCode === 'all') {
+    const scopedCodes = new Set(courseCodes.filter(Boolean));
+    return scopedCodes.size ? entries.filter((entry) => scopedCodes.has(entry.courseCode)) : entries;
+  }
+  return entries.filter((entry) => entry.courseCode === selectedCourseCode);
+}
+
 export function hasTimetableConflict(entries, candidate, ignoreId = '') {
   const candidateSlot = getTimeSlotLabel(candidate);
   return entries.some((entry) => {

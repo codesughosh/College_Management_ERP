@@ -12,7 +12,7 @@ import { canAccess, defaultRoles } from '../userRoles/rolePermissions';
 import { demoStaffMembers } from '../facultyStaff/demoFacultyStaff';
 import { demoStudents } from '../students/demoStudents';
 import { demoClassrooms, demoTimetableEntries } from './demoTimetable';
-import { formatDisplayDate, getClassOptions, hasTimetableConflict, validateTimetableEntry } from './timetableUtils';
+import { formatDisplayDate, getClassOptions, getTimeSlotOptions, hasTimetableConflict, normalizeTimeSlotFields, validateTimetableEntry } from './timetableUtils';
 import TimetableEntryModal from './components/TimetableEntryModal';
 import TimetableGrid from './components/TimetableGrid';
 import { filterByCourse, filterStudentsByCourse } from '../shared/courseFilters';
@@ -54,6 +54,7 @@ export default function TimetableManagement({ currentUser, academicYear = '2026-
   const courseStudents = scopedStudents.length ? scopedStudents : filterStudentsByCourse(students, selectedCourseCode, selectedCourse);
   const courseEntries = filterByCourse(entries, selectedCourseCode, selectedCourse);
   const classOptions = getClassOptions(courseStudents);
+  const timeSlotOptions = getTimeSlotOptions(courseEntries);
   const filteredEntries = useMemo(() => {
     const term = search.trim().toLowerCase();
     if (!term) return courseEntries;
@@ -68,8 +69,10 @@ export default function TimetableManagement({ currentUser, academicYear = '2026-
     const facultyMember = faculty.find((item) => item.id === form.facultyId);
     const classroom = classrooms.find((item) => item.id === form.classroomId);
     const classStudent = courseStudents.find((student) => `${student.className} - ${student.section}` === form.classKey);
+    const normalizedForm = normalizeTimeSlotFields(form);
     return {
       ...form,
+      ...normalizedForm,
       subject: form.subject.trim(),
       facultyName: facultyMember?.name || '',
       classroomName: classroom?.roomNo || '',
@@ -196,6 +199,7 @@ export default function TimetableManagement({ currentUser, academicYear = '2026-
           classrooms={classrooms}
           faculty={faculty}
           initialValues={entryDefaults}
+          timeSlotOptions={timeSlotOptions}
           onClose={() => {
             setShowEntryModal(false);
             setEntryDefaults({});
@@ -210,6 +214,7 @@ export default function TimetableManagement({ currentUser, academicYear = '2026-
           classOptions={classOptions}
           classrooms={classrooms}
           faculty={faculty}
+          timeSlotOptions={timeSlotOptions}
           onClose={() => setEditingEntry(null)}
           onSave={saveEntry}
         />

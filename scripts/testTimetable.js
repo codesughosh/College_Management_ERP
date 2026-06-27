@@ -1,7 +1,9 @@
 import assert from 'node:assert/strict';
 import {
   getClassOptions,
+  getTimeSlotOptions,
   hasTimetableConflict,
+  normalizeTimeSlotFields,
   validateTimetableEntry,
 } from '../src/modules/timetable/timetableUtils.js';
 
@@ -53,5 +55,23 @@ assert.equal(hasTimetableConflict(entries, {
   day: 'Tuesday',
   timeSlot: '09:00 - 10:00',
 }), false);
+
+assert.deepEqual(normalizeTimeSlotFields({ timeSlot: '02:00 - 03:00' }), {
+  timeSlot: '02:00 - 03:00',
+  startTime: '14:00',
+  endTime: '15:00',
+});
+
+assert.deepEqual(
+  getTimeSlotOptions([
+    { timeSlot: '02:00 - 03:00', status: 'Published' },
+    { timeSlot: '09:00 - 10:00', status: 'Published' },
+    { timeSlot: '01:00 - 02:00', status: 'Archived' },
+  ]),
+  [
+    { label: '09:00 - 10:00', startTime: '09:00', endTime: '10:00' },
+    { label: '02:00 - 03:00', startTime: '14:00', endTime: '15:00' },
+  ]
+);
 
 console.log('Timetable tests passed.');

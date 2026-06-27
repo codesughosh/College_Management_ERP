@@ -13,6 +13,68 @@ export const timeSlots = [
   '04:00 - 05:00',
 ];
 
+function parseTimePart(value = '') {
+  const match = String(value).trim().match(/^(\d{1,2})(?::?(\d{2}))?\s*(am|pm)?$/i);
+  if (!match) return null;
+  let hours = Number(match[1]);
+  const minutes = Number(match[2] || 0);
+  const meridiem = match[3]?.toLowerCase();
+  if (meridiem === 'pm' && hours < 12) hours += 12;
+  if (meridiem === 'am' && hours === 12) hours = 0;
+  if (!meridiem && hours >= 1 && hours <= 5) hours += 12;
+  return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
+}
+
+export function parseTimeSlot(timeSlot = '') {
+  const [start = '', end = ''] = String(timeSlot).split(/\s*-\s*/);
+  return {
+    startTime: parseTimePart(start) || '',
+    endTime: parseTimePart(end) || '',
+  };
+}
+
+function timeToMinutes(value = '') {
+  const parsed = parseTimePart(value);
+  if (!parsed) return Number.MAX_SAFE_INTEGER;
+  const [hours, minutes] = parsed.split(':').map(Number);
+  return hours * 60 + minutes;
+}
+
+export function getTimeSlotLabel(entry = {}) {
+  if (entry.timeSlot) return entry.timeSlot;
+  if (entry.startTime && entry.endTime) return `${entry.startTime} - ${entry.endTime}`;
+  return '';
+}
+
+export function normalizeTimeSlotFields(entry = {}) {
+  const parsed = parseTimeSlot(entry.timeSlot);
+  return {
+    ...entry,
+    timeSlot: getTimeSlotLabel(entry),
+    startTime: entry.startTime || parsed.startTime,
+    endTime: entry.endTime || parsed.endTime,
+  };
+}
+
+export function getTimeSlotOptions(entries = []) {
+  const options = new Map();
+  entries
+    .filter((entry) => entry.status !== 'Archived')
+    .map(normalizeTimeSlotFields)
+    .forEach((entry) => {
+      const label = getTimeSlotLabel(entry);
+      if (!label) return;
+      options.set(label, {
+        label,
+        startTime: entry.startTime,
+        endTime: entry.endTime,
+      });
+    });
+  return [...options.values()].sort((a, b) => (
+    timeToMinutes(a.startTime || a.label.split('-')[0]) - timeToMinutes(b.startTime || b.label.split('-')[0])
+  ));
+}
+
 export function formatDisplayDate(date = new Date()) {
   return date.toLocaleDateString('en-GB', {
     day: '2-digit',
@@ -30,9 +92,10 @@ export function getClassOptions(students) {
 }
 
 export function hasTimetableConflict(entries, candidate, ignoreId = '') {
+  const candidateSlot = getTimeSlotLabel(candidate);
   return entries.some((entry) => {
     if (entry.id === ignoreId || entry.status === 'Archived') return false;
-    const sameSlot = entry.day === candidate.day && entry.timeSlot === candidate.timeSlot;
+    const sameSlot = entry.day === candidate.day && getTimeSlotLabel(entry) === candidateSlot;
     if (!sameSlot) return false;
     return entry.classKey === candidate.classKey || entry.facultyId === candidate.facultyId || entry.classroomId === candidate.classroomId;
   });

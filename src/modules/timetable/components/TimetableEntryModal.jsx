@@ -1,16 +1,29 @@
 import { useState } from 'react';
-import { timeSlots, weekDays } from '../timetableUtils';
+import { normalizeTimeSlotFields, weekDays } from '../timetableUtils';
 
-export default function TimetableEntryModal({ classOptions, classrooms, faculty, initialEntry = null, initialValues = {}, mode = 'create', onClose, onSave }) {
+export default function TimetableEntryModal({ classOptions, classrooms, faculty, initialEntry = null, initialValues = {}, mode = 'create', onClose, onSave, timeSlotOptions = [] }) {
   const isEdit = mode === 'edit';
+  const initialTime = normalizeTimeSlotFields(initialEntry || initialValues);
   const [form, setForm] = useState({
     classKey: initialEntry?.classKey || initialValues.classKey || classOptions[0] || '',
     subject: initialEntry?.subject || '',
     facultyId: initialEntry?.facultyId || faculty[0]?.id || '',
     classroomId: initialEntry?.classroomId || classrooms[0]?.id || '',
     day: initialEntry?.day || initialValues.day || weekDays[0],
-    timeSlot: initialEntry?.timeSlot || initialValues.timeSlot || timeSlots[0],
+    timeSlot: initialTime.timeSlot || timeSlotOptions[0]?.label || '',
+    startTime: initialTime.startTime || timeSlotOptions[0]?.startTime || '',
+    endTime: initialTime.endTime || timeSlotOptions[0]?.endTime || '',
   });
+
+  const changeTimeSlot = (timeSlot) => {
+    const selected = timeSlotOptions.find((item) => item.label === timeSlot);
+    setForm((prev) => ({
+      ...prev,
+      timeSlot,
+      startTime: selected?.startTime || prev.startTime,
+      endTime: selected?.endTime || prev.endTime,
+    }));
+  };
 
   const submit = (event) => {
     event.preventDefault();
@@ -58,9 +71,18 @@ export default function TimetableEntryModal({ classOptions, classrooms, faculty,
           </label>
           <label>
             <span className="block text-xs font-semibold text-slate-500 mb-1.5">Time Slot</span>
-            <select value={form.timeSlot} onChange={(event) => setForm((prev) => ({ ...prev, timeSlot: event.target.value }))} className="w-full h-11 rounded-lg border border-slate-200 px-3 text-sm">
-              {timeSlots.map((item) => <option key={item}>{item}</option>)}
-            </select>
+            <input list="timetable-time-slots" value={form.timeSlot} onChange={(event) => changeTimeSlot(event.target.value)} placeholder="09:00 - 10:00" className="w-full h-11 rounded-lg border border-slate-200 px-3 text-sm" />
+            <datalist id="timetable-time-slots">
+              {timeSlotOptions.map((item) => <option key={item.label} value={item.label} />)}
+            </datalist>
+          </label>
+          <label>
+            <span className="block text-xs font-semibold text-slate-500 mb-1.5">Start Time</span>
+            <input type="time" value={form.startTime} onChange={(event) => setForm((prev) => ({ ...prev, startTime: event.target.value }))} className="w-full h-11 rounded-lg border border-slate-200 px-3 text-sm" />
+          </label>
+          <label>
+            <span className="block text-xs font-semibold text-slate-500 mb-1.5">End Time</span>
+            <input type="time" value={form.endTime} onChange={(event) => setForm((prev) => ({ ...prev, endTime: event.target.value }))} className="w-full h-11 rounded-lg border border-slate-200 px-3 text-sm" />
           </label>
         </div>
         <div className="erp-modal-footer px-6 py-4 border-t border-slate-100 flex justify-end gap-3">

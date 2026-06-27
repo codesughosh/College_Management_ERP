@@ -294,6 +294,24 @@ service cloud.firestore {
       allow delete: if false;
     }
 
+    match /hostelRooms/{documentId} {
+      allow read: if staffCan('hostel.view');
+      allow create, update: if staffCan('hostel.manage');
+      allow delete: if false;
+    }
+
+    match /hostelAllocations/{documentId} {
+      allow read: if staffCan('hostel.view');
+      allow create, update: if staffCan('hostel.manage');
+      allow delete: if false;
+    }
+
+    match /hostelRecords/{documentId} {
+      allow read: if staffCan('hostel.view');
+      allow create, update: if staffCan('hostel.manage');
+      allow delete: if false;
+    }
+
     match /financialReportSnapshots/{documentId} {
       allow read: if adminCan('financialReports.view');
       allow create, update: if adminCan('financialReports.snapshots');

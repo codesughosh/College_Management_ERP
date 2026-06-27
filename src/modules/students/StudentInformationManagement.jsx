@@ -35,6 +35,7 @@ import AttendanceManagement from '../attendance/AttendanceManagement';
 import TimetableManagement from '../timetable/TimetableManagement';
 import ExaminationResultManagement from '../exams/ExaminationResultManagement';
 import FeesManagement from '../fees/FeesManagement';
+import HostelManagement from '../hostel/HostelManagement';
 import FinancialReports from '../financialReports/FinancialReports';
 import NoticeBoardManagement from '../notices/NoticeBoardManagement';
 import DocumentManagement from '../documents/DocumentManagement';
@@ -754,6 +755,8 @@ export default function StudentInformationManagement({ user, onLogout }) {
                   <ExaminationResultManagement currentUser={user} academicYear={academicYear} selectedCourse={selectedCourse} selectedCourseCode={selectedCourseCode} scopedStudents={courseStudents} />
                 ) : activePage === 'fees' ? (
                   <FeesManagement currentUser={user} academicYear={academicYear} selectedCourse={selectedCourse} selectedCourseCode={selectedCourseCode} scopedStudents={courseStudents} />
+                ) : activePage === 'hostel-management' ? (
+                  <HostelManagement currentUser={user} academicYear={academicYear} selectedCourse={selectedCourse} selectedCourseCode={selectedCourseCode} />
                 ) : activePage === 'financial-reports' ? (
                   <FinancialReports currentUser={user} academicYear={academicYear} selectedCourse={selectedCourse} selectedCourseCode={selectedCourseCode} scopedStudents={courseStudents} />
                 ) : activePage === 'notice-board' ? (

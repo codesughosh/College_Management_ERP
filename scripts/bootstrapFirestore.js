@@ -178,6 +178,18 @@ const collections = {
     purpose: 'Fee concessions, waivers, and approved adjustments',
     fields: ['assignmentId', 'studentRecordId', 'studentId', 'studentName', 'amount', 'academicYear', 'reason', 'status', 'createdAtText'],
   },
+  hostelRooms: {
+    purpose: 'Hostel room master records and occupancy counts',
+    fields: ['roomNo', 'hostelName', 'blockName', 'floor', 'capacity', 'occupiedCount', 'wardenName', 'academicYear', 'status', 'createdAtText', 'updatedAtText'],
+  },
+  hostelAllocations: {
+    purpose: 'Student hostel room allocation records',
+    fields: ['studentRecordId', 'studentId', 'studentName', 'courseCode', 'courseName', 'roomNo', 'hostelName', 'allocatedOn', 'academicYear', 'status', 'guardianPhone', 'createdAtText', 'updatedAtText'],
+  },
+  hostelRecords: {
+    purpose: 'Hostel inspections, maintenance, and administrative records',
+    fields: ['recordType', 'title', 'hostelName', 'roomNo', 'recordDate', 'academicYear', 'status', 'notes', 'createdAtText', 'updatedAtText'],
+  },
   financialReportSnapshots: {
     purpose: 'Saved financial report summary snapshots',
     fields: ['reportName', 'filters', 'totalAssigned', 'lifetimeCollected', 'filteredCollected', 'totalAdjusted', 'totalOutstanding', 'overdueAmount', 'dueSoonAmount', 'collectionRate', 'classCount', 'dueStudentCount', 'status', 'createdAtText'],

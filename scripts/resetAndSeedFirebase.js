@@ -52,6 +52,9 @@ const schemas = {
   feeAssignments: ['feeStructureId', 'studentRecordId', 'studentId', 'studentName', 'classKey', 'academicYear', 'totalAmount', 'paidAmount', 'adjustmentAmount', 'dueAmount', 'dueDate', 'status'],
   feeCollections: ['assignmentId', 'studentRecordId', 'studentId', 'studentName', 'amount', 'academicYear', 'paymentMode', 'referenceNo', 'paymentDate', 'status'],
   feeAdjustments: ['assignmentId', 'studentRecordId', 'studentId', 'studentName', 'amount', 'academicYear', 'reason', 'status'],
+  hostelRooms: ['roomNo', 'hostelName', 'blockName', 'floor', 'capacity', 'occupiedCount', 'wardenName', 'academicYear', 'status'],
+  hostelAllocations: ['studentRecordId', 'studentId', 'studentName', 'courseCode', 'courseName', 'roomNo', 'hostelName', 'allocatedOn', 'academicYear', 'status', 'guardianPhone'],
+  hostelRecords: ['recordType', 'title', 'hostelName', 'roomNo', 'recordDate', 'academicYear', 'status', 'notes'],
   financialReportSnapshots: ['reportName', 'totalAssigned', 'lifetimeCollected', 'totalOutstanding', 'collectionRate', 'status'],
   noticeItems: ['type', 'title', 'referenceNo', 'audience', 'academicYear', 'priority', 'body', 'publishDate', 'expiryDate', 'status'],
   managedDocuments: ['ownerType', 'ownerRecordId', 'ownerId', 'ownerName', 'documentType', 'category', 'academicYear', 'fileName', 'verificationStatus'],
@@ -71,6 +74,7 @@ const allPermissions = [
   'timetable.view', 'timetable.create', 'timetable.edit', 'timetable.publish', 'timetable.classrooms',
   'exams.view', 'exams.schedule', 'exams.assessments', 'exams.marks', 'exams.results', 'exams.reportCards',
   'fees.view', 'fees.setup', 'fees.assign', 'fees.collect', 'fees.adjust', 'fees.reports',
+    'hostel.view', 'hostel.manage',
   'financialReports.view', 'financialReports.export', 'financialReports.snapshots',
   'notices.view', 'notices.create', 'notices.edit', 'notices.archive',
   'documents.view', 'documents.upload', 'documents.verify', 'documents.archive',
@@ -84,6 +88,7 @@ const adminPermissions = [
   'timetable.view', 'timetable.create', 'timetable.edit', 'timetable.publish', 'timetable.classrooms',
   'exams.view', 'exams.schedule', 'exams.assessments', 'exams.marks', 'exams.results', 'exams.reportCards',
   'fees.view', 'fees.setup', 'fees.assign', 'fees.collect', 'fees.adjust', 'fees.reports',
+    'hostel.view', 'hostel.manage',
   'financialReports.view', 'financialReports.export', 'financialReports.snapshots',
   'notices.view', 'notices.create', 'notices.edit', 'notices.archive',
   'documents.view', 'documents.upload', 'documents.verify', 'documents.archive',
@@ -268,6 +273,16 @@ const seed = {
     'seed-fee-collection-vivek': { assignmentId: 'seed-fee-vivek', studentRecordId: 'seed-student-vivek', studentId: 'STU-4449', studentName: 'Vivek Sharma', amount: 40000, academicYear: '2026-2027', paymentMode: 'Cash', referenceNo: 'OFF-1001', paymentDate: '2026-06-10', collectedBy: 'Admin Office', status: 'Posted', createdAtText: '10 Jun 2026' },
   },
   feeAdjustments: {},
+  hostelRooms: {
+    'seed-hostel-room-101': { roomNo: '101', hostelName: 'Main Hostel', blockName: 'A Block', floor: '1', capacity: 4, occupiedCount: 2, wardenName: 'Anusha Shine', academicYear: '2026-2027', status: 'Available', createdAtText: '19 Jun 2026' },
+    'seed-hostel-room-102': { roomNo: '102', hostelName: 'Main Hostel', blockName: 'A Block', floor: '1', capacity: 4, occupiedCount: 4, wardenName: 'Anusha Shine', academicYear: '2026-2027', status: 'Full', createdAtText: '19 Jun 2026' },
+  },
+  hostelAllocations: {
+    'seed-hostel-allocation-vivek': { studentRecordId: 'seed-student-vivek', studentId: 'STU-4449', studentName: 'Vivek Sharma', courseCode: 'SCI-XII', courseName: 'CBSE Science', roomNo: '101', hostelName: 'Main Hostel', allocatedOn: '2026-06-20', academicYear: '2026-2027', status: 'Active', guardianPhone: '+91 98765 43210', createdAtText: '20 Jun 2026' },
+  },
+  hostelRecords: {
+    'seed-hostel-record-inspection': { recordType: 'Inspection', title: 'Monthly room inspection', hostelName: 'Main Hostel', roomNo: '101', recordDate: '2026-06-25', academicYear: '2026-2027', status: 'Open', notes: 'Routine inspection logged.', createdAtText: '25 Jun 2026' },
+  },
   financialReportSnapshots: {
     'seed-finance-summary-june': { reportName: 'June 2026 Finance Summary', totalAssigned: 65000, lifetimeCollected: 40000, totalOutstanding: 25000, totalAdjusted: 0, collectionRate: 62, status: 'Generated', createdAtText: '19 Jun 2026' },
   },

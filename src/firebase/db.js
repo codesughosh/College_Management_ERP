@@ -545,6 +545,30 @@ export async function createFeeAdjustment(data) {
   return createCollectionDocument('feeAdjustments', data);
 }
 
+
+export async function getHostelManagementData(academicYear = '') {
+  const yearConstraints = academicYearWhere(academicYear);
+  const [hostelRooms, hostelAllocations, hostelRecords] = await Promise.all([
+    listCollection('hostelRooms', yearConstraints),
+    listCollection('hostelAllocations', yearConstraints),
+    listCollection('hostelRecords', yearConstraints),
+  ]);
+
+  return { hostelRooms, hostelAllocations, hostelRecords };
+}
+
+export async function createHostelRoom(data) {
+  return createCollectionDocument('hostelRooms', data);
+}
+
+export async function createHostelAllocation(data) {
+  return createCollectionDocument('hostelAllocations', data);
+}
+
+export async function createHostelRecord(data) {
+  return createCollectionDocument('hostelRecords', data);
+}
+
 export async function getFinancialReportsData(academicYear = '') {
   const yearConstraints = academicYearWhere(academicYear);
   const [feeStructures, feeAssignments, feeCollections, feeAdjustments, financialReportSnapshots] = await Promise.all([

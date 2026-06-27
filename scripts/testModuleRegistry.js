@@ -8,6 +8,7 @@ assert.equal(getModuleById('dashboard').label, 'Dashboard');
 assert.equal(getModuleById('students').permission, 'students.view');
 assert.equal(getModuleById('fees').permission, 'fees.view');
 assert.equal(getModuleById('fees').label, 'Payment');
+assert.equal(getModuleById('hostel-management').permission, 'hostel.view');
 assert.equal(getModuleById('parent-portal').permission, 'parentPortal.view');
 assert.equal(getModuleById('missing-module'), null);
 
@@ -28,6 +29,7 @@ assert.deepEqual(adminSidebarVisible, [
   'examination-results',
   'document-management',
   'fees',
+  'hostel-management',
   'financial-reports',
   'parent-portal',
 ]);
@@ -51,6 +53,7 @@ assert.deepEqual(superAdminVisible, [
   'notice-board',
   'document-management',
   'fees',
+  'hostel-management',
   'financial-reports',
   'parent-portal',
   'settings',
@@ -66,6 +69,7 @@ assert.equal(facultyVisible.includes('attendance'), true);
 assert.equal(facultyVisible.includes('notice-board'), true);
 assert.equal(facultyVisible.includes('document-management'), false);
 assert.equal(facultyVisible.includes('fees'), false);
+assert.equal(facultyVisible.includes('hostel-management'), true);
 assert.equal(facultyVisible.includes('financial-reports'), false);
 assert.equal(facultyVisible.includes('parent-portal'), false);
 
@@ -81,6 +85,7 @@ assert.deepEqual(adminVisible, [
   'examination-results',
   'document-management',
   'fees',
+  'hostel-management',
   'financial-reports',
   'parent-portal',
   'settings',

@@ -29,6 +29,8 @@ assert.equal(canAccess(defaultRoles, 'admin', 'timetable.publish'), true);
 assert.equal(canAccess(defaultRoles, 'admin', 'exams.reportCards'), true);
 assert.equal(canAccess(defaultRoles, 'admin', 'fees.collect'), true);
 assert.equal(canAccess(defaultRoles, 'admin', 'fees.reports'), true);
+assert.equal(canAccess(defaultRoles, 'admin', 'hostel.view'), true);
+assert.equal(canAccess(defaultRoles, 'admin', 'hostel.manage'), true);
 assert.equal(canAccess(defaultRoles, 'admin', 'financialReports.export'), true);
 assert.equal(canAccess(defaultRoles, 'admin', 'financialReports.snapshots'), true);
 assert.equal(canAccess(defaultRoles, 'admin', 'academicCurriculum.view'), true);
@@ -46,6 +48,7 @@ assert.equal(canAccess(defaultRoles, 'super-admin', 'academicCurriculum.view'), 
 assert.equal(canAccess(defaultRoles, 'super-admin', 'academics.manage'), true);
 assert.equal(canAccess(defaultRoles, 'super-admin', 'users.view'), true);
 assert.equal(canAccess(defaultRoles, 'super-admin', 'settings.manage'), true);
+assert.equal(canAccess(defaultRoles, 'super-admin', 'hostel.manage'), true);
 
 assert.equal(canAccess(defaultRoles, 'faculty', 'academicCurriculum.view'), true);
 assert.equal(canAccess(defaultRoles, 'faculty', 'academics.view'), false);
@@ -59,6 +62,8 @@ assert.equal(canAccess(defaultRoles, 'faculty', 'exams.marks'), false);
 assert.equal(canAccess(defaultRoles, 'faculty', 'exams.results'), false);
 assert.equal(canAccess(defaultRoles, 'faculty', 'notices.view'), true);
 assert.equal(canAccess(defaultRoles, 'faculty', 'notices.create'), false);
+assert.equal(canAccess(defaultRoles, 'faculty', 'hostel.view'), true);
+assert.equal(canAccess(defaultRoles, 'faculty', 'hostel.manage'), false);
 assert.equal(canAccess(defaultRoles, 'faculty', 'documents.view'), false);
 assert.equal(canAccess(defaultRoles, 'faculty', 'fees.collect'), false);
 assert.equal(canAccess(defaultRoles, 'faculty', 'financialReports.view'), false);
@@ -76,6 +81,7 @@ assert.equal(canAccess(defaultRoles, 'parent', 'parentPortal.viewAll'), false);
 assert.equal(canAccess(defaultRoles, 'parent', 'notices.view'), true);
 assert.equal(canAccess(defaultRoles, 'parent', 'attendance.view'), false);
 assert.equal(canAccess(defaultRoles, 'parent', 'fees.view'), false);
+assert.equal(canAccess(defaultRoles, 'parent', 'hostel.view'), false);
 
 const withoutUsersCreate = togglePermission(admin, 'users.create');
 assert.equal(withoutUsersCreate.includes('users.create'), true);

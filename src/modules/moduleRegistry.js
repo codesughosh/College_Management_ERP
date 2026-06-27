@@ -1,6 +1,7 @@
 import {
   Bell,
   BookOpen,
+  BedDouble,
   CalendarDays,
   FileText,
   GraduationCap,
@@ -122,6 +123,15 @@ export const moduleRegistry = [
     icon: Wallet,
     status: 'active',
     permission: 'fees.view',
+  },
+  {
+    id: 'hostel-management',
+    label: 'Hostel',
+    path: '/modules/hostel-management',
+    group: 'Daily Work',
+    icon: BedDouble,
+    status: 'active',
+    permission: 'hostel.view',
   },
   {
     id: 'financial-reports',

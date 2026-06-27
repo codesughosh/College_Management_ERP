@@ -3,10 +3,13 @@ export const weekDays = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday',
 export const timeSlots = [
   '09:00 - 10:00',
   '10:00 - 11:00',
+  '11:00 - 12:00',
   '11:15 - 12:15',
+  '12:00 - 01:00',
   '12:15 - 01:15',
   '02:00 - 03:00',
   '03:00 - 04:00',
+  '04:00 - 05:00',
 ];
 
 export function formatDisplayDate(date = new Date()) {

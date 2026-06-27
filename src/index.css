@@ -1836,3 +1836,84 @@ html{color-scheme:dark}::selection{background:rgba(0,255,136,.18);color:#eafff5}
   background:#ede8ff!important;
   color:var(--erp-accent)!important;
 }
+
+/* Authoritative light sidebar footprint: override older light-mode sidebar experiments. */
+.erp-shell.light-mode .erp-sidebar {
+  width:264px!important;
+  min-width:264px!important;
+  flex:0 0 264px!important;
+  padding:18px 16px!important;
+  background:#ffffff!important;
+  border-right:1px solid #ebe6ff!important;
+  box-shadow:none!important;
+}
+
+.erp-shell.light-mode .erp-sidebar.is-collapsed {
+  width:112px!important;
+  min-width:112px!important;
+  flex-basis:112px!important;
+  padding:18px 16px!important;
+}
+
+.erp-shell.light-mode .erp-sidebar-sticky {
+  top:18px!important;
+  height:calc(100vh - 36px)!important;
+  gap:14px!important;
+}
+
+.erp-shell.light-mode .erp-sidebar > .erp-sidebar-sticky {
+  padding:0!important;
+  border-bottom:0!important;
+}
+
+.erp-shell.light-mode .erp-sidebar-brand-card,
+.erp-shell.light-mode .erp-sidebar-menu-card,
+.erp-shell.light-mode .erp-sidebar-theme-switch {
+  width:100%!important;
+  background:#f5f2ff!important;
+  border:1px solid #e4dcff!important;
+  box-shadow:none!important;
+  backdrop-filter:none!important;
+}
+
+.erp-shell.light-mode .erp-sidebar-brand-card {
+  min-height:64px!important;
+  padding:10px 46px 10px 12px!important;
+  border-radius:18px!important;
+  gap:12px!important;
+}
+
+.erp-shell.light-mode .erp-sidebar-menu-card {
+  flex:1 1 auto!important;
+  min-height:0!important;
+  padding:16px 12px!important;
+  border-radius:24px!important;
+}
+
+.erp-shell.light-mode .erp-sidebar .erp-sidebar-menu-card > nav.erp-sidebar-nav {
+  padding:0!important;
+  gap:6px!important;
+}
+
+.erp-shell.light-mode .erp-sidebar .erp-sidebar-menu-card > nav.erp-sidebar-nav > button.erp-sidebar-item {
+  height:54px!important;
+  min-height:54px!important;
+  padding:0 14px!important;
+  margin:0!important;
+}
+
+.erp-shell.light-mode .erp-sidebar.is-collapsed .erp-sidebar-brand-card {
+  padding:10px!important;
+  justify-content:center!important;
+  border-radius:999px!important;
+}
+
+.erp-shell.light-mode .erp-sidebar.is-collapsed .erp-sidebar-menu-card {
+  padding:12px 8px!important;
+  border-radius:999px!important;
+}
+
+.erp-shell.light-mode .erp-sidebar.is-collapsed .erp-sidebar-menu-card > nav.erp-sidebar-nav > button.erp-sidebar-item {
+  justify-content:center!important;
+  padding:0!important;
+}

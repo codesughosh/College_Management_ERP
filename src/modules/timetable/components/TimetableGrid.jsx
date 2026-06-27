@@ -8,18 +8,19 @@ export default function TimetableGrid({ canArchive, canCreate, canEdit, entries,
       <table className="w-full text-sm border-separate border-spacing-1">
         <thead>
           <tr>
-            <th className="bg-[#e7e7e9] text-left px-3 py-3 rounded-lg min-w-32">Time</th>
-            {weekDays.map((day) => (
-              <th key={day} className="bg-[#e7e7e9] text-left px-3 py-3 rounded-lg min-w-52">{day}</th>
+            <th className="bg-[#e7e7e9] text-left px-3 py-3 rounded-lg min-w-32">Days</th>
+            {timeSlots.map((slot) => (
+              <th key={slot} className="bg-[#e7e7e9] text-left px-3 py-3 rounded-lg min-w-44">{slot}</th>
             ))}
           </tr>
         </thead>
         <tbody>
-          {timeSlots.map((slot) => (
-            <tr key={slot}>
-              <td className="bg-white px-3 py-3 rounded-lg font-semibold text-slate-700 shadow-[0_0_0_1px_rgba(226,232,240,0.9)]">{slot}</td>
-              {weekDays.map((day) => {
+          {weekDays.map((day) => (
+            <tr key={day}>
+              <td className="bg-white px-3 py-3 rounded-lg font-semibold text-slate-700 shadow-[0_0_0_1px_rgba(226,232,240,0.9)]">{day}</td>
+              {timeSlots.map((slot) => {
                 const dayEntries = entries.filter((entry) => entry.day === day && entry.timeSlot === slot && entry.status !== 'Archived');
+                const isLunchSlot = slot === '01:00 - 02:00';
                 return (
                   <td key={`${day}-${slot}`} className="bg-white align-top rounded-lg p-2 shadow-[0_0_0_1px_rgba(226,232,240,0.9)]">
                     <div className="space-y-2">
@@ -50,7 +51,12 @@ export default function TimetableGrid({ canArchive, canCreate, canEdit, entries,
                           )}
                         </div>
                       ))}
-                      {!dayEntries.length && canCreate && (
+                      {!dayEntries.length && isLunchSlot && (
+                        <div className="min-h-16 rounded-md bg-[#f5f5f6] p-3 text-center text-xs font-bold uppercase tracking-wide text-slate-500 flex items-center justify-center">
+                          Lunch Break
+                        </div>
+                      )}
+                      {!dayEntries.length && !isLunchSlot && canCreate && (
                         <button
                           type="button"
                           onClick={() => onCreate({ day, timeSlot: slot })}

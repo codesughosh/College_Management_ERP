@@ -419,7 +419,7 @@ export default function StudentInformationManagement({ user, onLogout }) {
       ...form,
       admissionNo: `ADM-2026-${nextNumber}`,
       studentId: `STU-${nextNumber}`,
-      institute: 'COLLEGE NAME',
+      institute: institute.name || form.collegeName || '',
       academicYear: selectedAcademicYear,
       status: 'Admission Review',
       createdAtText,

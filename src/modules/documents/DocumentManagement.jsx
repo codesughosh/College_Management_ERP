@@ -23,7 +23,6 @@ export default function DocumentManagement({ currentUser, academicYear = '2026-2
   const [documents, setDocuments] = useState(isFirebaseConfigured ? [] : demoManagedDocuments);
   const [selectedId, setSelectedId] = useState('');
   const [filters, setFilters] = useState({ search: '', ownerType: '', category: '', status: '' });
-  const [clearedOwnerFilterKey, setClearedOwnerFilterKey] = useState('');
   const [loading, setLoading] = useState(isFirebaseConfigured);
   const [loadError, setLoadError] = useState('');
   const [showUploadModal, setShowUploadModal] = useState(false);
@@ -56,44 +55,23 @@ export default function DocumentManagement({ currentUser, academicYear = '2026-2
   const ownerFilterKey = ownerFilter
     ? [ownerFilter.ownerType, ownerFilter.ownerRecordId, ownerFilter.ownerId].join('|')
     : '';
-  const isOwnerFilterActive = Boolean(ownerFilter && clearedOwnerFilterKey !== ownerFilterKey);
-
-  const routedDocuments = useMemo(() => (ownerFilter?.documents || []).map((item, index) => ({
-    id: item.id || `routed-document-${index}`,
-    ownerType: ownerFilter.ownerType || item.ownerType || '',
-    ownerRecordId: ownerFilter.ownerRecordId || item.ownerRecordId || item.studentRecordId || item.staffRecordId || '',
-    ownerId: ownerFilter.ownerId || item.ownerId || item.studentId || item.employeeId || '',
-    ownerName: ownerFilter.ownerName || item.ownerName || '',
-    archiveTitle: item.archiveTitle || '',
-    documentType: item.documentType || item.type || 'Uploaded Document',
-    category: item.category || (ownerFilter.ownerType === 'Staff' ? 'HR' : 'Admission'),
-    tags: item.tags || '',
-    verificationStatus: item.verificationStatus || item.status || 'Pending Review',
-    uploadedAtText: item.uploadedAtText || item.createdAtText || item.submittedAtText || '-',
-    verifiedAtText: item.verifiedAtText || '',
-    fileName: item.fileName || item.documentFileName || '',
-    fileSize: item.fileSize || item.documentFileSize || 0,
-    fileType: item.fileType || item.documentFileType || 'application/octet-stream',
-    fileUrl: item.fileUrl || item.documentFileUrl || item.documentUrl || '',
-    storagePath: item.storagePath || '',
-  })), [ownerFilter]);
-  const allDocuments = useMemo(() => {
-    const existingIds = new Set(documents.map((item) => item.id));
-    return [...documents, ...routedDocuments.filter((item) => !existingIds.has(item.id))];
-  }, [documents, routedDocuments]);
+  const isOwnerFilterActive = Boolean(ownerFilterKey);
   const courseDocuments = useMemo(
-    () => filterStudentScopedRecords(allDocuments, courseStudents, selectedCourseCode, selectedCourse),
-    [allDocuments, courseStudents, selectedCourse, selectedCourseCode]
+    () => filterStudentScopedRecords(documents, courseStudents, selectedCourseCode, selectedCourse),
+    [courseStudents, documents, selectedCourse, selectedCourseCode]
   );
-  const activeFilters = useMemo(() => ({
-    ...filters,
-    ...(isOwnerFilterActive ? {
-      ownerId: ownerFilter.ownerId || '',
-      ownerRecordId: ownerFilter.ownerRecordId || '',
-      ownerType: ownerFilter.ownerType || '',
-    } : {}),
-  }), [filters, isOwnerFilterActive, ownerFilter]);
-  const visibleDocuments = useMemo(() => filterDocuments(courseDocuments, activeFilters), [activeFilters, courseDocuments]);
+  const ownerScopedDocuments = useMemo(() => {
+    if (!isOwnerFilterActive) return [];
+    return documents.filter((item) => {
+      const ownerTypeMatches = item.ownerType === ownerFilter.ownerType;
+      const ownerRecordMatches = ownerFilter.ownerRecordId && item.ownerRecordId === ownerFilter.ownerRecordId;
+      const ownerIdMatches = ownerFilter.ownerId && item.ownerId === ownerFilter.ownerId;
+      return ownerTypeMatches && (ownerRecordMatches || ownerIdMatches);
+    });
+  }, [documents, isOwnerFilterActive, ownerFilter]);
+  const activeFilters = useMemo(() => (isOwnerFilterActive ? {} : filters), [filters, isOwnerFilterActive]);
+  const sourceDocuments = isOwnerFilterActive ? ownerScopedDocuments : courseDocuments;
+  const visibleDocuments = useMemo(() => filterDocuments(sourceDocuments, activeFilters), [activeFilters, sourceDocuments]);
   const normalizedDocuments = useMemo(() => visibleDocuments.map((item) => ({
     ...item,
     ownerName: resolveOwnerName(item, students, staff),
@@ -219,18 +197,11 @@ export default function DocumentManagement({ currentUser, academicYear = '2026-2
   };
 
   const updateFilter = (key, value) => {
-    if (key === 'ownerType' && ownerFilterKey) setClearedOwnerFilterKey(ownerFilterKey);
     setFilters((prev) => ({
       ...prev,
       [key]: value,
       ...(key === 'ownerType' ? { ownerId: '', ownerRecordId: '' } : {}),
     }));
-  };
-
-  const clearOwnerFilter = () => {
-    setClearedOwnerFilterKey(ownerFilterKey);
-    setFilters((prev) => ({ ...prev, ownerId: '', ownerRecordId: '', ownerType: '' }));
-    setSelectedId('');
   };
 
   return (
@@ -248,63 +219,54 @@ export default function DocumentManagement({ currentUser, academicYear = '2026-2
           {!isFirebaseConfigured && <p className="text-xs text-orange-600 mt-2">Demo mode: add Firebase keys to persist documents and upload files.</p>}
           {loadError && <p className="text-xs text-rose-600 mt-2">{loadError}</p>}
         </div>
-        <button onClick={() => setShowUploadModal(true)} disabled={!canUpload || uploading} className="h-10 px-5 rounded-full bg-[#fb9a5b] text-white font-semibold text-sm flex items-center gap-2 disabled:bg-slate-300">
-          <Plus size={16} /> {uploading ? 'Uploading...' : 'Upload Document'}
-        </button>
+        {!isOwnerFilterActive && (
+          <button onClick={() => setShowUploadModal(true)} disabled={!canUpload || uploading} className="h-10 px-5 rounded-full bg-[#fb9a5b] text-white font-semibold text-sm flex items-center gap-2 disabled:bg-slate-300">
+            <Plus size={16} /> {uploading ? 'Uploading...' : 'Upload Document'}
+          </button>
+        )}
       </div>
 
       <div className="flex flex-col xl:flex-row gap-5">
         <div className={`${selectedDocument ? 'xl:w-[68%]' : 'xl:w-full'} min-w-0 transition-all duration-300`}>
-          <div className="grid md:grid-cols-4 gap-3 mb-4">
-            <div className="relative">
-              <Search size={17} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-              <input value={filters.search} onChange={(event) => updateFilter('search', event.target.value)} placeholder="Search..." className="w-full h-10 rounded-lg bg-[#f0f0f2] border-0 pl-10 pr-3 text-sm" />
-            </div>
-            <select value={activeFilters.ownerType || ''} onChange={(event) => updateFilter('ownerType', event.target.value)} className="h-10 rounded-lg bg-[#f0f0f2] border-0 px-3 text-sm">
-              <option value="">All Owners</option>
-              {documentOwnerTypes.map((item) => <option key={item}>{item}</option>)}
-            </select>
-            <select value={filters.category} onChange={(event) => updateFilter('category', event.target.value)} className="h-10 rounded-lg bg-[#f0f0f2] border-0 px-3 text-sm">
-              <option value="">All Categories</option>
-              {documentCategories.map((item) => <option key={item}>{item}</option>)}
-            </select>
-            <select value={filters.status} onChange={(event) => updateFilter('status', event.target.value)} className="h-10 rounded-lg bg-[#f0f0f2] border-0 px-3 text-sm">
-              <option value="">All Statuses</option>
-              {documentStatuses.map((item) => <option key={item}>{item}</option>)}
-            </select>
-          </div>
-          {isOwnerFilterActive && activeFilters.ownerRecordId && (
-            <div className="mb-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded-lg bg-[#f5f5f6] border border-slate-100 p-3 text-sm">
-              <div>
-                <span className="font-semibold text-slate-900">{ownerFilter?.ownerName || 'Selected owner'}</span>
-                <span className="text-slate-500"> | {activeFilters.ownerType} {ownerFilter?.ownerId || ''}</span>
+          {!isOwnerFilterActive && (
+            <div className="grid md:grid-cols-4 gap-3 mb-4">
+              <div className="relative">
+                <Search size={17} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                <input value={filters.search} onChange={(event) => updateFilter('search', event.target.value)} placeholder="Search..." className="w-full h-10 rounded-lg bg-[#f0f0f2] border-0 pl-10 pr-3 text-sm" />
               </div>
-              <button
-                type="button"
-                onClick={clearOwnerFilter}
-                className="h-8 px-3 rounded-md bg-white border border-slate-200 text-xs font-semibold text-slate-700"
-              >
-                Show all documents
-              </button>
+              <select value={activeFilters.ownerType || ''} onChange={(event) => updateFilter('ownerType', event.target.value)} className="h-10 rounded-lg bg-[#f0f0f2] border-0 px-3 text-sm">
+                <option value="">All Owners</option>
+                {documentOwnerTypes.map((item) => <option key={item}>{item}</option>)}
+              </select>
+              <select value={filters.category} onChange={(event) => updateFilter('category', event.target.value)} className="h-10 rounded-lg bg-[#f0f0f2] border-0 px-3 text-sm">
+                <option value="">All Categories</option>
+                {documentCategories.map((item) => <option key={item}>{item}</option>)}
+              </select>
+              <select value={filters.status} onChange={(event) => updateFilter('status', event.target.value)} className="h-10 rounded-lg bg-[#f0f0f2] border-0 px-3 text-sm">
+                <option value="">All Statuses</option>
+                {documentStatuses.map((item) => <option key={item}>{item}</option>)}
+              </select>
             </div>
           )}
           <DocumentTable
             documents={normalizedDocuments}
-            canVerify={canVerify}
-            canArchive={canArchive}
+            canVerify={!isOwnerFilterActive && canVerify}
+            canArchive={!isOwnerFilterActive && canArchive}
             onArchive={archiveDocument}
             onPreview={(document) => setSelectedId(document.id)}
             onVerify={updateVerification}
             onSelect={setSelectedId}
             selectedId={selectedDocumentId}
+            emptyMessage={isOwnerFilterActive ? '' : 'No documents found.'}
             showActions={false}
           />
         </div>
         {selectedDocument && (
           <DocumentPreviewPanel
-            canArchive={canArchive}
-            canVerify={canVerify}
+            canArchive={!isOwnerFilterActive && canArchive}
+            canVerify={!isOwnerFilterActive && canVerify}
             document={selectedDocument}
+            showActions={!isOwnerFilterActive}
             onArchive={archiveDocument}
             onVerify={updateVerification}
           />

@@ -358,7 +358,6 @@ export default function StudentInformationManagement({ user, onLogout }) {
 
   const selectedStudent = selectedId ? courseStudents.find((student) => student.id === selectedId) || null : null;
   const selectedAdmissions = admissions.filter((record) => relationMatches(record, selectedStudent) && recordBelongsToYear(record));
-  const selectedStudentDocuments = studentDocuments.filter((record) => relationMatches(record, selectedStudent) && recordBelongsToYear(record));
   const latestAdmission = latestRecord(selectedAdmissions);
 
   const filteredStudents = useMemo(() => {
@@ -646,7 +645,6 @@ export default function StudentInformationManagement({ user, onLogout }) {
                   <StudentDetailPage
                     canEdit={canEditStudents}
                     latestAdmission={latestAdmission}
-                    documents={selectedStudentDocuments}
                     onEdit={setEditingStudent}
                     student={selectedStudent}
                     onBack={goBackOneStudentStep}
@@ -822,7 +820,7 @@ export default function StudentInformationManagement({ user, onLogout }) {
   );
 }
 
-function StudentDetailPage({ canEdit, documents = [], latestAdmission, onBack, onEdit, onOpenDocuments, student }) {
+function StudentDetailPage({ canEdit, latestAdmission, onBack, onEdit, onOpenDocuments, student }) {
   return (
     <div>
       <div className="flex flex-col gap-4 pb-6 border-b border-slate-100 mb-5">
@@ -848,7 +846,6 @@ function StudentDetailPage({ canEdit, documents = [], latestAdmission, onBack, o
           ownerName: student.name,
           ownerRecordId: student.id,
           ownerType: 'Student',
-          documents,
         })}
         showSummaryTabs={false}
         student={student}

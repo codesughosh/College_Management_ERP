@@ -365,7 +365,6 @@ export default function FacultyStaffManagement({ currentUser, academicYear = '20
           onEdit={() => setEditingStaff(selectedStaff)}
           onLeaveDecision={decideLeave}
           onOpenDocuments={() => onOpenDocuments?.({
-            documents: staffMemberDocumentList(selectedStaff),
             ownerId: selectedStaff.employeeId,
             ownerName: selectedStaff.name,
             ownerRecordId: selectedStaff.id,
@@ -449,20 +448,4 @@ export default function FacultyStaffManagement({ currentUser, academicYear = '20
       {leaveStaff && <LeaveModal staffMember={leaveStaff} onClose={() => setLeaveStaff(null)} onSave={saveLeave} />}
     </div>
   );
-}
-
-function staffMemberDocumentList(staffMember) {
-  if (!staffMember?.documentFileName) return [];
-  return [{
-    category: 'HR',
-    documentType: 'Staff Source Document',
-    fileName: staffMember.documentFileName,
-    fileSize: staffMember.documentFileSize || 0,
-    fileType: staffMember.documentFileType || 'application/pdf',
-    fileUrl: staffMember.documentFileUrl || staffMember.documentUrl || '',
-    id: `${staffMember.id}-source-document`,
-    tags: 'staff, source',
-    uploadedAtText: staffMember.createdAtText || staffMember.joiningDate || '',
-    verificationStatus: staffMember.documentStatus || 'Pending Review',
-  }];
 }

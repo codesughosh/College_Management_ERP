@@ -11,6 +11,7 @@ export default function DocumentTable({
   onVerify,
   onSelect,
   selectedId,
+  emptyMessage = 'No documents found.',
   showActions = true,
 }) {
   const stopRowAction = (event, action) => {
@@ -77,7 +78,7 @@ export default function DocumentTable({
             ))}
             {!documents.length && (
               <tr>
-                <td colSpan={showActions ? 6 : 5} className="px-4 py-10 text-center text-slate-500">No documents found.</td>
+                <td colSpan={showActions ? 6 : 5} className="px-4 py-10 text-center text-slate-500">{emptyMessage}</td>
               </tr>
             )}
           </tbody>

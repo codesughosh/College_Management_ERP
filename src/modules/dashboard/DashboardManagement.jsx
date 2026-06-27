@@ -10,6 +10,7 @@ import { isFirebaseConfigured } from '../../firebase/config';
 import { formatCurrency, summarizeFees } from '../fees/feeUtils';
 import { canAccess, defaultRoles } from '../userRoles/rolePermissions';
 import { filterByCourse, filterStudentScopedRecords, filterStudentsByCourse } from '../shared/courseFilters';
+import { buildAdmissionStages } from './dashboardUtils';
 
 const fallbackDashboardData = {
   students: demoStudents,
@@ -69,32 +70,6 @@ function buildCollectionTrend(collections = []) {
   });
 
   return months;
-}
-
-function buildAdmissionStages(students = [], admissions = []) {
-  const linkedKeys = new Set();
-  [...students, ...admissions].forEach((item) => {
-    const key = item.studentRecordId || item.studentId || item.id || item.admissionNo;
-    if (key) linkedKeys.add(key);
-  });
-
-  const activeStudents = students.filter((student) => student.status !== 'Archived');
-  const reviewStatuses = /review|pending|submitted|draft/i;
-  const admittedStatuses = /active|approved|admitted/i;
-  const reviewCount = [
-    ...activeStudents.filter((student) => reviewStatuses.test(student.status || '')),
-    ...admissions.filter((admission) => reviewStatuses.test(admission.status || '')),
-  ].length;
-  const admittedCount = activeStudents.filter((student) => admittedStatuses.test(student.status || '')).length;
-  const archivedCount = students.filter((student) => student.status === 'Archived').length;
-  const applicationCount = linkedKeys.size;
-
-  return [
-    { label: 'Applications', value: applicationCount, color: '#2563eb' },
-    { label: 'In Review', value: reviewCount, color: '#f59e0b' },
-    { label: 'Admitted', value: admittedCount, color: '#22c55e' },
-    { label: 'Archived', value: archivedCount, color: '#8b5cf6' },
-  ];
 }
 
 function formatChartCurrency(value) {

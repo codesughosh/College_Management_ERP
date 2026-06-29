@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import SearchSelect from '../../../components/SearchSelect';
 
 export default function ExamScheduleModal({ classOptions, faculty, initialSchedule = null, mode = 'create', onClose, onSave }) {
   const isEdit = mode === 'edit';
@@ -34,9 +35,12 @@ export default function ExamScheduleModal({ classOptions, faculty, initialSchedu
           </label>
           <label>
             <span className="block text-xs font-semibold text-slate-500 mb-1.5">Class</span>
-            <select value={form.classKey} onChange={(event) => setForm((prev) => ({ ...prev, classKey: event.target.value }))} className="w-full h-11 rounded-lg border border-slate-200 px-3 text-sm">
-              {classOptions.map((item) => <option key={item}>{item}</option>)}
-            </select>
+            <SearchSelect
+              value={form.classKey}
+              onChange={(classKey) => setForm((prev) => ({ ...prev, classKey }))}
+              options={classOptions}
+              placeholder="Search class..."
+            />
           </label>
           <label>
             <span className="block text-xs font-semibold text-slate-500 mb-1.5">Subject</span>
@@ -52,9 +56,15 @@ export default function ExamScheduleModal({ classOptions, faculty, initialSchedu
           </label>
           <label>
             <span className="block text-xs font-semibold text-slate-500 mb-1.5">Faculty</span>
-            <select value={form.facultyId} onChange={(event) => setForm((prev) => ({ ...prev, facultyId: event.target.value }))} className="w-full h-11 rounded-lg border border-slate-200 px-3 text-sm">
-              {faculty.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}
-            </select>
+            <SearchSelect
+              value={form.facultyId}
+              onChange={(facultyId) => setForm((prev) => ({ ...prev, facultyId }))}
+              options={faculty.map((item) => ({
+                value: item.id,
+                label: [item.name, item.employeeId].filter(Boolean).join(' - '),
+              }))}
+              placeholder="Search faculty..."
+            />
           </label>
         </div>
         <div className="px-6 py-4 border-t border-slate-100 flex justify-end gap-3">

@@ -2353,3 +2353,26 @@ html{color-scheme:dark}::selection{background:rgba(0,255,136,.18);color:#eafff5}
 .erp-shell.light-mode div[class*="fixed"][class*="inset-0"][class*="z-50"] > form {
   border-color:rgba(10,93,0,.18)!important;
 }
+
+.erp-shell.light-mode div[class*="fixed"][class*="inset-0"][class*="z-50"] > form,
+.erp-shell.light-mode div[class*="fixed"][class*="inset-0"][class*="z-50"] > form > div {
+  background:#ffffff!important;
+  color:var(--erp-text)!important;
+}
+
+.erp-shell.light-mode div[class*="fixed"][class*="inset-0"][class*="z-50"] > form label span,
+.erp-shell.light-mode div[class*="fixed"][class*="inset-0"][class*="z-50"] > form p {
+  color:#68627c!important;
+}
+
+.erp-shell.light-mode .erp-search-select {
+  background:#ffffff!important;
+  color:#242336!important;
+  border-color:rgba(3,53,0,.18)!important;
+  box-shadow:0 0 0 1px rgba(3,53,0,.03)!important;
+}
+
+.erp-shell.light-mode .erp-search-select:focus {
+  border-color:rgba(3,53,0,.52)!important;
+  box-shadow:0 0 0 3px rgba(3,53,0,.10)!important;
+}

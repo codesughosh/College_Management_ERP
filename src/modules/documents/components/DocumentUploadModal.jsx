@@ -1,5 +1,6 @@
 import { useRef, useState } from 'react';
 import { Upload } from 'lucide-react';
+import SearchSelect from '../../../components/SearchSelect';
 import { documentCategories, documentOwnerTypes } from '../documentUtils';
 
 export default function DocumentUploadModal({ students, staff, onClose, onSave }) {
@@ -53,11 +54,16 @@ export default function DocumentUploadModal({ students, staff, onClose, onSave }
           {needsOwner ? (
             <label>
               <span className="block text-xs font-semibold text-slate-500 mb-1.5">Owner</span>
-              <select value={form.ownerRecordId} disabled={ownerUnavailable} onChange={(event) => setForm((prev) => ({ ...prev, ownerRecordId: event.target.value }))} className="w-full h-11 rounded-lg border border-slate-200 px-3 text-sm disabled:opacity-60">
-                {ownerUnavailable ? (
-                  <option value="">No owners available</option>
-                ) : ownerOptions.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}
-              </select>
+              <SearchSelect
+                value={form.ownerRecordId}
+                disabled={ownerUnavailable}
+                onChange={(ownerRecordId) => setForm((prev) => ({ ...prev, ownerRecordId }))}
+                options={ownerOptions.map((item) => ({
+                  value: item.id,
+                  label: [item.name, item.studentId || item.employeeId || item.admissionNo].filter(Boolean).join(' - '),
+                }))}
+                placeholder={ownerUnavailable ? 'No owners available' : 'Search owner...'}
+              />
             </label>
           ) : (
             <label>

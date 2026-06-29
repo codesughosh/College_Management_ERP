@@ -2189,11 +2189,11 @@ html{color-scheme:dark}::selection{background:rgba(0,255,136,.18);color:#eafff5}
 
 /* Final light-mode color authority: green brand palette instead of lavender. */
 .erp-shell.light-mode {
-  --erp-surface-2:#f5fbf3;
-  --erp-surface-3:#e6f3e2;
-  --erp-border:rgba(10,93,0,.18);
-  --erp-accent:#0a5d00;
-  --erp-accent-hover:#084a00;
+  --erp-surface-2:#f7f8f7;
+  --erp-surface-3:#eef2ee;
+  --erp-border:rgba(3,53,0,.18);
+  --erp-accent:#033500;
+  --erp-accent-hover:#022800;
   background:#f7fbf6!important;
 }
 
@@ -2220,8 +2220,8 @@ html{color-scheme:dark}::selection{background:rgba(0,255,136,.18);color:#eafff5}
 .erp-shell.light-mode [class*="text-[#fb8d49]"],
 .erp-shell.light-mode [class*="text-orange-"],
 .erp-shell.light-mode .text-emerald-500 {
-  color:#0a5d00!important;
-  -webkit-text-fill-color:#0a5d00!important;
+  color:#033500!important;
+  -webkit-text-fill-color:#033500!important;
 }
 
 .erp-shell.light-mode input,
@@ -2271,10 +2271,10 @@ html{color-scheme:dark}::selection{background:rgba(0,255,136,.18);color:#eafff5}
 .erp-shell.light-mode button[class*="border-orange"],
 .erp-shell.light-mode button.rounded-full:not(.erp-theme-toggle):not(.erp-notification-button),
 .erp-shell.light-mode .erp-header button:first-child {
-  background:#0a5d00!important;
-  border-color:#0a5d00!important;
+  background:#033500!important;
+  border-color:#033500!important;
   color:#ffffff!important;
-  box-shadow:0 10px 24px rgba(10,93,0,.18)!important;
+  box-shadow:0 10px 24px rgba(3,53,0,.18)!important;
 }
 
 .erp-shell.light-mode button[class*="bg-[#333"]:hover:not(:disabled),
@@ -2283,13 +2283,13 @@ html{color-scheme:dark}::selection{background:rgba(0,255,136,.18);color:#eafff5}
 .erp-shell.light-mode button[class*="bg-orange"]:hover:not(:disabled),
 .erp-shell.light-mode button.rounded-full:not(.erp-theme-toggle):not(.erp-notification-button):hover:not(:disabled),
 .erp-shell.light-mode .erp-header button:first-child:hover:not(:disabled) {
-  background:#084a00!important;
-  border-color:#084a00!important;
+  background:#022800!important;
+  border-color:#022800!important;
 }
 
 .erp-shell.light-mode .erp-sidebar {
   background:#ffffff!important;
-  border-right:1px solid #d7ead2!important;
+  border-right:1px solid #e7ece6!important;
 }
 
 .erp-shell.light-mode .erp-sidebar-brand-card,
@@ -2298,28 +2298,51 @@ html{color-scheme:dark}::selection{background:rgba(0,255,136,.18);color:#eafff5}
 .erp-shell.light-mode .erp-sidebar > .erp-sidebar-sticky:first-child > .erp-sidebar-brand-card,
 .erp-shell.light-mode .erp-sidebar > .erp-sidebar-sticky:first-child > .erp-sidebar-menu-card,
 .erp-shell.light-mode .erp-sidebar > .erp-sidebar-sticky:first-child > .erp-sidebar-theme-switch {
-  background:#f2faef!important;
-  border-color:#d7ead2!important;
+  background:#ffffff!important;
+  border-color:#e7ece6!important;
 }
 
 .erp-shell.light-mode .erp-sidebar-logo,
 .erp-shell.light-mode .erp-sidebar-expand-logo,
 .erp-shell.light-mode .erp-sidebar-collapse-button {
-  background:#e5f3e0!important;
-  border-color:#c9e5c2!important;
-  color:#0a5d00!important;
+  background:#ffffff!important;
+  border-color:#e7ece6!important;
+  color:#596173!important;
 }
 
 .erp-shell.light-mode .erp-sidebar .erp-sidebar-menu-card > nav.erp-sidebar-nav > button.erp-sidebar-item:hover {
-  background:#edf7ea!important;
-  color:#063d00!important;
+  background:#f7f8f7!important;
+  color:#263026!important;
 }
 
-.erp-shell.light-mode .erp-sidebar .erp-sidebar-menu-card > nav.erp-sidebar-nav > button.erp-sidebar-item.is-active,
+.erp-shell.light-mode .erp-sidebar .erp-sidebar-menu-card > nav.erp-sidebar-nav > button.erp-sidebar-item.is-active {
+  background:#e1f0de!important;
+  border-color:#8fbc86!important;
+  color:#033500!important;
+}
+
+.erp-shell.light-mode .erp-sidebar .erp-sidebar-menu-card > nav.erp-sidebar-nav > button.erp-sidebar-item:not(.is-active) {
+  background:#ffffff!important;
+  border-color:transparent!important;
+  color:#5f5a78!important;
+  box-shadow:none!important;
+}
+
+.erp-shell.light-mode .erp-sidebar .erp-sidebar-menu-card > nav.erp-sidebar-nav > button.erp-sidebar-item.is-active {
+  box-shadow:inset 0 0 0 1px rgba(3,53,0,.08)!important;
+}
+
+.erp-shell.light-mode .erp-sidebar-theme-switch button {
+  background:#ffffff!important;
+  border-color:#e7ece6!important;
+  color:#5f5a78!important;
+}
+
 .erp-shell.light-mode .erp-sidebar-theme-switch button.is-active {
-  background:#e5f3e0!important;
-  border-color:#b8dcae!important;
-  color:#0a5d00!important;
+  background:#f7f8f7!important;
+  border-color:#dfe5de!important;
+  color:#263026!important;
+  box-shadow:none!important;
 }
 
 .erp-shell.light-mode .erp-dashboard-donut-hole {

@@ -2135,3 +2135,54 @@ html{color-scheme:dark}::selection{background:rgba(0,255,136,.18);color:#eafff5}
   display:block!important;
   flex:0 0 auto!important;
 }
+
+/* Guard against legacy light-mode child selectors that were shrinking the sidebar internals. */
+.erp-shell.light-mode .erp-sidebar > .erp-sidebar-sticky:first-child {
+  padding:0!important;
+  border-bottom:0!important;
+}
+
+.erp-shell.light-mode .erp-sidebar > .erp-sidebar-sticky:first-child > .erp-sidebar-brand-card,
+.erp-shell.light-mode .erp-sidebar > .erp-sidebar-sticky:first-child > .erp-sidebar-menu-card,
+.erp-shell.light-mode .erp-sidebar > .erp-sidebar-sticky:first-child > .erp-sidebar-theme-switch {
+  width:100%!important;
+  background:#f5f2ff!important;
+  border:1px solid #e4dcff!important;
+  box-shadow:none!important;
+  backdrop-filter:none!important;
+}
+
+.erp-shell.light-mode .erp-sidebar > .erp-sidebar-sticky:first-child > .erp-sidebar-brand-card {
+  min-height:64px!important;
+  padding:10px 46px 10px 12px!important;
+  border-radius:18px!important;
+  gap:12px!important;
+}
+
+.erp-shell.light-mode .erp-sidebar.is-collapsed > .erp-sidebar-sticky:first-child > .erp-sidebar-brand-card {
+  padding:10px!important;
+  justify-content:center!important;
+  border-radius:999px!important;
+}
+
+.erp-shell.light-mode .erp-sidebar > .erp-sidebar-sticky:first-child > .erp-sidebar-menu-card {
+  flex:1 1 auto!important;
+  min-height:0!important;
+  padding:16px 12px!important;
+  border-radius:24px!important;
+}
+
+.erp-shell.light-mode .erp-sidebar.is-collapsed > .erp-sidebar-sticky:first-child > .erp-sidebar-menu-card {
+  padding:12px 8px!important;
+  border-radius:999px!important;
+}
+
+.erp-shell.light-mode .erp-sidebar > .erp-sidebar-sticky:first-child > .erp-sidebar-theme-switch {
+  padding:6px!important;
+  border-radius:20px!important;
+}
+
+.erp-shell.light-mode .erp-sidebar.is-collapsed > .erp-sidebar-sticky:first-child > .erp-sidebar-theme-switch {
+  padding:8px!important;
+  border-radius:999px!important;
+}

@@ -5,6 +5,7 @@ import toast from 'react-hot-toast';
 import { loginWithEmail, logoutUser, sendResetPasswordEmail } from '../firebase/auth';
 import { isFirebaseConfigured } from '../firebase/config';
 import { getUserProfile } from '../firebase/db';
+import { canResolveLoginIdentifier, resolveLoginEmail } from '../firebase/loginAliases';
 import devloftLogo from '../../assets/logo.png';
 
 const roleOptions = [
@@ -15,12 +16,12 @@ const roleOptions = [
 
 function getAuthErrorMessage(error) {
   const code = error?.code || '';
-  if (code.includes('invalid-credential')) return 'Invalid email or password.';
+  if (code.includes('invalid-credential')) return 'Invalid email/phone or password.';
   if (code.includes('email-already-in-use')) return 'This email is already registered.';
   if (code.includes('weak-password')) return 'Password should be at least 6 characters.';
   if (code.includes('network-request-failed')) return 'Network error while contacting Firebase.';
-  if (code.includes('missing-email')) return 'Enter your email address first.';
-  if (code.includes('user-not-found')) return 'No account exists for that email address.';
+  if (code.includes('missing-email')) return 'Enter your email or phone first.';
+  if (code.includes('user-not-found')) return 'No account exists for that email or phone.';
   return error?.message || 'Authentication failed. Please try again.';
 }
 
@@ -41,7 +42,13 @@ export default function AuthPage() {
     event.preventDefault();
     setSubmitting(true);
     try {
-      const signedInUser = await loginWithEmail(form.email.trim(), form.password);
+      const identifier = form.email.trim();
+      if (!canResolveLoginIdentifier(identifier)) {
+        toast.error('No account exists for that email or phone.');
+        return;
+      }
+
+      const signedInUser = await loginWithEmail(resolveLoginEmail(identifier), form.password);
       const profile = await getUserProfile(signedInUser.uid).catch(() => null);
       const profileRoleId = profile?.roleId || signedInUser.roleId;
 
@@ -61,15 +68,20 @@ export default function AuthPage() {
   };
 
   const resetPassword = async () => {
-    const email = form.email.trim();
-    if (!email) {
-      toast.error('Enter your email address first.');
+    const identifier = form.email.trim();
+    if (!identifier) {
+      toast.error('Enter your email or phone first.');
+      return;
+    }
+
+    if (!canResolveLoginIdentifier(identifier)) {
+      toast.error('No account exists for that email or phone.');
       return;
     }
 
     setResetting(true);
     try {
-      await sendResetPasswordEmail(email);
+      await sendResetPasswordEmail(resolveLoginEmail(identifier));
       toast.success('Password reset email sent.');
     } catch (error) {
       toast.error(getAuthErrorMessage(error));
@@ -128,16 +140,17 @@ export default function AuthPage() {
           </fieldset>
 
           <label className="block">
-            <span className="text-xs font-semibold text-slate-500 mb-1.5 block">Email</span>
+            <span className="text-xs font-semibold text-slate-500 mb-1.5 block">Email or Phone</span>
             <div className="relative">
               <Mail size={17} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
               <input
-                type="email"
+                type="text"
+                inputMode="email"
                 required
                 value={form.email}
                 onChange={(event) => setForm((prev) => ({ ...prev, email: event.target.value }))}
                 className="w-full h-11 rounded-lg bg-[#f5f5f6] border border-slate-200 pl-10 pr-3 outline-none focus:ring-2 focus:ring-orange-100"
-                placeholder={`${selectedRole.id}@college.edu`}
+                placeholder={`${selectedRole.id}@college.edu or 9876543210`}
               />
             </div>
           </label>

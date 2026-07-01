@@ -11,6 +11,7 @@
     "firebase:seed": "node scripts/resetAndSeedFirebase.js",
     "firebase:seed-users": "node scripts/seedRoleAuthUsers.js",
     "firebase:maurya-credentials": "node scripts/createMauryaLoginCredentials.js",
+    "firebase:login-aliases": "node scripts/generateLoginAliases.js",
     "firebase:reset-seed": "node scripts/resetAndSeedFirebase.js --reset --yes-i-understand-this-deletes-data",
     "firebase:backfill-academic-year": "node scripts/backfillAcademicYear.js",
     "preview": "vite preview"

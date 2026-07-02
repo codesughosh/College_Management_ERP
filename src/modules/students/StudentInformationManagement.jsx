@@ -1022,7 +1022,7 @@ function StudentDetailPage({
   transfers = [],
 }) {
   const [showAllDetails, setShowAllDetails] = useState(false);
-  const [activeStat, setActiveStat] = useState('attendance');
+  const [activeTab, setActiveTab] = useState('profile');
   const verifiedDocs = documents.filter((item) => item.verificationStatus === 'Verified' || item.verificationStatus === 'Source PDF').length;
   const pendingDocs = documents.filter((item) => item.verificationStatus === 'Pending Review').length;
   const presentRecords = attendanceRecords.filter((item) => item.status === 'Present').length;
@@ -1036,18 +1036,92 @@ function StudentDetailPage({
   const feePaid = feeAssignments.reduce((sum, item) => sum + Number(item.paidAmount || 0), 0);
   const feeAdjusted = feeAssignments.reduce((sum, item) => sum + Number(item.adjustmentAmount || 0), 0);
   const feeDue = feeAssignments.reduce((sum, item) => sum + Number(item.dueAmount || 0), 0);
+  const feeCompletion = feeAssigned ? Math.min(100, Math.round(((feePaid + feeAdjusted) / feeAssigned) * 100)) : 0;
+  const documentCompletion = documents.length ? Math.round((verifiedDocs / documents.length) * 100) : 0;
   const admissionStatus = latestAdmission?.status || student.status || PENDING_ADMISSION_STATUS;
   const canShowApproval = canApprove
     && student.status !== 'Archived'
     && !statusRequiresSuperAdminApproval(student.status)
     && !statusRequiresSuperAdminApproval(latestAdmission?.status || '');
   const summaryTabs = [
-    { id: 'profile', label: 'Profile', value: 'Open', icon: <UserRound size={14} /> },
-    { id: 'attendance', label: 'Attendance', value: `${attendancePercentage}%`, icon: <Bell size={14} />, active: activeStat === 'attendance' },
-    { id: 'exams', label: 'Exams', value: `${examRecordCount}`, icon: <BookOpen size={14} />, active: activeStat === 'exams' },
-    { id: 'payment', label: 'Payment', value: feeDue ? `INR ${feeDue}` : 'No due', icon: <Wallet size={14} />, active: activeStat === 'payment' },
-    { id: 'documents', label: 'Docs', value: `${documents.length}`, icon: <FileText size={14} />, active: activeStat === 'documents' },
+    { id: 'profile', label: 'Profile', icon: <UserRound size={14} />, active: activeTab === 'profile' },
+    { id: 'attendance', label: 'Attendance', value: `${attendancePercentage}%`, icon: <Bell size={14} />, active: activeTab === 'attendance' },
+    { id: 'exams', label: 'Exams', value: `${examRecordCount}`, icon: <BookOpen size={14} />, active: activeTab === 'exams' },
+    { id: 'payment', label: 'Payment', value: feeDue ? `INR ${feeDue}` : 'No due', icon: <Wallet size={14} />, active: activeTab === 'payment' },
+    { id: 'documents', label: 'Docs', value: `${documents.length}`, icon: <FileText size={14} />, active: activeTab === 'documents' },
   ];
+
+  const attendanceSubjectRows = Object.values(attendanceRecords.reduce((map, record) => {
+    const subject = record.subjectName || record.subject || 'General Attendance';
+    const row = map[subject] || { subject, total: 0, present: 0, absent: 0, leave: 0 };
+    row.total += 1;
+    if (record.status === 'Present') row.present += 1;
+    if (record.status === 'Absent') row.absent += 1;
+    if (['Leave', 'On Leave'].includes(record.status)) row.leave += 1;
+    map[subject] = row;
+    return map;
+  }, {})).map((row) => ({
+    ...row,
+    percentage: row.total ? Math.round((row.present / row.total) * 100) : 0,
+  }));
+
+  const examRows = [
+    ...marksEntries.map((item, index) => {
+      const maxMarks = Number(item.maxMarks || 0);
+      const marksObtained = Number(item.marksObtained || 0);
+      const percentage = Number(item.percentage || (maxMarks ? Math.round((marksObtained / maxMarks) * 100) : 0));
+      return {
+        id: item.id || `mark-${index}`,
+        label: item.subject || item.subjectName || item.examName || `Marks Entry ${index + 1}`,
+        helper: item.examName || item.title || item.enteredAtText || 'Marks entry',
+        value: maxMarks ? `${marksObtained}/${maxMarks}` : `${percentage}%`,
+        percentage,
+        status: item.grade || item.status || '-',
+      };
+    }),
+    ...results.map((item, index) => {
+      const percentage = Number(item.percentage || 0);
+      const totalMax = Number(item.totalMax || item.maxMarks || 0);
+      const totalObtained = Number(item.totalObtained || item.marksObtained || 0);
+      return {
+        id: item.id || `result-${index}`,
+        label: item.examName || item.subject || `Result ${index + 1}`,
+        helper: item.generatedAtText || item.classKey || 'Generated result',
+        value: totalMax ? `${totalObtained}/${totalMax}` : `${percentage}%`,
+        percentage,
+        status: item.grade || item.status || '-',
+      };
+    }),
+  ];
+
+  const paymentRows = feeAssignments.map((item, index) => {
+    const total = Number(item.totalAmount || 0);
+    const paid = Number(item.paidAmount || 0);
+    const adjusted = Number(item.adjustmentAmount || 0);
+    const due = Number(item.dueAmount || Math.max(0, total - paid - adjusted));
+    return {
+      id: item.id || `fee-${index}`,
+      label: item.feeStructureName || item.structureName || item.classKey || `Fee Assignment ${index + 1}`,
+      helper: item.dueDate ? `Due date: ${item.dueDate}` : item.academicYear || 'Fee assignment',
+      value: `INR ${due}`,
+      percentage: total ? Math.min(100, Math.round(((paid + adjusted) / total) * 100)) : 0,
+      status: item.status || (due > 0 ? 'Due' : 'Paid'),
+      total,
+      paid,
+      adjusted,
+      due,
+    };
+  });
+
+  const documentRows = documents.map((item, index) => ({
+    id: item.id || `document-${index}`,
+    label: item.documentType || item.archiveTitle || item.fileName || `Document ${index + 1}`,
+    helper: item.category || item.fileName || item.uploadedAtText || 'Student document',
+    value: item.verificationStatus || 'Pending Review',
+    percentage: item.verificationStatus === 'Verified' || item.verificationStatus === 'Source PDF' ? 100 : 0,
+    status: item.verificationStatus || 'Pending Review',
+  }));
+
   const statDetails = {
     attendance: {
       title: 'Attendance Stats',
@@ -1090,66 +1164,49 @@ function StudentDetailPage({
       ],
     },
   };
-  const selectedStat = statDetails[activeStat] || statDetails.attendance;
 
   const handleSummaryTabSelect = (tabId) => {
-    if (tabId === 'profile') {
-      setShowAllDetails(true);
-      return;
-    }
-    if (statDetails[tabId]) setActiveStat(tabId);
+    if (summaryTabs.some((tab) => tab.id === tabId)) setActiveTab(tabId);
   };
 
-  return (
-    <div>
-      <div className="flex flex-col gap-4 pb-6 border-b border-slate-100 mb-5">
-        <button
-          type="button"
-          onClick={onBack}
-          className="erp-back-button h-12 px-5 rounded-lg bg-[#fb8d49] text-white font-extrabold text-base flex items-center gap-2 self-start shadow-lg shadow-orange-200 hover:bg-[#e97934] focus:outline-none focus:ring-4 focus:ring-orange-200"
-        >
-          <ArrowLeft size={20} /> Back
-        </button>
+  const renderMetricGrid = (items) => (
+    <div className="grid sm:grid-cols-2 xl:grid-cols-4 gap-3">
+      {items.map(([label, value]) => (
+        <div key={label} className="rounded-lg border border-slate-100 bg-white p-3">
+          <div className="text-xs font-semibold text-slate-500">{label}</div>
+          <div className="mt-1 text-lg font-extrabold text-slate-900">{value}</div>
+        </div>
+      ))}
+    </div>
+  );
+
+  const renderProgressRow = (row, color = '#00c46f') => (
+    <div key={row.id || row.label} className="rounded-lg border border-slate-100 bg-white p-4">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
         <div>
-          <div className="text-sm font-bold text-slate-500 mb-2">Academics / <span className="text-[#f39a5f]">Student Details</span></div>
-          <h1 className="text-2xl font-bold text-slate-900">{student.name}</h1>
-          <p className="text-sm text-slate-500 mt-1">{student.admissionNo} / {student.studentId}</p>
+          <div className="font-bold text-slate-900">{row.label}</div>
+          <div className="text-xs text-slate-500 mt-1">{row.helper}</div>
+        </div>
+        <div className="flex items-center gap-3 text-sm">
+          <span className="font-extrabold text-slate-900">{row.value}</span>
+          <span className="rounded-full bg-[#f5f5f6] px-3 py-1 text-xs font-bold text-slate-600">{row.status}</span>
         </div>
       </div>
+      <div className="mt-3 h-3 rounded-full bg-[#f5f5f6] overflow-hidden">
+        <div className="h-full rounded-full" style={{ width: `${Math.min(100, Math.max(0, Number(row.percentage || 0)))}%`, background: color }} />
+      </div>
+      <div className="mt-2 text-right text-xs font-bold text-slate-500">{Math.min(100, Math.max(0, Number(row.percentage || 0)))}%</div>
+    </div>
+  );
 
-      <StudentProfileCard
-        canEdit={canEdit}
-        onApprove={onApprove}
-        onEdit={onEdit}
-        onOpenDocuments={() => onOpenDocuments?.(student)}
-        onSummaryTabSelect={handleSummaryTabSelect}
-        showApprove={canShowApproval}
-        showExtendedDetails={showAllDetails}
-        showSummaryTabs
-        summaryTabs={summaryTabs}
-        student={student}
-      />
+  const renderEmptyState = (message) => (
+    <div className="rounded-lg border border-dashed border-slate-200 bg-white p-6 text-sm font-semibold text-slate-500">
+      {message}
+    </div>
+  );
 
-      <section className="mb-5 rounded-lg border border-emerald-500/30 bg-emerald-950/10 p-4 shadow-[0_0_24px_rgba(16,185,129,0.08)]">
-        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3 mb-4">
-          <div>
-            <h3 className="font-bold text-slate-900">{selectedStat.title}</h3>
-            <p className="text-sm text-slate-500 mt-1">{selectedStat.helper}</p>
-          </div>
-          <span className="rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs font-bold text-emerald-700">
-            In-page stats
-          </span>
-        </div>
-        <div className="grid sm:grid-cols-2 xl:grid-cols-4 gap-3">
-          {selectedStat.items.map(([label, value]) => (
-            <div key={label} className="rounded-lg border border-slate-100 bg-white p-3">
-              <div className="text-xs font-semibold text-slate-500">{label}</div>
-              <div className="mt-1 text-lg font-extrabold text-slate-900">{value}</div>
-            </div>
-          ))}
-        </div>
-      </section>
-
+  const renderProfileContent = () => (
+    <>
       <div className="grid xl:grid-cols-[1.1fr_.9fr] gap-5 mb-5">
         <section className="bg-white border border-slate-100 rounded-lg p-5 shadow-sm">
           <div className="flex items-center justify-between gap-3 mb-4">
@@ -1214,6 +1271,142 @@ function StudentDetailPage({
           <div className="rounded-lg bg-[#f5f5f6] p-3">Parent portal information is shown here as read-only student context.</div>
         </div>
       </div>
+    </>
+  );
+
+  const renderActiveTabContent = () => {
+    if (activeTab === 'profile') return renderProfileContent();
+
+    const selectedStat = statDetails[activeTab] || statDetails.attendance;
+
+    return (
+      <section className="rounded-lg border border-emerald-500/30 bg-emerald-950/10 p-5 shadow-[0_0_24px_rgba(16,185,129,0.08)]">
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3 mb-4">
+          <div>
+            <h3 className="font-bold text-slate-900">{selectedStat.title}</h3>
+            <p className="text-sm text-slate-500 mt-1">{selectedStat.helper}</p>
+          </div>
+          <span className="rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs font-bold text-emerald-700">
+            In-page stats
+          </span>
+        </div>
+        {renderMetricGrid(selectedStat.items)}
+
+        {activeTab === 'attendance' && (
+          <div className="mt-5 grid xl:grid-cols-[.7fr_1.3fr] gap-4">
+            <div className="rounded-lg border border-slate-100 bg-white p-5">
+              <div className="text-sm font-bold text-slate-900 mb-4">Overall Attendance</div>
+              <div
+                className="mx-auto h-36 w-36 rounded-full flex items-center justify-center"
+                style={{ background: `conic-gradient(#00c46f ${attendancePercentage * 3.6}deg, #f5f5f6 0deg)` }}
+              >
+                <div className="h-24 w-24 rounded-full bg-white flex flex-col items-center justify-center">
+                  <span className="text-3xl font-extrabold text-slate-900">{attendancePercentage}%</span>
+                  <span className="text-xs font-semibold text-slate-500">Present</span>
+                </div>
+              </div>
+            </div>
+            <div className="space-y-3">
+              <div className="text-sm font-bold text-slate-900">Subject-wise Attendance</div>
+              {attendanceSubjectRows.length
+                ? attendanceSubjectRows.map((row) => renderProgressRow({
+                  id: row.subject,
+                  label: row.subject,
+                  helper: `Present ${row.present} | Absent ${row.absent} | Leave ${row.leave} | Total ${row.total}`,
+                  value: `${row.percentage}%`,
+                  percentage: row.percentage,
+                  status: row.total ? `${row.present}/${row.total}` : '0/0',
+                }, '#00c46f'))
+                : renderEmptyState('No subject-wise attendance records available.')}
+            </div>
+          </div>
+        )}
+
+        {activeTab === 'exams' && (
+          <div className="mt-5 space-y-3">
+            <div className="text-sm font-bold text-slate-900">Subject-wise Exam Performance</div>
+            {examRows.length
+              ? examRows.map((row) => renderProgressRow(row, '#2563eb'))
+              : renderEmptyState('No exam marks or result records available.')}
+          </div>
+        )}
+
+        {activeTab === 'payment' && (
+          <div className="mt-5 grid xl:grid-cols-[.7fr_1.3fr] gap-4">
+            <div className="rounded-lg border border-slate-100 bg-white p-5">
+              <div className="text-sm font-bold text-slate-900 mb-4">Payment Progress</div>
+              <div className="h-3 rounded-full bg-[#f5f5f6] overflow-hidden">
+                <div className="h-full rounded-full bg-[#00c46f]" style={{ width: `${feeCompletion}%` }} />
+              </div>
+              <div className="mt-3 text-3xl font-extrabold text-slate-900">{feeCompletion}%</div>
+              <div className="text-sm text-slate-500">Paid or adjusted against assigned fees.</div>
+            </div>
+            <div className="space-y-3">
+              <div className="text-sm font-bold text-slate-900">Fee Assignments</div>
+              {paymentRows.length
+                ? paymentRows.map((row) => renderProgressRow({
+                  ...row,
+                  helper: `${row.helper} | Total INR ${row.total} | Paid INR ${row.paid} | Adjusted INR ${row.adjusted}`,
+                }, row.due > 0 ? '#f59e0b' : '#00c46f'))
+                : renderEmptyState('No fee assignment records available.')}
+            </div>
+          </div>
+        )}
+
+        {activeTab === 'documents' && (
+          <div className="mt-5 grid xl:grid-cols-[.7fr_1.3fr] gap-4">
+            <div className="rounded-lg border border-slate-100 bg-white p-5">
+              <div className="text-sm font-bold text-slate-900 mb-4">Verification Progress</div>
+              <div className="h-3 rounded-full bg-[#f5f5f6] overflow-hidden">
+                <div className="h-full rounded-full bg-[#00c46f]" style={{ width: `${documentCompletion}%` }} />
+              </div>
+              <div className="mt-3 text-3xl font-extrabold text-slate-900">{documentCompletion}%</div>
+              <div className="text-sm text-slate-500">Verified documents for this student.</div>
+            </div>
+            <div className="space-y-3">
+              <div className="text-sm font-bold text-slate-900">Document Status</div>
+              {documentRows.length
+                ? documentRows.map((row) => renderProgressRow(row, row.percentage === 100 ? '#00c46f' : '#f59e0b'))
+                : renderEmptyState('No student document records available.')}
+            </div>
+          </div>
+        )}
+      </section>
+    );
+  };
+
+  return (
+    <div>
+      <div className="flex flex-col gap-4 pb-6 border-b border-slate-100 mb-5">
+        <button
+          type="button"
+          onClick={onBack}
+          className="erp-back-button h-12 px-5 rounded-lg bg-[#fb8d49] text-white font-extrabold text-base flex items-center gap-2 self-start shadow-lg shadow-orange-200 hover:bg-[#e97934] focus:outline-none focus:ring-4 focus:ring-orange-200"
+        >
+          <ArrowLeft size={20} /> Back
+        </button>
+        <div>
+          <div className="text-sm font-bold text-slate-500 mb-2">Academics / <span className="text-[#f39a5f]">Student Details</span></div>
+          <h1 className="text-2xl font-bold text-slate-900">{student.name}</h1>
+          <p className="text-sm text-slate-500 mt-1">{student.admissionNo} / {student.studentId}</p>
+        </div>
+      </div>
+
+      <StudentProfileCard
+        canEdit={canEdit}
+        onApprove={onApprove}
+        onEdit={onEdit}
+        onOpenDocuments={() => onOpenDocuments?.(student)}
+        onSummaryTabSelect={handleSummaryTabSelect}
+        showApprove={canShowApproval}
+        showExtendedDetails={showAllDetails}
+        showProfileDetails={activeTab === 'profile'}
+        showSummaryTabs
+        summaryTabs={summaryTabs}
+        student={student}
+      />
+
+      {renderActiveTabContent()}
     </div>
   );
 }

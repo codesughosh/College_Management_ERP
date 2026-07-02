@@ -43,12 +43,13 @@ export default function StudentProfileCard({
   onSummaryTabSelect,
   showApprove = false,
   showExtendedDetails = true,
+  showProfileDetails = true,
   showSummaryTabs = true,
   summaryTabs = [],
   student,
 }) {
   const resolvedSummaryTabs = summaryTabs.length ? summaryTabs : [
-    { id: 'profile', label: 'Profile', value: 'Open', icon: <UserRound size={14} /> },
+    { id: 'profile', label: 'Profile', icon: <UserRound size={14} /> },
     { id: 'documents', label: 'Docs', value: `${student.documents?.length || 0}`, icon: <FileText size={14} /> },
   ];
 
@@ -111,28 +112,32 @@ export default function StudentProfileCard({
               }`}
             >
               {tab.icon} {tab.label}
-              <span className="text-[11px] opacity-75">{tab.value}</span>
+              {tab.value ? <span className="text-[11px] opacity-75">{tab.value}</span> : null}
             </button>
           ))}
         </div>
         )}
 
-        <h3 className="font-bold text-slate-900 mb-4">Basic Details</h3>
-        <div className="grid sm:grid-cols-2 xl:grid-cols-3 gap-x-8 gap-y-4 text-sm">
-          <DetailItem label="Admission No" value={student.admissionNo} />
-          <DetailItem label="Class" value={`${student.className || '-'} - ${student.section || '-'}`} />
-          <DetailItem label="Guardian" value={student.guardianName} />
-          <DetailItem label="ID Holder" value={student.idHolder} />
-          <DetailItem label="Contact" value={student.phone} icon={<Phone size={13} className="shrink-0" />} />
-          <DetailItem label="Email" value={student.email} />
-        </div>
-
-        {showExtendedDetails && (
+        {showProfileDetails && (
           <>
-            <DetailGrid title="RGUHS Admission Details" fields={commonAdmissionFields} student={student} />
-            <DetailGrid title="Entrance & Qualifying Exam" fields={examAdmissionFields} student={student} />
-            <DetailGrid title="Lateral Entry Diploma Details" fields={lateralAdmissionFields} student={student} />
-            <DetailGrid title="Caste & Income Certificate Details" fields={certificateAdmissionFields} student={student} />
+            <h3 className="font-bold text-slate-900 mb-4">Basic Details</h3>
+            <div className="grid sm:grid-cols-2 xl:grid-cols-3 gap-x-8 gap-y-4 text-sm">
+              <DetailItem label="Admission No" value={student.admissionNo} />
+              <DetailItem label="Class" value={`${student.className || '-'} - ${student.section || '-'}`} />
+              <DetailItem label="Guardian" value={student.guardianName} />
+              <DetailItem label="ID Holder" value={student.idHolder} />
+              <DetailItem label="Contact" value={student.phone} icon={<Phone size={13} className="shrink-0" />} />
+              <DetailItem label="Email" value={student.email} />
+            </div>
+
+            {showExtendedDetails && (
+              <>
+                <DetailGrid title="RGUHS Admission Details" fields={commonAdmissionFields} student={student} />
+                <DetailGrid title="Entrance & Qualifying Exam" fields={examAdmissionFields} student={student} />
+                <DetailGrid title="Lateral Entry Diploma Details" fields={lateralAdmissionFields} student={student} />
+                <DetailGrid title="Caste & Income Certificate Details" fields={certificateAdmissionFields} student={student} />
+              </>
+            )}
           </>
         )}
       </div>

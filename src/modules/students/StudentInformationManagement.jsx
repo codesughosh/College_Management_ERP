@@ -2,9 +2,15 @@ import { Component, useCallback, useEffect, useMemo, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import {
   ArrowLeft,
+  Bell,
+  BookOpen,
   Download,
+  FileText,
+  Plus,
   Search,
+  UserRound,
   Users,
+  Wallet,
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import {
@@ -16,6 +22,7 @@ import {
   archiveStudent,
   restoreStudent,
   updateStudent,
+  updateStudentAdmission,
 } from '../../firebase/db';
 import { isFirebaseConfigured } from '../../firebase/config';
 import { getEnabledModules, getModuleById, getModuleByPath } from '../moduleRegistry';
@@ -28,7 +35,20 @@ import StudentModal from './components/StudentModal';
 import StudentProfileCard from './components/StudentProfileCard';
 import StudentTable from './components/StudentTable';
 import TopHeader from './components/TopHeader';
-import { formatDisplayDate, latestRecord, relationMatches, validateStudentProfile } from './studentUtils';
+import {
+  ACTIVE_STUDENT_STATUS,
+  APPROVED_ADMISSION_STATUS,
+  PENDING_ADMISSION_STATUS,
+  buildCourseOptionsFromStudents,
+  canApproveStudentAdmission,
+  formatDisplayDate,
+  latestRecord,
+  normalizeCreatedAdmissionStatus,
+  normalizeEditableStudentStatus,
+  relationMatches,
+  statusRequiresSuperAdminApproval,
+  validateStudentProfile,
+} from './studentUtils';
 import UserRoleManagement from '../userRoles/UserRoleManagement';
 import FacultyStaffManagement from '../facultyStaff/FacultyStaffManagement';
 import AttendanceManagement from '../attendance/AttendanceManagement';
@@ -45,7 +65,8 @@ import AcademicsManagement from '../academics/AcademicsManagement';
 import CurriculumManagement from '../curriculum/CurriculumManagement';
 import SettingsManagement from '../settings/SettingsManagement';
 import { demoInstituteSettings, normalizeInstituteSettings } from '../settings/demoSettings';
-import { filterStudentScopedRecords } from '../shared/courseFilters';
+import { filterStudentScopedRecords, filterStudentsByCourse } from '../shared/courseFilters';
+import { getParentLinkedStudents } from '../parentPortal/parentPortalUtils';
 
 function csvValue(value) {
   return `"${String(value ?? '').replace(/"/g, '""')}"`;
@@ -225,9 +246,14 @@ export default function StudentInformationManagement({ user, onLogout }) {
   const [studentDocuments, setStudentDocuments] = useState([]);
   const [promotions, setPromotions] = useState([]);
   const [transfers, setTransfers] = useState([]);
+  const [attendanceRecords, setAttendanceRecords] = useState([]);
+  const [marksEntries, setMarksEntries] = useState([]);
+  const [studentResults, setStudentResults] = useState([]);
+  const [feeAssignments, setFeeAssignments] = useState([]);
   const [loadError, setLoadError] = useState('');
   const [showModal, setShowModal] = useState(false);
   const [editingStudent, setEditingStudent] = useState(null);
+  const [focusedStudentContext, setFocusedStudentContext] = useState(null);
   const [statusFilter, setStatusFilter] = useState('active');
   const [academicYear, setAcademicYear] = useState('2025-2026');
   const [institute, setInstitute] = useState(isFirebaseConfigured ? {} : demoInstituteSettings);
@@ -246,6 +272,7 @@ export default function StudentInformationManagement({ user, onLogout }) {
     : !activeModule?.permission || canAccess(defaultRoles, currentRoleId, activeModule.permission);
   const navigateToModule = useCallback((moduleId, options = {}) => {
     const nextModule = getModuleById(moduleId);
+    setFocusedStudentContext(options.state?.studentContext || null);
     setSelectedId('');
     setSearch('');
     navigate(nextModule?.path || '/dashboard', options);
@@ -327,9 +354,11 @@ export default function StudentInformationManagement({ user, onLogout }) {
         setStudentDocuments(data.documents);
         setPromotions(data.promotions);
         setTransfers(data.transfers);
-        if (data.admissionBatches?.length) {
-          setCourses(data.admissionBatches);
-        }
+        setAttendanceRecords(data.attendanceRecords || []);
+        setMarksEntries(data.marksEntries || []);
+        setStudentResults(data.studentResults || []);
+        setFeeAssignments(data.feeAssignments || []);
+        setCourses(buildCourseOptionsFromStudents(data.students, data.admissionBatches || []));
       } catch (error) {
         console.warn('Using demo students because Firestore is not reachable.', error);
         setLoadError('Unable to load Firestore records. Showing demo/local records.');
@@ -340,31 +369,61 @@ export default function StudentInformationManagement({ user, onLogout }) {
 
   const academicYearOptions = useMemo(() => {
     const years = new Set(['2025-2026', '2026-2027', '2024-2025']);
-    [...students, ...admissions, ...studentDocuments, ...promotions, ...transfers].forEach((record) => {
+    [
+      ...students,
+      ...admissions,
+      ...studentDocuments,
+      ...promotions,
+      ...transfers,
+      ...attendanceRecords,
+      ...marksEntries,
+      ...studentResults,
+      ...feeAssignments,
+    ].forEach((record) => {
       if (record?.academicYear) years.add(record.academicYear);
     });
     return [...years].sort().reverse();
-  }, [admissions, promotions, studentDocuments, students, transfers]);
+  }, [admissions, attendanceRecords, feeAssignments, marksEntries, promotions, studentDocuments, studentResults, students, transfers]);
 
   const recordBelongsToYear = (record) => record.academicYear === academicYear;
   const yearStudents = useMemo(() => students.filter((student) => student.academicYear === academicYear), [academicYear, students]);
-  const courseStudents = useMemo(() => (
-    selectedCourseCode === 'all'
-      ? yearStudents
-      : yearStudents.filter((student) => student.courseCode === selectedCourseCode || student.program === selectedCourseCode)
-  ), [selectedCourseCode, yearStudents]);
-  const selectedCourse = useMemo(() => courses.find((course) => course.courseCode === selectedCourseCode) || null, [courses, selectedCourseCode]);
+  const parentLinkedStudents = useMemo(
+    () => currentRoleId === 'parent' ? getParentLinkedStudents(yearStudents, user) : [],
+    [currentRoleId, user, yearStudents]
+  );
+  const parentCourseOptions = useMemo(
+    () => buildCourseOptionsFromStudents(parentLinkedStudents, []),
+    [parentLinkedStudents]
+  );
+  const headerCourses = currentRoleId === 'parent' ? parentCourseOptions : courses;
+  const roleScopedYearStudents = currentRoleId === 'parent' ? parentLinkedStudents : yearStudents;
+  const selectedIsLinkedParentCourse = parentCourseOptions.some((course) => course.courseCode === selectedCourseCode);
+  const effectiveSelectedCourseCode = currentRoleId === 'parent' && parentCourseOptions.length && (selectedCourseCode === 'all' || !selectedIsLinkedParentCourse)
+    ? parentCourseOptions[0].courseCode
+    : selectedCourseCode;
+  const selectedCourse = useMemo(
+    () => [...courses, ...parentCourseOptions].find((course) => course.courseCode === effectiveSelectedCourseCode) || null,
+    [courses, effectiveSelectedCourseCode, parentCourseOptions]
+  );
+  const courseStudents = useMemo(
+    () => filterStudentsByCourse(roleScopedYearStudents, effectiveSelectedCourseCode, selectedCourse),
+    [roleScopedYearStudents, effectiveSelectedCourseCode, selectedCourse]
+  );
+  const focusedStudent = focusedStudentContext
+    ? courseStudents.find((student) => relationMatches(focusedStudentContext, student)) || null
+    : null;
+  const moduleScopedStudents = focusedStudent ? [focusedStudent] : courseStudents;
   const courseScopedAdmissions = useMemo(
-    () => filterStudentScopedRecords(admissions.filter((item) => item.academicYear === academicYear), courseStudents, selectedCourseCode, selectedCourse),
-    [academicYear, admissions, courseStudents, selectedCourse, selectedCourseCode]
+    () => filterStudentScopedRecords(admissions.filter((item) => item.academicYear === academicYear), courseStudents, effectiveSelectedCourseCode, selectedCourse),
+    [academicYear, admissions, courseStudents, effectiveSelectedCourseCode, selectedCourse]
   );
   const courseScopedDocuments = useMemo(
-    () => filterStudentScopedRecords(studentDocuments.filter((item) => item.academicYear === academicYear), courseStudents, selectedCourseCode, selectedCourse),
-    [academicYear, courseStudents, selectedCourse, selectedCourseCode, studentDocuments]
+    () => filterStudentScopedRecords(studentDocuments.filter((item) => item.academicYear === academicYear), courseStudents, effectiveSelectedCourseCode, selectedCourse),
+    [academicYear, courseStudents, effectiveSelectedCourseCode, selectedCourse, studentDocuments]
   );
   const courseScopedPromotions = useMemo(
-    () => filterStudentScopedRecords(promotions.filter((item) => item.academicYear === academicYear), courseStudents, selectedCourseCode, selectedCourse),
-    [academicYear, courseStudents, promotions, selectedCourse, selectedCourseCode]
+    () => filterStudentScopedRecords(promotions.filter((item) => item.academicYear === academicYear), courseStudents, effectiveSelectedCourseCode, selectedCourse),
+    [academicYear, courseStudents, effectiveSelectedCourseCode, promotions, selectedCourse]
   );
 
   const selectedStudent = selectedId ? courseStudents.find((student) => student.id === selectedId) || null : null;
@@ -372,6 +431,10 @@ export default function StudentInformationManagement({ user, onLogout }) {
   const selectedDocuments = studentDocuments.filter((record) => relationMatches(record, selectedStudent) && recordBelongsToYear(record));
   const selectedPromotions = promotions.filter((record) => relationMatches(record, selectedStudent) && recordBelongsToYear(record));
   const selectedTransfers = transfers.filter((record) => relationMatches(record, selectedStudent) && recordBelongsToYear(record));
+  const selectedAttendanceRecords = attendanceRecords.filter((record) => relationMatches(record, selectedStudent) && recordBelongsToYear(record));
+  const selectedMarksEntries = marksEntries.filter((record) => relationMatches(record, selectedStudent) && recordBelongsToYear(record));
+  const selectedResults = studentResults.filter((record) => relationMatches(record, selectedStudent) && recordBelongsToYear(record));
+  const selectedFeeAssignments = feeAssignments.filter((record) => relationMatches(record, selectedStudent) && recordBelongsToYear(record));
   const latestAdmission = latestRecord(selectedAdmissions);
 
   const filteredStudents = useMemo(() => {
@@ -414,6 +477,41 @@ export default function StudentInformationManagement({ user, onLogout }) {
     });
   }, [navigateToModule]);
 
+  const buildStudentContext = useCallback((student) => ({
+    id: student.id,
+    studentRecordId: student.id,
+    studentId: student.studentId,
+    name: student.name,
+    courseCode: student.courseCode,
+    courseName: student.courseName || student.program,
+  }), []);
+
+  const openStudentModule = useCallback((moduleId, student, extraState = {}) => {
+    const studentContext = buildStudentContext(student);
+    if (student.courseCode && student.courseCode !== selectedCourseCode) {
+      setSelectedCourseCode(student.courseCode);
+    }
+    navigateToModule(moduleId, {
+      state: {
+        ...extraState,
+        studentContext,
+      },
+    });
+  }, [buildStudentContext, navigateToModule, selectedCourseCode]);
+
+  const openStudentDocuments = useCallback((student) => {
+    const studentContext = buildStudentContext(student);
+    openStudentModule('document-management', student, {
+      documentOwner: {
+        ownerId: student.studentId,
+        ownerName: student.name,
+        ownerRecordId: student.id,
+        ownerType: 'Student',
+        studentContext,
+      },
+    });
+  }, [buildStudentContext, openStudentModule]);
+
   const saveStudent = async (form) => {
     if (!canCreateAdmission) {
       toast.error('You do not have permission to create new admissions.');
@@ -429,13 +527,15 @@ export default function StudentInformationManagement({ user, onLogout }) {
     const nextNumber = String(4450 + students.length).padStart(5, '0');
     const selectedAcademicYear = form.academicYear;
     const createdAtText = formatDisplayDate();
+    const pendingStatus = normalizeCreatedAdmissionStatus();
     const payload = {
       ...form,
       admissionNo: `ADM-2026-${nextNumber}`,
       studentId: `STU-${nextNumber}`,
       institute: 'Maurya Institute of Allied Health Sciences',
       academicYear: selectedAcademicYear,
-      status: 'Admission Review',
+      status: pendingStatus,
+      admissionApprovalStatus: pendingStatus,
       createdAtText,
     };
 
@@ -457,7 +557,7 @@ export default function StudentInformationManagement({ user, onLogout }) {
         admissionDate: created.admissionDate,
         seatType: created.seatType,
         actualCategory: created.actualCategory,
-        status: 'Admission Review',
+        status: pendingStatus,
         submittedAtText: createdAtText,
       };
       const admissionForm = {
@@ -504,7 +604,7 @@ export default function StudentInformationManagement({ user, onLogout }) {
         admissionDate: local.admissionDate,
         seatType: local.seatType,
         actualCategory: local.actualCategory,
-        status: 'Admission Review',
+        status: pendingStatus,
         submittedAtText: createdAtText,
       };
       const admissionForm = {
@@ -541,8 +641,16 @@ export default function StudentInformationManagement({ user, onLogout }) {
       return;
     }
 
+    const statusChanged = form.status !== editingStudent.status;
+    const normalizedStatus = normalizeEditableStudentStatus(form.status, currentRoleId);
+    if (statusChanged && normalizedStatus !== form.status) {
+      toast.error('Only Super Admin can approve or admit a student.');
+      return;
+    }
+
     const updates = {
       ...form,
+      status: statusChanged ? normalizedStatus : form.status,
       updatedAtText: formatDisplayDate(),
     };
 
@@ -559,6 +667,45 @@ export default function StudentInformationManagement({ user, onLogout }) {
       toast.success('Student profile updated locally. Check Firebase setup to persist it.');
     } finally {
       setEditingStudent(null);
+    }
+  };
+
+  const approveStudentAdmission = async (student) => {
+    if (!canApproveStudentAdmission(currentRoleId)) {
+      toast.error('Only Super Admin can approve admissions.');
+      return;
+    }
+
+    const approvedAtText = formatDisplayDate();
+    const studentUpdates = {
+      status: ACTIVE_STUDENT_STATUS,
+      admissionApprovalStatus: APPROVED_ADMISSION_STATUS,
+      approvedBy: user?.name || 'Super Admin',
+      approvedAtText,
+    };
+    const admission = latestRecord(admissions.filter((record) => relationMatches(record, student) && record.academicYear === student.academicYear));
+    const admissionUpdates = {
+      status: APPROVED_ADMISSION_STATUS,
+      approvedBy: user?.name || 'Super Admin',
+      approvedAtText,
+    };
+
+    try {
+      await Promise.all([
+        updateStudent(student.id, studentUpdates),
+        admission?.id ? updateStudentAdmission(admission.id, admissionUpdates) : Promise.resolve(),
+      ]);
+      setStudents((prev) => prev.map((item) => item.id === student.id ? { ...item, ...studentUpdates } : item));
+      if (admission?.id) {
+        setAdmissions((prev) => prev.map((item) => item.id === admission.id ? { ...item, ...admissionUpdates } : item));
+      }
+      toast.success('Student admission approved');
+    } catch {
+      setStudents((prev) => prev.map((item) => item.id === student.id ? { ...item, ...studentUpdates } : item));
+      if (admission?.id) {
+        setAdmissions((prev) => prev.map((item) => item.id === admission.id ? { ...item, ...admissionUpdates } : item));
+      }
+      toast.success('Student admission approved locally. Check Firebase setup to persist it.');
     }
   };
 
@@ -596,10 +743,11 @@ export default function StudentInformationManagement({ user, onLogout }) {
     }
 
     const restoredAtText = formatDisplayDate();
-    const updates = { status: 'Active', restoredAtText };
+    const restoredStatus = canApproveStudentAdmission(currentRoleId) ? ACTIVE_STUDENT_STATUS : PENDING_ADMISSION_STATUS;
+    const updates = { status: restoredStatus, restoredAtText };
 
     try {
-      await restoreStudent(student.id, { restoredAtText });
+      await restoreStudent(student.id, updates);
       setStudents((prev) => prev.map((item) => (
         item.id === student.id ? { ...item, ...updates } : item
       )));
@@ -633,8 +781,8 @@ export default function StudentInformationManagement({ user, onLogout }) {
             <TopHeader
               academicYear={academicYear}
               academicYears={academicYearOptions}
-              courseCode={selectedCourseCode}
-              courses={courses}
+              courseCode={effectiveSelectedCourseCode}
+              courses={headerCourses}
               institute={institute}
               onAcademicYearChange={setAcademicYear}
               onCourseChange={(courseCode) => {
@@ -653,19 +801,26 @@ export default function StudentInformationManagement({ user, onLogout }) {
                     You do not have permission to open this module.
                   </div>
                 ) : activePage === 'dashboard' ? (
-                  <DashboardManagement academicYear={academicYear} currentUser={user} selectedCourse={selectedCourse} selectedCourseCode={selectedCourseCode} scopedStudents={courseStudents} onNavigate={navigateToModule} />
+                  <DashboardManagement academicYear={academicYear} currentUser={user} selectedCourse={selectedCourse} selectedCourseCode={effectiveSelectedCourseCode} scopedStudents={courseStudents} onNavigate={navigateToModule} />
                 ) : activePage === 'students' ? (
                 selectedStudent ? (
                   <StudentDetailPage
+                    attendanceRecords={selectedAttendanceRecords}
+                    canApprove={canApproveStudentAdmission(currentRoleId)}
                     canEdit={canEditStudents}
                     documents={selectedDocuments}
+                    feeAssignments={selectedFeeAssignments}
                     latestAdmission={latestAdmission}
+                    marksEntries={selectedMarksEntries}
+                    onApprove={approveStudentAdmission}
                     onEdit={setEditingStudent}
+                    onOpenStudentModule={openStudentModule}
                     promotions={selectedPromotions}
+                    results={selectedResults}
                     student={selectedStudent}
                     transfers={selectedTransfers}
                     onBack={goBackOneStudentStep}
-                    onOpenDocuments={openOwnerDocuments}
+                    onOpenDocuments={openStudentDocuments}
                   />
                 ) : (
                 <>
@@ -676,6 +831,15 @@ export default function StudentInformationManagement({ user, onLogout }) {
                     {!isFirebaseConfigured && <p className="text-xs text-orange-600 mt-2">Demo mode: add Firebase keys to persist records.</p>}
                     {loadError && <p className="text-xs text-rose-600 mt-2">{loadError}</p>}
                   </div>
+                  {canCreateAdmission && (
+                    <button
+                      type="button"
+                      onClick={() => setShowModal(true)}
+                      className="h-10 px-5 rounded-lg bg-[#fb8d49] text-white font-semibold text-sm flex items-center justify-center gap-2"
+                    >
+                      <Plus size={16} /> New Admission
+                    </button>
+                  )}
                 </div>
 
                 <div className="erp-branch-focus flex flex-col lg:flex-row lg:items-center justify-between gap-4 mb-5 rounded-lg bg-[#f5f5f6] p-5 border border-slate-100">
@@ -686,7 +850,7 @@ export default function StudentInformationManagement({ user, onLogout }) {
                     <div className="min-w-0">
                       <div className="text-xs font-bold text-slate-500">Students</div>
                       <h2 className="text-2xl font-extrabold text-slate-900 mt-1">
-                        {selectedCourseCode === 'all' ? 'All Students' : courses.find((course) => course.courseCode === selectedCourseCode)?.courseName || 'Selected Course'}
+                        {effectiveSelectedCourseCode === 'all' ? 'All Students' : [...courses, ...parentCourseOptions].find((course) => course.courseCode === effectiveSelectedCourseCode)?.courseName || 'Selected Course'}
                       </h2>
                       <p className="text-sm text-slate-500 mt-1">Browse active and archived records.</p>
                     </div>
@@ -755,43 +919,43 @@ export default function StudentInformationManagement({ user, onLogout }) {
                     currentUser={user}
                     academicYear={academicYear}
                     selectedCourse={selectedCourse}
-                    selectedCourseCode={selectedCourseCode}
+                    selectedCourseCode={effectiveSelectedCourseCode}
                     scopedStudents={courseStudents}
                     onOpenDocuments={openOwnerDocuments}
                   />
                 ) : activePage === 'academics' ? (
-                  <AcademicsManagement currentUser={user} academicYear={academicYear} selectedCourse={selectedCourse} selectedCourseCode={selectedCourseCode} />
+                  <AcademicsManagement currentUser={user} academicYear={academicYear} selectedCourse={selectedCourse} selectedCourseCode={effectiveSelectedCourseCode} />
                 ) : activePage === 'calendar' ? (
-                  <CurriculumManagement currentUser={user} academicYear={academicYear} selectedCourse={selectedCourse} selectedCourseCode={selectedCourseCode} />
+                  <CurriculumManagement currentUser={user} academicYear={academicYear} selectedCourse={selectedCourse} selectedCourseCode={effectiveSelectedCourseCode} />
                 ) : activePage === 'attendance' ? (
-                  <AttendanceManagement currentUser={user} academicYear={academicYear} selectedCourse={selectedCourse} selectedCourseCode={selectedCourseCode} scopedStudents={courseStudents} />
+                  <AttendanceManagement currentUser={user} academicYear={academicYear} selectedCourse={selectedCourse} selectedCourseCode={effectiveSelectedCourseCode} scopedStudents={moduleScopedStudents} />
                 ) : activePage === 'timetable' ? (
-                  <TimetableManagement currentUser={user} academicYear={academicYear} selectedCourse={selectedCourse} selectedCourseCode={selectedCourseCode} scopedStudents={courseStudents} />
+                  <TimetableManagement currentUser={user} academicYear={academicYear} selectedCourse={selectedCourse} selectedCourseCode={effectiveSelectedCourseCode} scopedStudents={courseStudents} />
                 ) : activePage === 'examination-results' ? (
-                  <ExaminationResultManagement currentUser={user} academicYear={academicYear} selectedCourse={selectedCourse} selectedCourseCode={selectedCourseCode} scopedStudents={courseStudents} />
+                  <ExaminationResultManagement currentUser={user} academicYear={academicYear} selectedCourse={selectedCourse} selectedCourseCode={effectiveSelectedCourseCode} scopedStudents={moduleScopedStudents} />
                 ) : activePage === 'fees' ? (
-                  <FeesManagement currentUser={user} academicYear={academicYear} selectedCourse={selectedCourse} selectedCourseCode={selectedCourseCode} scopedStudents={courseStudents} />
+                  <FeesManagement currentUser={user} academicYear={academicYear} selectedCourse={selectedCourse} selectedCourseCode={effectiveSelectedCourseCode} scopedStudents={moduleScopedStudents} />
                 ) : activePage === 'hostel-management' ? (
-                  <HostelManagement currentUser={user} academicYear={academicYear} selectedCourse={selectedCourse} selectedCourseCode={selectedCourseCode} />
+                  <HostelManagement currentUser={user} academicYear={academicYear} selectedCourse={selectedCourse} selectedCourseCode={effectiveSelectedCourseCode} scopedStudents={moduleScopedStudents} />
                 ) : activePage === 'financial-reports' ? (
-                  <FinancialReports currentUser={user} academicYear={academicYear} selectedCourse={selectedCourse} selectedCourseCode={selectedCourseCode} scopedStudents={courseStudents} />
+                  <FinancialReports currentUser={user} academicYear={academicYear} selectedCourse={selectedCourse} selectedCourseCode={effectiveSelectedCourseCode} scopedStudents={courseStudents} />
                 ) : activePage === 'notice-board' ? (
-                  <NoticeBoardManagement currentUser={user} academicYear={academicYear} selectedCourse={selectedCourse} selectedCourseCode={selectedCourseCode} />
+                  <NoticeBoardManagement currentUser={user} academicYear={academicYear} selectedCourse={selectedCourse} selectedCourseCode={effectiveSelectedCourseCode} />
                 ) : activePage === 'document-management' ? (
                   <DocumentManagement
                     currentUser={user}
                     academicYear={academicYear}
                     selectedCourse={selectedCourse}
-                    selectedCourseCode={selectedCourseCode}
-                    scopedStudents={courseStudents}
+                    selectedCourseCode={effectiveSelectedCourseCode}
+                    scopedStudents={moduleScopedStudents}
                     ownerFilter={location.state?.documentOwner}
                   />
                 ) : activePage === 'parent-portal' ? (
-                  <ParentPortal currentUser={user} academicYear={academicYear} selectedCourse={selectedCourse} selectedCourseCode={selectedCourseCode} />
+                  <ParentPortal currentUser={user} academicYear={academicYear} selectedCourse={selectedCourse} selectedCourseCode={effectiveSelectedCourseCode} />
                 ) : activePage === 'user-roles' ? (
                   <UserRoleManagement currentUser={user} />
                 ) : activePage === 'settings' ? (
-                  <SettingsManagement currentUser={user} selectedCourse={selectedCourse} selectedCourseCode={selectedCourseCode} />
+                  <SettingsManagement currentUser={user} selectedCourse={selectedCourse} selectedCourseCode={effectiveSelectedCourseCode} />
                 ) : (
                   <DemoModulePage page={activePage} onOpenStudents={() => navigateToModule('students')} />
                 )}
@@ -817,9 +981,10 @@ export default function StudentInformationManagement({ user, onLogout }) {
       {showModal && (
         <StudentModal
           academicYearOptions={academicYearOptions}
+          canApproveAdmission={canApproveStudentAdmission(currentRoleId)}
           courses={courses}
           initialAcademicYear={academicYear}
-          initialCourseCode={selectedCourseCode === 'all' ? courses[0]?.courseCode : selectedCourseCode}
+          initialCourseCode={effectiveSelectedCourseCode === 'all' ? courses[0]?.courseCode : effectiveSelectedCourseCode}
           onClose={() => setShowModal(false)}
           onSave={saveStudent}
         />
@@ -828,6 +993,7 @@ export default function StudentInformationManagement({ user, onLogout }) {
         <StudentModal
           mode="edit"
           academicYearOptions={academicYearOptions}
+          canApproveAdmission={canApproveStudentAdmission(currentRoleId)}
           courses={courses}
           initialAcademicYear={academicYear}
           initialStudent={editingStudent}
@@ -839,26 +1005,59 @@ export default function StudentInformationManagement({ user, onLogout }) {
   );
 }
 
-function StudentMetricCard({ label, value, helper, tone = '#fb8d49' }) {
-  return (
-    <div className="rounded-lg bg-[#f5f5f6] p-4">
-      <div className="text-xs font-semibold text-slate-500">{label}</div>
-      <div className="mt-1 text-2xl font-extrabold text-slate-900">{value}</div>
-      <div className="mt-3 h-2 rounded-full bg-white overflow-hidden">
-        <div className="h-full rounded-full" style={{ width: `${Math.min(100, Number(value) || 0)}%`, background: tone }} />
-      </div>
-      <div className="mt-2 text-xs text-slate-500">{helper}</div>
-    </div>
-  );
-}
-
-function StudentDetailPage({ canEdit, documents = [], latestAdmission, onBack, onEdit, onOpenDocuments, promotions = [], student, transfers = [] }) {
+function StudentDetailPage({
+  attendanceRecords = [],
+  canApprove = false,
+  canEdit,
+  documents = [],
+  feeAssignments = [],
+  latestAdmission,
+  marksEntries = [],
+  onApprove,
+  onBack,
+  onEdit,
+  onOpenDocuments,
+  onOpenStudentModule,
+  promotions = [],
+  results = [],
+  student,
+  transfers = [],
+}) {
   const [showAllDetails, setShowAllDetails] = useState(false);
   const verifiedDocs = documents.filter((item) => item.verificationStatus === 'Verified' || item.verificationStatus === 'Source PDF').length;
-  const documentPercentage = documents.length ? Math.round((verifiedDocs / documents.length) * 100) : 0;
-  const admissionStatus = latestAdmission?.status || student.status || 'Active';
-  const profileCompletionFields = ['name', 'studentId', 'guardianName', 'phone', 'email', 'address', 'dob', 'gender', 'courseName', 'academicYear'];
-  const profileCompletion = Math.round((profileCompletionFields.filter((key) => student[key]).length / profileCompletionFields.length) * 100);
+  const presentRecords = attendanceRecords.filter((item) => item.status === 'Present').length;
+  const attendancePercentage = attendanceRecords.length ? Math.round((presentRecords / attendanceRecords.length) * 100) : 0;
+  const examRecordCount = marksEntries.length + results.length;
+  const feeDue = feeAssignments.reduce((sum, item) => sum + Number(item.dueAmount || 0), 0);
+  const admissionStatus = latestAdmission?.status || student.status || PENDING_ADMISSION_STATUS;
+  const canShowApproval = canApprove
+    && student.status !== 'Archived'
+    && !statusRequiresSuperAdminApproval(student.status)
+    && !statusRequiresSuperAdminApproval(latestAdmission?.status || '');
+  const summaryTabs = [
+    { id: 'profile', label: 'Profile', value: 'Open', icon: <UserRound size={14} /> },
+    { id: 'attendance', label: 'Attendance', value: `${attendancePercentage}%`, icon: <Bell size={14} /> },
+    { id: 'exams', label: 'Exams', value: `${examRecordCount}`, icon: <BookOpen size={14} /> },
+    { id: 'payment', label: 'Payment', value: feeDue ? `INR ${feeDue}` : 'No due', icon: <Wallet size={14} /> },
+    { id: 'documents', label: 'Docs', value: `${documents.length}`, icon: <FileText size={14} /> },
+  ];
+
+  const handleSummaryTabSelect = (tabId) => {
+    if (tabId === 'profile') {
+      setShowAllDetails(true);
+      return;
+    }
+    if (tabId === 'documents') {
+      onOpenDocuments?.(student);
+      return;
+    }
+    const moduleMap = {
+      attendance: 'attendance',
+      exams: 'examination-results',
+      payment: 'fees',
+    };
+    if (moduleMap[tabId]) onOpenStudentModule?.(moduleMap[tabId], student);
+  };
 
   return (
     <div>
@@ -879,23 +1078,16 @@ function StudentDetailPage({ canEdit, documents = [], latestAdmission, onBack, o
 
       <StudentProfileCard
         canEdit={canEdit}
+        onApprove={onApprove}
         onEdit={onEdit}
-        onOpenDocuments={() => onOpenDocuments?.({
-          ownerId: student.studentId,
-          ownerName: student.name,
-          ownerRecordId: student.id,
-          ownerType: 'Student',
-        })}
+        onOpenDocuments={() => onOpenDocuments?.(student)}
+        onSummaryTabSelect={handleSummaryTabSelect}
+        showApprove={canShowApproval}
         showExtendedDetails={showAllDetails}
         showSummaryTabs
+        summaryTabs={summaryTabs}
         student={student}
       />
-
-      <div className="grid md:grid-cols-3 gap-4 mb-5">
-        <StudentMetricCard label="Profile Completion" value={profileCompletion} helper="Core profile fields recorded" tone="#2563eb" />
-        <StudentMetricCard label="Document Readiness" value={documentPercentage} helper={`${verifiedDocs}/${documents.length || 0} documents verified`} tone="#22c55e" />
-        <StudentMetricCard label="Admission Progress" value={admissionStatus === 'Active' || admissionStatus === 'Approved' ? 100 : 55} helper={admissionStatus} tone="#f59e0b" />
-      </div>
 
       <div className="grid xl:grid-cols-[1.1fr_.9fr] gap-5 mb-5">
         <section className="bg-white border border-slate-100 rounded-lg p-5 shadow-sm">
@@ -955,7 +1147,7 @@ function StudentDetailPage({ canEdit, documents = [], latestAdmission, onBack, o
         <h3 className="font-bold mb-4">Student Timeline</h3>
         <div className="grid sm:grid-cols-3 gap-3 text-sm text-slate-600">
           <div className="rounded-lg bg-[#f5f5f6] p-3">
-            Admission status: {latestAdmission?.status || student.status}. Created on {student.createdAtText || latestAdmission?.submittedAtText || 'today'}.
+            Admission status: {admissionStatus}. Created on {student.createdAtText || latestAdmission?.submittedAtText || 'today'}.
           </div>
           <div className="rounded-lg bg-[#f5f5f6] p-3">Documents available: {documents.length}</div>
           <div className="rounded-lg bg-[#f5f5f6] p-3">Parent portal information is shown here as read-only student context.</div>

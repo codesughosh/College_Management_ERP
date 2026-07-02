@@ -21,6 +21,9 @@ export default function TopHeader({
   const isParent = currentRoleId === 'parent';
   const userDisplayId = user?.displayId || user?.adminId || user?.employeeId || user?.uid?.slice(0, 8) || '-';
   const instituteId = user?.selectedCollege?.code || institute?.instituteId || institute?.code || '-';
+  const selectedCourseValue = isParent && !courses.some((course) => course.courseCode === courseCode)
+    ? courses[0]?.courseCode || ''
+    : courseCode;
 
   useEffect(() => {
     const closeProfileMenu = (event) => {
@@ -39,12 +42,14 @@ export default function TopHeader({
           <label className="text-xs font-semibold text-slate-500">
             <span className="sr-only">Course</span>
             <select
-              value={courseCode}
+              value={selectedCourseValue}
               onChange={(event) => onCourseChange?.(event.target.value)}
+              disabled={isParent && courses.length <= 1}
               className="w-72 h-11 bg-white border border-slate-200 rounded-lg shadow-[0_2px_8px_rgba(15,23,42,0.04)] px-4 text-sm text-slate-600 outline-none focus:border-[#fb9a5b] focus:ring-2 focus:ring-orange-100"
               title="Select course"
             >
-              <option value="all">All Courses</option>
+              {!isParent && <option value="all">All Courses</option>}
+              {isParent && !courses.length && <option value="">No linked course</option>}
               {courses.map((course) => (
                 <option key={course.courseCode} value={course.courseCode}>
                   {course.courseName} - {course.admissionType || course.courseYear}

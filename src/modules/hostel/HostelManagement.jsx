@@ -6,6 +6,7 @@ import {
   createHostelRecord,
   createHostelRoom,
   getHostelManagementData,
+  updateHostelRoom,
 } from '../../firebase/db';
 import { isFirebaseConfigured } from '../../firebase/config';
 import { canAccess, defaultRoles } from '../userRoles/rolePermissions';
@@ -19,6 +20,7 @@ import {
   validateHostelRecord,
   validateHostelRoom,
 } from './hostelUtils';
+import { filterStudentScopedRecords } from '../shared/courseFilters';
 
 const tabs = [
   ['rooms', 'Rooms'],
@@ -26,7 +28,7 @@ const tabs = [
   ['records', 'Records'],
 ];
 
-export default function HostelManagement({ currentUser, academicYear = '2025-2026', selectedCourse = null, selectedCourseCode = 'all' }) {
+export default function HostelManagement({ currentUser, academicYear = '2025-2026', scopedStudents = [], selectedCourse = null, selectedCourseCode = 'all' }) {
   const [rooms, setRooms] = useState(isFirebaseConfigured ? [] : demoHostelRooms);
   const [allocations, setAllocations] = useState(isFirebaseConfigured ? [] : demoHostelAllocations);
   const [records, setRecords] = useState(isFirebaseConfigured ? [] : demoHostelRecords);
@@ -53,11 +55,10 @@ export default function HostelManagement({ currentUser, academicYear = '2025-202
 
   const currentRoleId = currentUser?.roleId || 'admin';
   const canManage = canAccess(defaultRoles, currentRoleId, 'hostel.manage');
-  const visibleAllocations = useMemo(() => {
-    const courseName = selectedCourse?.courseName || selectedCourse?.name || '';
-    if (selectedCourseCode === 'all') return allocations;
-    return allocations.filter((item) => item.courseCode === selectedCourseCode || item.courseName === courseName);
-  }, [allocations, selectedCourse, selectedCourseCode]);
+  const visibleAllocations = useMemo(
+    () => filterStudentScopedRecords(allocations, scopedStudents, selectedCourseCode, selectedCourse),
+    [allocations, scopedStudents, selectedCourse, selectedCourseCode]
+  );
   const summary = useMemo(() => summarizeHostel(rooms, visibleAllocations, records), [rooms, records, visibleAllocations]);
 
   const activeRows = useMemo(() => {
@@ -91,24 +92,48 @@ export default function HostelManagement({ currentUser, academicYear = '2025-202
         const id = await createHostelRoom(payload);
         setRooms((prev) => [{ id: id || `local-hostel-room-${Date.now()}`, ...payload }, ...prev]);
       } else if (activeTab === 'allocations') {
-        const room = rooms.find((item) => Number(item.occupiedCount || 0) < Number(item.capacity || 0)) || rooms[0];
+        const room = rooms.find((item) => (
+          item.status !== 'Archived' && Number(item.occupiedCount || 0) < Number(item.capacity || 0)
+        ));
+        if (!room) {
+          toast.error('No available hostel room found.');
+          return;
+        }
+        const allocatedKeys = new Set(
+          allocations
+            .filter((item) => item.status === 'Active')
+            .flatMap((item) => [item.studentRecordId, item.studentId].filter(Boolean))
+        );
+        const student = scopedStudents.find((item) => !allocatedKeys.has(item.id) && !allocatedKeys.has(item.studentId));
+        if (!student) {
+          toast.error('No unallocated student found for the selected course.');
+          return;
+        }
         const payload = {
-          studentName: `Student ${visibleAllocations.length + 1}`,
-          studentId: `HOSTEL-${String(visibleAllocations.length + 1).padStart(3, '0')}`,
-          courseName: selectedCourse?.courseName || selectedCourse?.name || '',
-          courseCode: selectedCourseCode === 'all' ? '' : selectedCourseCode,
-          roomNo: room?.roomNo || '101',
-          hostelName: room?.hostelName || 'Main Hostel',
+          studentRecordId: student.id,
+          studentName: student.name,
+          studentId: student.studentId,
+          courseName: student.courseName || student.program || selectedCourse?.courseName || selectedCourse?.name || '',
+          courseCode: student.courseCode || (selectedCourseCode === 'all' ? '' : selectedCourseCode),
+          roomNo: room.roomNo,
+          hostelName: room.hostelName,
           allocatedOn: new Date().toISOString().slice(0, 10),
           academicYear,
           status: 'Active',
-          guardianPhone: '',
+          guardianPhone: student.phone || '',
           createdAtText,
         };
         const message = validateHostelAllocation(payload);
         if (message) return toast.error(message);
         const id = await createHostelAllocation(payload);
+        const occupiedCount = Number(room.occupiedCount || 0) + 1;
+        const roomUpdates = {
+          occupiedCount,
+          status: occupiedCount >= Number(room.capacity || 0) ? 'Full' : 'Available',
+        };
+        await updateHostelRoom(room.id, roomUpdates);
         setAllocations((prev) => [{ id: id || `local-hostel-allocation-${Date.now()}`, ...payload }, ...prev]);
+        setRooms((prev) => prev.map((item) => item.id === room.id ? { ...item, ...roomUpdates } : item));
       } else {
         const room = rooms[0];
         const payload = {

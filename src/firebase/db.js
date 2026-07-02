@@ -110,6 +110,10 @@ export async function getStudentInformationData(academicYear = '') {
     promotions,
     transfers,
     admissionBatches,
+    attendanceRecords,
+    marksEntries,
+    studentResults,
+    feeAssignments,
   ] = await Promise.all([
     listCollection('students', yearConstraints),
     listCollection('studentAdmissions', yearConstraints),
@@ -117,6 +121,10 @@ export async function getStudentInformationData(academicYear = '') {
     listCollection('studentPromotions', yearConstraints),
     listCollection('studentTransfers', yearConstraints),
     listCollection('admissionBatches', yearConstraints),
+    listCollection('studentAttendanceRecords', yearConstraints),
+    listCollection('marksEntries', yearConstraints),
+    listCollection('studentResults', yearConstraints),
+    listCollection('feeAssignments', yearConstraints),
   ]);
 
   return {
@@ -126,6 +134,10 @@ export async function getStudentInformationData(academicYear = '') {
     promotions,
     transfers,
     admissionBatches,
+    attendanceRecords,
+    marksEntries,
+    studentResults,
+    feeAssignments,
   };
 }
 
@@ -135,6 +147,14 @@ export async function createStudent(data) {
 
 export async function createStudentAdmission(data) {
   return createCollectionDocument('studentAdmissions', data);
+}
+
+export async function updateStudentAdmission(id, data) {
+  if (!db || !id || id.startsWith('demo-') || id.startsWith('local-')) return;
+  await updateDoc(doc(db, 'studentAdmissions', id), {
+    ...data,
+    updatedAt: serverTimestamp(),
+  });
 }
 
 export async function createStudentDocument(data) {
@@ -180,7 +200,7 @@ export async function restoreStudent(id, data = {}) {
   if (!db || !id || id.startsWith('demo-') || id.startsWith('local-')) return;
   await updateDoc(doc(db, 'students', id), {
     ...data,
-    status: 'Active',
+    status: data.status || 'Active',
     restoredAt: serverTimestamp(),
     updatedAt: serverTimestamp(),
   });
@@ -564,6 +584,14 @@ export async function getHostelManagementData(academicYear = '') {
 
 export async function createHostelRoom(data) {
   return createCollectionDocument('hostelRooms', data);
+}
+
+export async function updateHostelRoom(id, data) {
+  if (!db || !id || id.startsWith('demo-') || id.startsWith('local-')) return;
+  await updateDoc(doc(db, 'hostelRooms', id), {
+    ...data,
+    updatedAt: serverTimestamp(),
+  });
 }
 
 export async function createHostelAllocation(data) {

@@ -1,4 +1,4 @@
-import { Bell, BookOpen, Edit3, FileText, Phone, UserRound, Wallet } from 'lucide-react';
+import { Edit3, FileText, Phone, UserRound } from 'lucide-react';
 import StatusBadge from './StatusBadge';
 import {
   certificateAdmissionFields,
@@ -37,18 +37,19 @@ function DetailGrid({ fields, student, title }) {
 
 export default function StudentProfileCard({
   canEdit = true,
+  onApprove,
   onEdit,
   onOpenDocuments,
+  onSummaryTabSelect,
+  showApprove = false,
   showExtendedDetails = true,
   showSummaryTabs = true,
+  summaryTabs = [],
   student,
 }) {
-  const summaryTabs = [
-    { label: 'Profile', value: 'Open', icon: <UserRound size={14} /> },
-    { label: 'Attendance', value: '84%', icon: <Bell size={14} /> },
-    { label: 'Exams', value: 'View', icon: <BookOpen size={14} /> },
-    { label: 'Payment', value: 'Summary', icon: <Wallet size={14} /> },
-    { label: 'Docs', value: `${student.documents?.length || 0}`, icon: <FileText size={14} /> },
+  const resolvedSummaryTabs = summaryTabs.length ? summaryTabs : [
+    { id: 'profile', label: 'Profile', value: 'Open', icon: <UserRound size={14} /> },
+    { id: 'documents', label: 'Docs', value: `${student.documents?.length || 0}`, icon: <FileText size={14} /> },
   ];
 
   return (
@@ -77,6 +78,14 @@ export default function StudentProfileCard({
               <Edit3 size={14} /> Edit
             </button>
           )}
+          {showApprove && (
+            <button
+              onClick={() => onApprove?.(student)}
+              className="h-9 px-4 rounded-full bg-emerald-600 text-white font-semibold text-xs flex items-center justify-center gap-2"
+            >
+              Approve Admission
+            </button>
+          )}
           <button
             onClick={() => onOpenDocuments?.(student)}
             className="h-9 px-4 rounded-full bg-[#f5f5f6] text-slate-700 border border-slate-200 font-semibold text-xs flex items-center justify-center gap-2"
@@ -90,9 +99,11 @@ export default function StudentProfileCard({
       <div className="pt-5">
         {showSummaryTabs && (
         <div className="flex flex-wrap gap-2 mb-5">
-          {summaryTabs.map((tab, index) => (
+          {resolvedSummaryTabs.map((tab, index) => (
             <button
-              key={tab.label}
+              key={tab.id || tab.label}
+              type="button"
+              onClick={() => onSummaryTabSelect?.(tab.id || tab.label, student)}
               className={`h-10 px-4 rounded-lg border text-xs font-semibold flex items-center gap-2 ${
                 index === 0
                   ? 'bg-[#33373e] text-white border-[#33373e]'

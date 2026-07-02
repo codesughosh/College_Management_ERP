@@ -39,7 +39,7 @@ export default function DocumentManagement({ currentUser, academicYear = '2026-2
         setSelectedId('');
       } catch (error) {
         console.warn('Using demo documents because Firestore is not reachable.', error);
-        setLoadError('Unable to load Firestore document records. Showing demo/local records.');
+        setLoadError('Unable to load Firestore document records. Showing locally created records only.');
       } finally {
         setLoading(false);
       }

@@ -17,7 +17,7 @@ assert.equal(superAdmin.name, 'Super Admin');
 assert.equal(admin.name, 'Admin');
 assert.equal(hasPermission(admin, 'students.view'), true);
 assert.equal(hasPermission(admin, 'students.edit'), true);
-assert.equal(hasPermission(admin, 'students.create'), false);
+assert.equal(hasPermission(admin, 'students.create'), true);
 assert.equal(hasPermission(admin, 'students.archive'), false);
 assert.equal(hasPermission(admin, 'users.view'), false);
 assert.equal(hasPermission(admin, 'users.create'), false);

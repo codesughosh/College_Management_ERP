@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Upload, UserRound } from 'lucide-react';
 import { admissionCourses } from '../admissionSeedData';
 import { getAdmissionFieldsForCourse } from '../admissionFieldConfig';
+import { PENDING_ADMISSION_STATUS } from '../studentUtils';
 
 const defaultForm = {
   name: '',
@@ -19,7 +20,7 @@ const defaultForm = {
   email: '',
   profilePhotoUrl: '',
   profilePhotoName: '',
-  status: 'Admission Review',
+  status: PENDING_ADMISSION_STATUS,
 };
 
 export default function StudentModal({
@@ -29,6 +30,7 @@ export default function StudentModal({
   initialCourseCode = 'BSCN',
   initialStudent = null,
   mode = 'create',
+  canApproveAdmission = false,
   onClose,
   onSave,
 }) {
@@ -175,8 +177,11 @@ export default function StudentModal({
                 onChange={(event) => setForm((prev) => ({ ...prev, status: event.target.value }))}
                 className="w-full h-11 rounded-lg border border-slate-200 px-3 text-sm outline-none focus:border-[#fb9a5b] focus:ring-2 focus:ring-orange-100"
               >
-                <option>Active</option>
+                {!canApproveAdmission && ['Active', 'Approved'].includes(form.status) && <option>{form.status}</option>}
+                <option>Pending Approval</option>
                 <option>Admission Review</option>
+                {canApproveAdmission && <option>Active</option>}
+                {canApproveAdmission && <option>Approved</option>}
                 <option>Archived</option>
               </select>
             </label>

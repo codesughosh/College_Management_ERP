@@ -2,6 +2,7 @@ export default function StatusBadge({ value }) {
   const classes = {
     Active: 'bg-emerald-50 text-emerald-700 border-emerald-200',
     'Admission Review': 'bg-orange-50 text-orange-700 border-orange-200',
+    'Pending Approval': 'bg-amber-50 text-amber-700 border-amber-200',
     Eligible: 'bg-emerald-50 text-emerald-700 border-emerald-200',
     'Pending Review': 'bg-amber-50 text-amber-700 border-amber-200',
     'Certificate Ready': 'bg-sky-50 text-sky-700 border-sky-200',

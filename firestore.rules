@@ -118,6 +118,24 @@ service cloud.firestore {
         ]);
     }
 
+    function isAdmittedStatus(status) {
+      return status in ['Active', 'Approved', 'Admitted'];
+    }
+
+    function createDoesNotApproveAdmission() {
+      return !isAdmittedStatus(request.resource.data.get('status', ''))
+        && !isAdmittedStatus(request.resource.data.get('admissionApprovalStatus', ''));
+    }
+
+    function updateDoesNotApproveAdmission() {
+      let changedKeys = request.resource.data.diff(resource.data).affectedKeys();
+      return !changedKeys.hasAny(['status', 'admissionApprovalStatus'])
+        || (
+          !isAdmittedStatus(request.resource.data.get('status', ''))
+          && !isAdmittedStatus(request.resource.data.get('admissionApprovalStatus', ''))
+        );
+    }
+
     match /colleges/{documentId} {
       allow read: if isActive();
       allow create, update: if isSuperAdmin();
@@ -141,15 +159,15 @@ service cloud.firestore {
     match /students/{studentRecordId} {
       allow get: if staffCan('students.view') || isLinkedStudent(studentRecordId, resource.data.get('studentId', ''));
       allow list: if staffCan('students.view') || isLinkedStudent(studentRecordId, resource.data.get('studentId', ''));
-      allow create: if staffCan('students.create');
-      allow update: if staffCan('students.edit') || staffCan('students.archive');
+      allow create: if staffCan('students.create') && (isSuperAdmin() || createDoesNotApproveAdmission());
+      allow update: if (staffCan('students.edit') || staffCan('students.archive')) && (isSuperAdmin() || updateDoesNotApproveAdmission());
       allow delete: if false;
     }
 
     match /studentAdmissions/{documentId} {
       allow read: if staffCan('students.view');
-      allow create: if staffCan('students.create');
-      allow update: if staffCan('students.edit');
+      allow create: if staffCan('students.create') && (isSuperAdmin() || createDoesNotApproveAdmission());
+      allow update: if staffCan('students.edit') && (isSuperAdmin() || updateDoesNotApproveAdmission());
       allow delete: if false;
     }
 

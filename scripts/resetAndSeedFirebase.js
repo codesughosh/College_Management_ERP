@@ -82,7 +82,7 @@ const allPermissions = [
 ];
 
 const adminPermissions = [
-  'students.view', 'students.edit',
+  'students.view', 'students.create', 'students.edit',
   'staff.view', 'staff.create', 'staff.edit', 'staff.archive', 'staff.leave', 'staff.attendance',
   'attendance.view', 'academicCurriculum.view', 'academics.view', 'academics.manage', 'attendance.markStudents', 'attendance.markStaff', 'attendance.reports', 'attendance.notifyParents',
   'timetable.view', 'timetable.create', 'timetable.edit', 'timetable.publish', 'timetable.classrooms',

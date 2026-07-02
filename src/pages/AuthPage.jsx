@@ -150,7 +150,7 @@ export default function AuthPage() {
                 value={form.email}
                 onChange={(event) => setForm((prev) => ({ ...prev, email: event.target.value }))}
                 className="w-full h-11 rounded-lg bg-[#f5f5f6] border border-slate-200 pl-10 pr-3 outline-none focus:ring-2 focus:ring-orange-100"
-                placeholder={`${selectedRole.id}@college.edu or 9876543210`}
+                placeholder="Email or Phone"
               />
             </div>
           </label>

@@ -105,6 +105,7 @@ export const defaultRoles = [
       'academics.view',
       'academics.manage',
       'students.view',
+      'students.create',
       'students.edit',
       'staff.view',
       'staff.create',

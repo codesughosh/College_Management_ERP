@@ -54,8 +54,93 @@ service cloud.firestore {
       return isActive() && exists(rolePath(myRoleId()));
     }
 
+    function adminBuiltinPermission(permission) {
+      return permission in [
+        'dashboard.view',
+        'academicCurriculum.view',
+        'academics.view',
+        'academics.manage',
+        'students.view',
+        'students.create',
+        'students.edit',
+        'staff.view',
+        'staff.create',
+        'staff.edit',
+        'staff.archive',
+        'staff.leave',
+        'staff.attendance',
+        'attendance.view',
+        'attendance.markStudents',
+        'attendance.markStaff',
+        'attendance.reports',
+        'attendance.notifyParents',
+        'timetable.view',
+        'timetable.create',
+        'timetable.edit',
+        'timetable.publish',
+        'timetable.classrooms',
+        'exams.view',
+        'exams.schedule',
+        'exams.assessments',
+        'exams.marks',
+        'exams.results',
+        'exams.reportCards',
+        'fees.view',
+        'fees.setup',
+        'fees.assign',
+        'fees.collect',
+        'fees.adjust',
+        'fees.reports',
+        'hostel.view',
+        'hostel.manage',
+        'financialReports.view',
+        'financialReports.export',
+        'financialReports.snapshots',
+        'notices.view',
+        'notices.create',
+        'notices.edit',
+        'notices.archive',
+        'documents.view',
+        'documents.upload',
+        'documents.verify',
+        'documents.archive',
+        'settings.view',
+        'settings.manage'
+      ];
+    }
+
+    function facultyBuiltinPermission(permission) {
+      return permission in [
+        'students.view',
+        'academicCurriculum.view',
+        'attendance.view',
+        'attendance.markStudents',
+        'timetable.view',
+        'notices.view',
+        'documents.view',
+        'hostel.view'
+      ];
+    }
+
+    function parentBuiltinPermission(permission) {
+      return permission in [
+        'academicCurriculum.view',
+        'timetable.view',
+        'notices.view',
+        'documents.view',
+        'parentPortal.view'
+      ];
+    }
+
+    function builtinRoleHasPermission(permission) {
+      return (myRoleId() == 'admin' && adminBuiltinPermission(permission))
+        || (myRoleId() == 'faculty' && facultyBuiltinPermission(permission))
+        || (myRoleId() == 'parent' && parentBuiltinPermission(permission));
+    }
+
     function hasPermission(permission) {
       return isSuperAdmin()
+        || builtinRoleHasPermission(permission)
         || (
           roleDocExists()
           && permission in get(rolePath(myRoleId())).data.get('permissions', [])

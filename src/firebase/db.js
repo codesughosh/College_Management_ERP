@@ -62,6 +62,15 @@ async function listCollection(collectionName, constraints = []) {
     .map((item) => ({ id: item.id, ...item.data() }));
 }
 
+async function listCollectionOptional(collectionName, constraints = []) {
+  try {
+    return await listCollection(collectionName, constraints);
+  } catch (error) {
+    console.warn(`Skipping optional ${collectionName} records.`, error);
+    return [];
+  }
+}
+
 async function getCollectionDocuments(collectionName, ids = []) {
   if (!db) return [];
   const snapshots = await Promise.all(
@@ -121,10 +130,10 @@ export async function getStudentInformationData(academicYear = '') {
     listCollection('studentPromotions', yearConstraints),
     listCollection('studentTransfers', yearConstraints),
     listCollection('admissionBatches', yearConstraints),
-    listCollection('studentAttendanceRecords', yearConstraints),
-    listCollection('marksEntries', yearConstraints),
-    listCollection('studentResults', yearConstraints),
-    listCollection('feeAssignments', yearConstraints),
+    listCollectionOptional('studentAttendanceRecords', yearConstraints),
+    listCollectionOptional('marksEntries', yearConstraints),
+    listCollectionOptional('studentResults', yearConstraints),
+    listCollectionOptional('feeAssignments', yearConstraints),
   ]);
 
   return {

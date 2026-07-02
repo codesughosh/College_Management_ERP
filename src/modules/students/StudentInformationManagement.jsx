@@ -1037,7 +1037,6 @@ function StudentDetailPage({
   const feeAdjusted = feeAssignments.reduce((sum, item) => sum + Number(item.adjustmentAmount || 0), 0);
   const feeDue = feeAssignments.reduce((sum, item) => sum + Number(item.dueAmount || 0), 0);
   const feeCompletion = feeAssigned ? Math.min(100, Math.round(((feePaid + feeAdjusted) / feeAssigned) * 100)) : 0;
-  const documentCompletion = documents.length ? Math.round((verifiedDocs / documents.length) * 100) : 0;
   const admissionStatus = latestAdmission?.status || student.status || PENDING_ADMISSION_STATUS;
   const canShowApproval = canApprove
     && student.status !== 'Archived'
@@ -1354,21 +1353,21 @@ function StudentDetailPage({
         )}
 
         {activeTab === 'documents' && (
-          <div className="mt-5 grid xl:grid-cols-[.7fr_1.3fr] gap-4">
-            <div className="rounded-lg border border-slate-100 bg-white p-5">
-              <div className="text-sm font-bold text-slate-900 mb-4">Verification Progress</div>
-              <div className="h-3 rounded-full bg-[#f5f5f6] overflow-hidden">
-                <div className="h-full rounded-full bg-[#00c46f]" style={{ width: `${documentCompletion}%` }} />
-              </div>
-              <div className="mt-3 text-3xl font-extrabold text-slate-900">{documentCompletion}%</div>
-              <div className="text-sm text-slate-500">Verified documents for this student.</div>
-            </div>
-            <div className="space-y-3">
-              <div className="text-sm font-bold text-slate-900">Document Status</div>
-              {documentRows.length
-                ? documentRows.map((row) => renderProgressRow(row, row.percentage === 100 ? '#00c46f' : '#f59e0b'))
-                : renderEmptyState('No student document records available.')}
-            </div>
+          <div className="mt-5 space-y-3">
+            <div className="text-sm font-bold text-slate-900">Document Information</div>
+            {documentRows.length
+              ? documentRows.map((row) => (
+                <div key={row.id || row.label} className="rounded-lg border border-slate-100 bg-white p-4">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                    <div>
+                      <div className="font-bold text-slate-900">{row.label}</div>
+                      <div className="text-xs text-slate-500 mt-1">{row.helper}</div>
+                    </div>
+                    <span className="rounded-full bg-[#f5f5f6] px-3 py-1 text-xs font-bold text-slate-600">{row.status}</span>
+                  </div>
+                </div>
+              ))
+              : renderEmptyState('No student document records available.')}
           </div>
         )}
       </section>

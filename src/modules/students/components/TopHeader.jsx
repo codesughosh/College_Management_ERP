@@ -49,7 +49,7 @@ export default function TopHeader({
               title="Select course"
             >
               {!isParent && <option value="all">All Courses</option>}
-              {isParent && !courses.length && <option value="">No linked course</option>}
+              {isParent && !courses.length && <option value="">Student Course</option>}
               {courses.map((course) => (
                 <option key={course.courseCode} value={course.courseCode}>
                   {course.courseName} - {course.admissionType || course.courseYear}

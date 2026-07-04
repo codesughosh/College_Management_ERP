@@ -1,26 +1,20 @@
 import { ChevronLeft, ChevronRight, GraduationCap, Moon, Sun } from 'lucide-react';
-import { getEnabledModules } from '../../moduleRegistry';
+import { getEnabledModules, sortModulesByDisplayOrder } from '../../moduleRegistry';
 import { canAccess, defaultRoles } from '../../userRoles/rolePermissions';
 
 export default function Sidebar({ activePage, collapsed = false, currentUser, institute, onNavigate, onThemeToggle, onToggleCollapse, themeMode = 'dark' }) {
   const currentRoleId = currentUser?.roleId || 'admin';
   const isSuperAdmin = currentRoleId === 'super-admin';
-  const parentModuleOrder = ['parent-portal', 'timetable', 'notice-board', 'document-management', 'calendar'];
   const canShowHiddenModule = (module) => {
+    if (module.id === 'dashboard') return false;
     if (module.id === 'parent-portal') return currentRoleId === 'parent';
     return isSuperAdmin;
   };
   const collegeName = institute?.name || '-';
-  const navItems = getEnabledModules()
+  const navItems = sortModulesByDisplayOrder(getEnabledModules()
     .filter((module) => !module.permission || canAccess(defaultRoles, currentRoleId, module.permission))
     .filter((module) => !module.footer)
-    .filter((module) => !module.hideFromSidebar || canShowHiddenModule(module))
-    .sort((first, second) => {
-      if (currentRoleId !== 'parent') return 0;
-      const firstIndex = parentModuleOrder.indexOf(first.id);
-      const secondIndex = parentModuleOrder.indexOf(second.id);
-      return (firstIndex === -1 ? 99 : firstIndex) - (secondIndex === -1 ? 99 : secondIndex);
-    })
+    .filter((module) => !module.hideFromSidebar || canShowHiddenModule(module)))
     .map((module) => {
       const Icon = module.icon;
       return {

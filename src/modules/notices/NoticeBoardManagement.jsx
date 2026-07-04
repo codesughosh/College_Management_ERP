@@ -166,9 +166,9 @@ export default function NoticeBoardManagement({ currentUser, academicYear = '202
     <div>
       <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-4 pb-6 border-b border-slate-100">
         <div>
-          <div className="text-sm font-bold text-slate-500 mb-2">Administration / <span className="text-[#f39a5f]">Notice Board & Announcements</span></div>
-          <h1 className="text-2xl font-bold text-slate-900">Notice Board & Announcements</h1>
-          <p className="text-sm text-slate-500 mt-1">Digital notices, circular management, event announcements, audience targeting, and publication status.</p>
+          <div className="text-sm font-bold text-slate-500 mb-2">Administration / <span className="text-[#f39a5f]">Communication</span></div>
+          <h1 className="text-2xl font-bold text-slate-900">Communication</h1>
+          <p className="text-sm text-slate-500 mt-1">Announcements, circular management, event communication, audience targeting, and publication status.</p>
           {!isFirebaseConfigured && <p className="text-xs text-orange-600 mt-2">Demo mode: add Firebase keys to persist announcements.</p>}
           {loadError && <p className="text-xs text-rose-600 mt-2">{loadError}</p>}
         </div>

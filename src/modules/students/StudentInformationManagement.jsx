@@ -56,10 +56,10 @@ import TimetableManagement from '../timetable/TimetableManagement';
 import ExaminationResultManagement from '../exams/ExaminationResultManagement';
 import FeesManagement from '../fees/FeesManagement';
 import HostelManagement from '../hostel/HostelManagement';
-import FinancialReports from '../financialReports/FinancialReports';
 import NoticeBoardManagement from '../notices/NoticeBoardManagement';
 import DocumentManagement from '../documents/DocumentManagement';
 import ParentPortal from '../parentPortal/ParentPortal';
+import ReportsManagement from '../reports/ReportsManagement';
 import { canAccess, defaultRoles } from '../userRoles/rolePermissions';
 import AcademicsManagement from '../academics/AcademicsManagement';
 import CurriculumManagement from '../curriculum/CurriculumManagement';
@@ -261,14 +261,14 @@ export default function StudentInformationManagement({ user, onLogout }) {
   const currentRoleId = user?.roleId || 'admin';
   const activePage = getPageFromPath(location.pathname);
   const activeModule = getModuleById(activePage);
-  const canViewStudents = canAccess(defaultRoles, currentRoleId, 'students.view');
   const canCreateAdmission = canAccess(defaultRoles, currentRoleId, 'students.create');
   const canEditStudents = canAccess(defaultRoles, currentRoleId, 'students.edit');
   const canArchiveStudents = canAccess(defaultRoles, currentRoleId, 'students.archive');
+  const canViewReportsModule = canAccess(defaultRoles, currentRoleId, 'reports.view');
   const accessibleModules = useMemo(() => getEnabledModules()
     .filter((module) => !module.permission || canAccess(defaultRoles, currentRoleId, module.permission)), [currentRoleId]);
   const canOpenActiveModule = activePage === 'reports'
-    ? canViewStudents
+    ? canViewReportsModule
     : !activeModule?.permission || canAccess(defaultRoles, currentRoleId, activeModule.permission);
   const navigateToModule = useCallback((moduleId, options = {}) => {
     const nextModule = getModuleById(moduleId);
@@ -310,7 +310,7 @@ export default function StudentInformationManagement({ user, onLogout }) {
 
   useEffect(() => {
     const isActivePageAllowed = activePage === 'reports'
-      ? canViewStudents
+      ? canViewReportsModule
       : accessibleModules.some((module) => module.id === activePage);
     if (!isActivePageAllowed) {
       const nextPage = currentRoleId === 'parent' && accessibleModules.some((module) => module.id === 'parent-portal')
@@ -318,7 +318,7 @@ export default function StudentInformationManagement({ user, onLogout }) {
         : accessibleModules[0]?.id || 'dashboard';
       queueMicrotask(() => navigateToModule(nextPage, { replace: true }));
     }
-  }, [accessibleModules, activePage, canViewStudents, currentRoleId, navigateToModule]);
+  }, [accessibleModules, activePage, canViewReportsModule, currentRoleId, navigateToModule]);
 
   useEffect(() => {
     const loadShellSettings = async () => {
@@ -424,6 +424,18 @@ export default function StudentInformationManagement({ user, onLogout }) {
   const courseScopedPromotions = useMemo(
     () => filterStudentScopedRecords(promotions.filter((item) => item.academicYear === academicYear), courseStudents, effectiveSelectedCourseCode, selectedCourse),
     [academicYear, courseStudents, effectiveSelectedCourseCode, promotions, selectedCourse]
+  );
+  const courseScopedAttendanceRecords = useMemo(
+    () => filterStudentScopedRecords(attendanceRecords.filter((item) => item.academicYear === academicYear), courseStudents, effectiveSelectedCourseCode, selectedCourse),
+    [academicYear, attendanceRecords, courseStudents, effectiveSelectedCourseCode, selectedCourse]
+  );
+  const courseScopedMarksEntries = useMemo(
+    () => filterStudentScopedRecords(marksEntries.filter((item) => item.academicYear === academicYear), courseStudents, effectiveSelectedCourseCode, selectedCourse),
+    [academicYear, courseStudents, effectiveSelectedCourseCode, marksEntries, selectedCourse]
+  );
+  const courseScopedStudentResults = useMemo(
+    () => filterStudentScopedRecords(studentResults.filter((item) => item.academicYear === academicYear), courseStudents, effectiveSelectedCourseCode, selectedCourse),
+    [academicYear, courseStudents, effectiveSelectedCourseCode, selectedCourse, studentResults]
   );
 
   const selectedStudent = selectedId ? courseStudents.find((student) => student.id === selectedId) || null : null;
@@ -585,7 +597,7 @@ export default function StudentInformationManagement({ user, onLogout }) {
       setStudents((prev) => [created, ...prev]);
       setAcademicYear(selectedAcademicYear);
       setSelectedId(created.id);
-      toast.success(id ? 'Student admission saved' : 'Student added locally. Add Firebase keys to persist.');
+      toast.success(id ? 'Student admission sent for Super Admin approval' : 'Student added locally and marked pending approval. Add Firebase keys to persist.');
     } catch {
       const local = { id: `local-${Date.now()}`, ...payload };
       const admission = {
@@ -623,7 +635,7 @@ export default function StudentInformationManagement({ user, onLogout }) {
       setAdmissions((prev) => [admission, ...prev]);
       setStudentDocuments((prev) => [admissionForm, ...prev]);
       setSelectedId(local.id);
-      toast.success('Student added locally. Check Firebase setup to persist it.');
+      toast.success('Student added locally and marked pending approval. Check Firebase setup to persist it.');
     } finally {
       setShowModal(false);
     }
@@ -869,7 +881,7 @@ export default function StudentInformationManagement({ user, onLogout }) {
                     </div>
                     <div className="flex items-center gap-2 mb-4">
                       {[
-                        ['active', 'Active Records'],
+                        ['active', 'Active & Pending'],
                         ['archived', 'Archived'],
                       ].map(([value, label]) => (
                         <button
@@ -905,13 +917,19 @@ export default function StudentInformationManagement({ user, onLogout }) {
                 </>
                 )
                 ) : activePage === 'reports' ? (
-                  <StudentReportView
+                  <ReportsManagement
                     academicYear={academicYear}
-                    students={courseStudents}
                     admissions={courseScopedAdmissions}
+                    attendanceRecords={courseScopedAttendanceRecords}
+                    currentUser={user}
                     documents={courseScopedDocuments}
+                    marksEntries={courseScopedMarksEntries}
                     promotions={courseScopedPromotions}
-                    onBack={goBackOneStudentStep}
+                    scopedStudents={courseStudents}
+                    selectedCourse={selectedCourse}
+                    selectedCourseCode={effectiveSelectedCourseCode}
+                    initialCategoryId={location.state?.reportCategory}
+                    studentResults={courseScopedStudentResults}
                   />
                 ) : activePage === 'faculty-staff' ? (
                   <FacultyStaffManagement
@@ -927,7 +945,14 @@ export default function StudentInformationManagement({ user, onLogout }) {
                 ) : activePage === 'calendar' ? (
                   <CurriculumManagement currentUser={user} academicYear={academicYear} selectedCourse={selectedCourse} selectedCourseCode={effectiveSelectedCourseCode} />
                 ) : activePage === 'attendance' ? (
-                  <AttendanceManagement currentUser={user} academicYear={academicYear} selectedCourse={selectedCourse} selectedCourseCode={effectiveSelectedCourseCode} scopedStudents={moduleScopedStudents} />
+                  <AttendanceManagement
+                    currentUser={user}
+                    academicYear={academicYear}
+                    onOpenReports={(reportCategory) => navigateToModule('reports', { state: { reportCategory } })}
+                    selectedCourse={selectedCourse}
+                    selectedCourseCode={effectiveSelectedCourseCode}
+                    scopedStudents={moduleScopedStudents}
+                  />
                 ) : activePage === 'timetable' ? (
                   <TimetableManagement currentUser={user} academicYear={academicYear} selectedCourse={selectedCourse} selectedCourseCode={effectiveSelectedCourseCode} scopedStudents={courseStudents} />
                 ) : activePage === 'examination-results' ? (
@@ -936,9 +961,7 @@ export default function StudentInformationManagement({ user, onLogout }) {
                   <FeesManagement currentUser={user} academicYear={academicYear} selectedCourse={selectedCourse} selectedCourseCode={effectiveSelectedCourseCode} scopedStudents={moduleScopedStudents} />
                 ) : activePage === 'hostel-management' ? (
                   <HostelManagement currentUser={user} academicYear={academicYear} selectedCourse={selectedCourse} selectedCourseCode={effectiveSelectedCourseCode} scopedStudents={moduleScopedStudents} />
-                ) : activePage === 'financial-reports' ? (
-                  <FinancialReports currentUser={user} academicYear={academicYear} selectedCourse={selectedCourse} selectedCourseCode={effectiveSelectedCourseCode} scopedStudents={courseStudents} />
-                ) : activePage === 'notice-board' ? (
+                ) : activePage === 'communication' ? (
                   <NoticeBoardManagement currentUser={user} academicYear={academicYear} selectedCourse={selectedCourse} selectedCourseCode={effectiveSelectedCourseCode} />
                 ) : activePage === 'document-management' ? (
                   <DocumentManagement

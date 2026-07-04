@@ -1,16 +1,48 @@
 import {
   Bell,
+  BarChart3,
   BookOpen,
   BedDouble,
   CalendarDays,
   FileText,
   GraduationCap,
   LayoutDashboard,
+  MessageSquare,
   Settings,
   TrendingUp,
   Users,
   Wallet,
 } from 'lucide-react';
+
+export const moduleDisplayOrder = [
+  'students',
+  'faculty-staff',
+  'attendance',
+  'timetable',
+  'examination-results',
+  'communication',
+  'calendar',
+  'hostel-management',
+  'document-management',
+  'fees',
+  'reports',
+  'settings',
+];
+
+const moduleIdAliases = {
+  'notice-board': 'communication',
+  'financial-reports': 'reports',
+};
+
+const modulePathAliases = {
+  '/modules/notice-board': '/modules/communication',
+  '/modules/financial-reports': '/modules/reports',
+};
+
+const displayOrder = moduleDisplayOrder.reduce((map, id, index) => {
+  map[id] = index;
+  return map;
+}, {});
 
 export const moduleRegistry = [
   {
@@ -21,6 +53,7 @@ export const moduleRegistry = [
     icon: LayoutDashboard,
     status: 'active',
     permission: 'dashboard.view',
+    hideFromSidebar: true,
   },
   {
     id: 'students',
@@ -30,25 +63,6 @@ export const moduleRegistry = [
     icon: GraduationCap,
     status: 'active',
     permission: 'students.view',
-  },
-  {
-    id: 'calendar',
-    label: 'Curriculum',
-    path: '/modules/calendar',
-    group: 'Daily Work',
-    icon: CalendarDays,
-    status: 'active',
-    permission: 'academicCurriculum.view',
-  },
-  {
-    id: 'academics',
-    label: 'Academics',
-    path: '/modules/academics',
-    group: 'Admin Setup',
-    icon: GraduationCap,
-    status: 'active',
-    permission: 'academics.view',
-    hideFromSidebar: true,
   },
   {
     id: 'faculty-staff',
@@ -87,23 +101,31 @@ export const moduleRegistry = [
     permission: 'exams.view',
   },
   {
-    id: 'user-roles',
-    label: 'Users & Roles',
-    path: '/modules/user-roles',
-    group: 'Admin Setup',
-    icon: Settings,
-    status: 'active',
-    permission: 'users.view',
-    hideFromSidebar: true,
-  },
-  {
-    id: 'notice-board',
-    label: 'Notice Board',
-    path: '/modules/notice-board',
-    group: 'Admin Setup',
-    icon: Bell,
+    id: 'communication',
+    label: 'Communication',
+    path: '/modules/communication',
+    group: 'Daily Work',
+    icon: MessageSquare,
     status: 'active',
     permission: 'notices.view',
+  },
+  {
+    id: 'calendar',
+    label: 'Curriculum',
+    path: '/modules/calendar',
+    group: 'Daily Work',
+    icon: CalendarDays,
+    status: 'active',
+    permission: 'academicCurriculum.view',
+  },
+  {
+    id: 'hostel-management',
+    label: 'Hostel',
+    path: '/modules/hostel-management',
+    group: 'Daily Work',
+    icon: BedDouble,
+    status: 'active',
+    permission: 'hostel.view',
   },
   {
     id: 'document-management',
@@ -124,22 +146,33 @@ export const moduleRegistry = [
     permission: 'fees.view',
   },
   {
-    id: 'hostel-management',
-    label: 'Hostel',
-    path: '/modules/hostel-management',
+    id: 'reports',
+    label: 'Reports',
+    path: '/modules/reports',
     group: 'Daily Work',
-    icon: BedDouble,
+    icon: BarChart3,
     status: 'active',
-    permission: 'hostel.view',
+    permission: 'reports.view',
   },
   {
-    id: 'financial-reports',
-    label: 'Financial Report',
-    path: '/modules/financial-reports',
-    group: 'Daily Work',
-    icon: TrendingUp,
+    id: 'academics',
+    label: 'Academics',
+    path: '/modules/academics',
+    group: 'Admin Setup',
+    icon: GraduationCap,
     status: 'active',
-    permission: 'financialReports.view',
+    permission: 'academics.view',
+    hideFromSidebar: true,
+  },
+  {
+    id: 'user-roles',
+    label: 'Users & Roles',
+    path: '/modules/user-roles',
+    group: 'Admin Setup',
+    icon: Settings,
+    status: 'active',
+    permission: 'users.view',
+    hideFromSidebar: true,
   },
   {
     id: 'parent-portal',
@@ -167,11 +200,21 @@ export function getEnabledModules() {
   return moduleRegistry.filter((module) => module.status !== 'disabled');
 }
 
+export function sortModulesByDisplayOrder(modules = []) {
+  return [...modules].sort((first, second) => {
+    const firstOrder = displayOrder[first.id] ?? 999;
+    const secondOrder = displayOrder[second.id] ?? 999;
+    return firstOrder - secondOrder;
+  });
+}
+
 export function getModuleById(id) {
-  return moduleRegistry.find((module) => module.id === id) || null;
+  const resolvedId = moduleIdAliases[id] || id;
+  return moduleRegistry.find((module) => module.id === resolvedId) || null;
 }
 
 export function getModuleByPath(path) {
-  return moduleRegistry.find((module) => module.path === path) || null;
+  const resolvedPath = modulePathAliases[path] || path;
+  return moduleRegistry.find((module) => module.path === resolvedPath) || null;
 }
 

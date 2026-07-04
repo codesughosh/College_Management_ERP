@@ -63,6 +63,7 @@ service cloud.firestore {
         'students.view',
         'students.create',
         'students.edit',
+        'students.documents',
         'staff.view',
         'staff.create',
         'staff.edit',
@@ -96,6 +97,7 @@ service cloud.firestore {
         'financialReports.view',
         'financialReports.export',
         'financialReports.snapshots',
+        'reports.view',
         'notices.view',
         'notices.create',
         'notices.edit',
@@ -115,10 +117,12 @@ service cloud.firestore {
         'academicCurriculum.view',
         'attendance.view',
         'attendance.markStudents',
+        'attendance.reports',
         'timetable.view',
         'notices.view',
         'documents.view',
-        'hostel.view'
+        'hostel.view',
+        'reports.view'
       ];
     }
 
@@ -265,7 +269,7 @@ service cloud.firestore {
 
     match /studentDocuments/{documentId} {
       allow get, list: if staffCan('students.view') || canReadStudentRecord(resource.data);
-      allow create: if staffCan('students.documents');
+      allow create: if staffCan('students.create') || staffCan('students.documents');
       allow update: if staffCan('students.documents') || staffCan('students.verifyDocuments');
       allow delete: if false;
     }

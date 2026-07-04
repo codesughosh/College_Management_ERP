@@ -31,12 +31,12 @@ export const demoModuleContent = {
   },
   attendance: {
     title: 'Attendance Management',
-    subtitle: 'Student and faculty attendance tracking with daily, monthly, and yearly reports.',
-    actions: ['Mark Attendance', 'View Daily Report', 'Notify Parents'],
+    subtitle: 'Student and faculty attendance tracking with summaries available in Reports.',
+    actions: ['Mark Attendance', 'Open Reports', 'Notify Parents'],
     rows: [
       ['Student Attendance', 'Class-wise attendance tracking', 'Draft'],
       ['Faculty Attendance', 'Faculty check-in and absence tracking', 'Draft'],
-      ['Attendance Reports', 'Daily, monthly, and yearly summaries', 'Draft'],
+      ['Attendance Summaries', 'Daily, monthly, and yearly views in Reports', 'Ready'],
     ],
   },
   timetable: {
@@ -69,10 +69,10 @@ export const demoModuleContent = {
       ['Parent', 'Portal access only', 'Draft'],
     ],
   },
-  'notice-board': {
-    title: 'Notice Board & Announcements',
-    subtitle: 'Digital notices, circulars, and event announcements.',
-    actions: ['Create Notice', 'Publish Circular', 'Announce Event'],
+  communication: {
+    title: 'Communication',
+    subtitle: 'Announcements, circulars, and event communication.',
+    actions: ['Create Announcement', 'Publish Circular', 'Announce Event'],
     rows: [
       ['Digital Notices', 'Institute-wide notice publishing', 'Draft'],
       ['Circular Management', 'Circular creation and tracking', 'Draft'],
@@ -99,16 +99,6 @@ export const demoModuleContent = {
       ['Due Tracking', 'Outstanding fee monitoring', 'Draft'],
     ],
   },
-  'financial-reports': {
-    title: 'Financial Reports',
-    subtitle: 'Collection reports, outstanding reports, fee analytics, and summaries.',
-    actions: ['Collection Report', 'Outstanding Report', 'Fee Analytics'],
-    rows: [
-      ['Collection Reports', 'Manual collection summaries', 'Draft'],
-      ['Outstanding Reports', 'Student dues and aging', 'Draft'],
-      ['Financial Summaries', 'Fee-level summary views', 'Draft'],
-    ],
-  },
   'parent-portal': {
     title: 'Parent Portal',
     subtitle: 'Parent access for attendance, academic performance, fee status, and communication view.',
@@ -121,12 +111,12 @@ export const demoModuleContent = {
   },
   reports: {
     title: 'Reports',
-    subtitle: 'MIS snapshots for admissions, documents, promotions, and transfers.',
-    actions: ['Generate Report', 'Download MIS', 'Schedule Email'],
+    subtitle: 'Category-wise reports for students, attendance, documents, exams, and financials.',
+    actions: ['Student Reports', 'Attendance Reports', 'Financial Reports'],
     rows: [
-      ['Admission Report', 'This academic year', 'Ready'],
-      ['Document Pending Report', 'Verification queue', 'Ready'],
-      ['Promotion Report', 'Class-wise summary', 'Draft'],
+      ['Student Reports', 'Admissions, approvals, and documents', 'Ready'],
+      ['Attendance Reports', 'Daily, monthly, and yearly summaries', 'Ready'],
+      ['Financial Reports', 'Collections, outstanding dues, and analytics', 'Ready'],
     ],
   },
   payments: {

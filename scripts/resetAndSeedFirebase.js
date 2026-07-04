@@ -75,28 +75,28 @@ const allPermissions = [
   'exams.view', 'exams.schedule', 'exams.assessments', 'exams.marks', 'exams.results', 'exams.reportCards',
   'fees.view', 'fees.setup', 'fees.assign', 'fees.collect', 'fees.adjust', 'fees.reports',
   'hostel.view', 'hostel.manage',
-  'financialReports.view', 'financialReports.export', 'financialReports.snapshots',
+  'financialReports.view', 'financialReports.export', 'financialReports.snapshots', 'reports.view',
   'notices.view', 'notices.create', 'notices.edit', 'notices.archive',
   'documents.view', 'documents.upload', 'documents.verify', 'documents.archive',
   'parentPortal.view', 'parentPortal.viewAll', 'settings.view', 'settings.manage',
 ];
 
 const adminPermissions = [
-  'students.view', 'students.create', 'students.edit',
+  'students.view', 'students.create', 'students.edit', 'students.documents',
   'staff.view', 'staff.create', 'staff.edit', 'staff.archive', 'staff.leave', 'staff.attendance',
   'attendance.view', 'academicCurriculum.view', 'academics.view', 'academics.manage', 'attendance.markStudents', 'attendance.markStaff', 'attendance.reports', 'attendance.notifyParents',
   'timetable.view', 'timetable.create', 'timetable.edit', 'timetable.publish', 'timetable.classrooms',
   'exams.view', 'exams.schedule', 'exams.assessments', 'exams.marks', 'exams.results', 'exams.reportCards',
   'fees.view', 'fees.setup', 'fees.assign', 'fees.collect', 'fees.adjust', 'fees.reports',
   'hostel.view', 'hostel.manage',
-  'financialReports.view', 'financialReports.export', 'financialReports.snapshots',
+  'financialReports.view', 'financialReports.export', 'financialReports.snapshots', 'reports.view',
   'notices.view', 'notices.create', 'notices.edit', 'notices.archive',
   'documents.view', 'documents.upload', 'documents.verify', 'documents.archive',
 ];
 
 const facultyPermissions = [
   'students.view',
-  'attendance.view', 'attendance.markStudents', 'attendance.reports',
+  'attendance.view', 'attendance.markStudents', 'attendance.reports', 'reports.view',
   'academicCurriculum.view',
   'timetable.view',
   'exams.view', 'exams.marks',

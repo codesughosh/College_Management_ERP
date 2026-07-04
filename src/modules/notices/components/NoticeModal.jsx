@@ -26,7 +26,7 @@ export default function NoticeModal({ initialNotice = null, mode = 'create', onC
         <div className="px-6 py-5 border-b border-slate-100 flex items-center justify-between">
           <div>
             <h2 className="text-lg font-bold text-slate-900">{isEdit ? 'Edit Announcement' : 'Create Announcement'}</h2>
-            <p className="text-sm text-slate-500">Publish digital notices, circulars, and event announcements.</p>
+            <p className="text-sm text-slate-500">Publish announcements, circulars, and event communication.</p>
           </div>
           <button type="button" onClick={onClose} className="h-9 w-9 rounded-full hover:bg-slate-100 text-slate-500">x</button>
         </div>

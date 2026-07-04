@@ -22,7 +22,6 @@ import {
   demoStudentAttendance,
 } from './demoAttendance';
 import { demoAcademicSubjects } from '../academics/demoAcademics';
-import AttendanceReports from './components/AttendanceReports';
 import AttendanceTable from './components/AttendanceTable';
 import { filterStudentScopedRecords, filterStudentsByCourse } from '../shared/courseFilters';
 
@@ -38,14 +37,13 @@ function formatInputDate(inputDate) {
   return formatDisplayDate(new Date(`${inputDate}T00:00:00`));
 }
 
-export default function AttendanceManagement({ currentUser, academicYear = '2026-2027', scopedStudents = [], selectedCourse = null, selectedCourseCode = 'all' }) {
+export default function AttendanceManagement({ currentUser, academicYear = '2026-2027', onOpenReports, scopedStudents = [], selectedCourse = null, selectedCourseCode = 'all' }) {
   const [students, setStudents] = useState(isFirebaseConfigured ? [] : demoAttendanceStudents);
   const [staff, setStaff] = useState(isFirebaseConfigured ? [] : demoAttendanceStaff);
   const [studentAttendance, setStudentAttendance] = useState(isFirebaseConfigured ? [] : demoStudentAttendance);
   const [staffAttendance, setStaffAttendance] = useState(isFirebaseConfigured ? [] : demoStaffAttendance);
   const [academicSubjects, setAcademicSubjects] = useState(isFirebaseConfigured ? [] : demoAcademicSubjects);
   const [mode, setMode] = useState('students');
-  const [reportScope, setReportScope] = useState('daily');
   const [selectedSubjectCode, setSelectedSubjectCode] = useState('');
   const [search, setSearch] = useState('');
   const [selectedDateInput, setSelectedDateInput] = useState(getTodayInputValue);
@@ -93,7 +91,6 @@ export default function AttendanceManagement({ currentUser, academicYear = '2026
       setActiveAttendanceTask(flow.task || '');
       setActiveAttendanceBranch(flow.branch || '');
       setMode(flow.mode || 'students');
-      setReportScope(flow.scope || 'daily');
       setSelectedEntityId('');
       setSearch('');
     };
@@ -160,16 +157,15 @@ export default function AttendanceManagement({ currentUser, academicYear = '2026
     setSelectedEntityId('');
     setSearch('');
     setMode(nextMode);
-    window.history.pushState({ ...(window.history.state || {}), attendanceFlow: { task: taskId, branch: '', mode: nextMode, scope: reportScope } }, '');
+    window.history.pushState({ ...(window.history.state || {}), attendanceFlow: { task: taskId, branch: '', mode: nextMode } }, '');
   };
 
-  const openAttendanceBranch = ({ branchId, nextMode = mode, nextScope = reportScope }) => {
+  const openAttendanceBranch = ({ branchId, nextMode = mode }) => {
     setActiveAttendanceBranch(branchId);
     setSelectedEntityId('');
     setSearch('');
     setMode(nextMode);
-    setReportScope(nextScope);
-    window.history.pushState({ ...(window.history.state || {}), attendanceFlow: { task: activeAttendanceTask, branch: branchId, mode: nextMode, scope: nextScope } }, '');
+    window.history.pushState({ ...(window.history.state || {}), attendanceFlow: { task: activeAttendanceTask, branch: branchId, mode: nextMode } }, '');
   };
 
   const goBackOneAttendanceStep = () => {
@@ -203,15 +199,15 @@ export default function AttendanceManagement({ currentUser, academicYear = '2026
       meta: [`${staff.length} staff`, canMarkStaff ? 'Mark enabled' : 'View only'],
       onOpen: () => openAttendanceTask('staff', 'staff'),
     },
-    {
+    canViewReports && {
       id: 'reports',
-      title: 'Reports',
-      description: 'Review daily, monthly, and yearly summaries.',
+      title: 'Attendance Reports',
+      description: 'Open the Reports module for attendance summaries.',
       icon: <CalendarDays size={22} />,
-      meta: [`${summary.percentage}%`, canViewReports ? 'Reports enabled' : 'View only'],
-      onOpen: () => openAttendanceTask('reports', mode),
+      meta: [`${summary.percentage}%`, 'Reports module'],
+      onOpen: () => onOpenReports?.('attendance'),
     },
-  ];
+  ].filter(Boolean);
 
   const attendanceBranchOptions = {
     students: [
@@ -220,11 +216,6 @@ export default function AttendanceManagement({ currentUser, academicYear = '2026
     ],
     staff: [
       { id: 'mark-staff', title: 'Mark Staff Attendance', description: 'Select a staff member, then mark attendance.', icon: <UserCheck size={20} />, nextMode: 'staff' },
-    ],
-    reports: [
-      { id: 'daily-report', title: 'Daily Report', description: 'View daily attendance summary.', icon: <CalendarDays size={20} />, nextScope: 'daily' },
-      { id: 'monthly-report', title: 'Monthly Report', description: 'View monthly attendance summary.', icon: <CalendarDays size={20} />, nextScope: 'monthly' },
-      { id: 'yearly-report', title: 'Yearly Report', description: 'View yearly attendance summary.', icon: <CalendarDays size={20} />, nextScope: 'yearly' },
     ],
   };
 
@@ -312,7 +303,7 @@ export default function AttendanceManagement({ currentUser, academicYear = '2026
         <div>
           <div className="text-sm font-bold text-slate-500 mb-2">Academics / <span className="text-[#f39a5f]">Attendance Management</span></div>
           <h1 className="text-2xl font-bold text-slate-900">Attendance Management</h1>
-          <p className="text-sm text-slate-500 mt-1">Student and faculty attendance tracking with daily, monthly, and yearly reports.</p>
+          <p className="text-sm text-slate-500 mt-1">Student and faculty attendance tracking. Attendance summaries open from the Reports module.</p>
           {!isFirebaseConfigured && <p className="text-xs text-orange-600 mt-2">Demo mode: add Firebase keys to persist attendance.</p>}
           {loadError && <p className="text-xs text-rose-600 mt-2">{loadError}</p>}
         </div>
@@ -387,7 +378,7 @@ export default function AttendanceManagement({ currentUser, academicYear = '2026
         {activeBranches.map((branch) => (
           <button
             key={branch.id}
-            onClick={() => openAttendanceBranch({ branchId: branch.id, nextMode: branch.nextMode || mode, nextScope: branch.nextScope || reportScope })}
+            onClick={() => openAttendanceBranch({ branchId: branch.id, nextMode: branch.nextMode || mode })}
             className="group min-h-36 text-left rounded-lg border border-slate-100 bg-white p-5 shadow-sm"
           >
             <div className="flex items-start justify-between gap-4">
@@ -414,13 +405,6 @@ export default function AttendanceManagement({ currentUser, academicYear = '2026
         </div>
       </div>
 
-      {activeAttendanceTask === 'reports' ? (
-        canViewReports ? (
-          <AttendanceReports records={mode === 'students' ? courseStudentAttendance : staffAttendance} scope={reportScope} />
-        ) : (
-          <div className="bg-white border border-slate-100 rounded-lg p-5 shadow-sm text-sm text-slate-500">You do not have permission to view attendance reports.</div>
-        )
-      ) : (
       <div className="flex flex-col xl:flex-row gap-5">
         <div className="xl:w-[68%] min-w-0">
           {!canMarkStudents && mode === 'students' && (
@@ -503,7 +487,6 @@ export default function AttendanceManagement({ currentUser, academicYear = '2026
           )}
         </aside>
       </div>
-      )}
       </>
       )}
     </div>

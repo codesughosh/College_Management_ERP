@@ -110,7 +110,7 @@ export default function StudentModal({
           <div>
             <h2 className="text-lg font-bold text-slate-900">{isEdit ? 'Edit Student Profile' : 'New Student Admission'}</h2>
             <p className="text-sm text-slate-500">
-              {isEdit ? 'Updates student profile and academic details.' : 'Creates profile, admission number, and student ID.'}
+              {isEdit ? 'Updates student profile and academic details.' : 'Creates profile, admission number, and student ID for Super Admin approval.'}
             </p>
           </div>
           <button type="button" onClick={onClose} className="h-9 w-9 rounded-full hover:bg-slate-100 text-slate-500">x</button>
@@ -130,6 +130,11 @@ export default function StudentModal({
             </label>
             <span className="text-xs text-slate-500">{form.profilePhotoName || 'Optional student profile picture'}</span>
           </div>
+          {!isEdit && (
+            <div className="sm:col-span-2 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm font-semibold text-amber-700">
+              New admissions are saved as Pending Approval until a Super Admin approves them.
+            </div>
+          )}
           <label className="sm:col-span-2">
             <span className="block text-xs font-semibold text-slate-500 mb-1.5">Course</span>
             <select

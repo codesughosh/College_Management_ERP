@@ -3072,3 +3072,390 @@ html{color-scheme:dark}::selection{background:rgba(0,255,136,.18);color:#eafff5}
 .erp-shell.light-mode .erp-workspace {
   border-color:#c8ddc2!important;
 }
+
+/* Mobile-first shell polish and explicit navigation behavior. */
+.erp-header-grid {
+  min-height:48px;
+  display:grid;
+  grid-template-columns:1fr minmax(180px,auto) 1fr;
+  align-items:center;
+  gap:16px;
+}
+
+.erp-header-college-title {
+  max-width:min(42vw,520px);
+  justify-self:center;
+  color:var(--erp-text)!important;
+  font-size:18px;
+  font-weight:850;
+  line-height:1.1;
+  text-align:center;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+
+.erp-header-actions,
+.erp-header-user-cluster,
+.erp-header-filters {
+  display:flex;
+  align-items:center;
+  min-width:0;
+}
+
+.erp-header-actions {
+  justify-self:end;
+  gap:14px;
+}
+
+.erp-header-user-cluster {
+  gap:14px;
+}
+
+.erp-header-filters {
+  gap:8px;
+}
+
+.erp-header-select {
+  width:178px!important;
+  height:36px!important;
+}
+
+.erp-header-year-select {
+  width:118px!important;
+  height:36px!important;
+}
+
+.erp-header .erp-profile-menu-wrap > button {
+  background:#10262b!important;
+  color:var(--erp-accent)!important;
+  box-shadow:none!important;
+}
+
+.erp-sidebar-submenu-chevron {
+  color:currentColor!important;
+  transition:transform .18s ease;
+}
+
+.erp-sidebar-submenu-chevron.is-open {
+  transform:rotate(90deg);
+}
+
+.erp-shell .erp-sidebar-subitem {
+  gap:9px!important;
+  justify-content:flex-start!important;
+  min-height:40px!important;
+  height:40px!important;
+  font-size:14px!important;
+}
+
+.erp-sidebar-subitem-icon {
+  width:18px;
+  min-width:18px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  color:currentColor;
+}
+
+.erp-mobile-nav {
+  position:fixed;
+  left:10px;
+  right:10px;
+  bottom:10px;
+  z-index:90;
+  pointer-events:none;
+}
+
+.erp-mobile-nav-scroll {
+  min-height:64px;
+  padding:8px;
+  display:flex;
+  align-items:center;
+  gap:7px;
+  overflow-x:auto;
+  border:1px solid var(--erp-border);
+  border-radius:22px;
+  background:rgba(3,10,14,.94);
+  box-shadow:0 18px 42px rgba(0,0,0,.28);
+  backdrop-filter:blur(18px);
+  pointer-events:auto;
+  scrollbar-width:none;
+}
+
+.erp-mobile-nav-scroll::-webkit-scrollbar {
+  display:none;
+}
+
+.erp-mobile-nav-item {
+  min-width:68px;
+  height:48px;
+  padding:5px 8px;
+  border:0;
+  border-radius:16px;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  gap:3px;
+  color:var(--erp-muted);
+  background:transparent;
+  font-size:10px;
+  font-weight:750;
+  line-height:1;
+}
+
+.erp-mobile-nav-item svg {
+  width:19px;
+  height:19px;
+}
+
+.erp-mobile-nav-item.is-active {
+  color:var(--erp-accent);
+  background:rgba(0,255,136,.13);
+}
+
+.erp-mobile-submenu {
+  margin:0 6px 8px;
+  padding:8px;
+  display:flex;
+  gap:8px;
+  overflow-x:auto;
+  border:1px solid var(--erp-border);
+  border-radius:18px;
+  background:rgba(3,10,14,.96);
+  box-shadow:0 14px 34px rgba(0,0,0,.26);
+  pointer-events:auto;
+  scrollbar-width:none;
+}
+
+.erp-mobile-submenu::-webkit-scrollbar {
+  display:none;
+}
+
+.erp-mobile-subitem {
+  height:40px;
+  padding:0 12px;
+  border:0;
+  border-radius:14px;
+  display:flex;
+  align-items:center;
+  gap:8px;
+  color:var(--erp-muted);
+  background:rgba(255,255,255,.04);
+  white-space:nowrap;
+  font-size:12px;
+  font-weight:800;
+}
+
+.erp-mobile-subitem.is-active {
+  color:var(--erp-accent);
+  background:rgba(0,255,136,.13);
+}
+
+.erp-attendance-status-wrap {
+  min-width:236px;
+  display:flex;
+  flex-wrap:wrap;
+  align-items:center;
+  gap:7px;
+}
+
+.erp-attendance-status-actions {
+  display:flex;
+  align-items:center;
+  gap:7px;
+}
+
+.erp-attendance-status-button {
+  height:34px;
+  min-width:96px;
+  padding:0 11px;
+  border:1px solid rgba(148,163,184,.28);
+  border-radius:999px;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  gap:6px;
+  color:var(--erp-muted);
+  background:rgba(255,255,255,.035);
+  font-size:12px;
+  font-weight:850;
+  transition:background .16s ease,border-color .16s ease,color .16s ease,box-shadow .16s ease;
+}
+
+.erp-attendance-status-button.is-present {
+  color:#00ff88!important;
+  border-color:rgba(0,255,136,.68)!important;
+  background:rgba(0,255,136,.13)!important;
+  box-shadow:0 0 0 2px rgba(0,255,136,.10)!important;
+}
+
+.erp-attendance-status-button.is-absent {
+  color:#ff6b7a!important;
+  border-color:rgba(255,107,122,.72)!important;
+  background:rgba(255,107,122,.12)!important;
+  box-shadow:0 0 0 2px rgba(255,107,122,.10)!important;
+}
+
+.erp-attendance-status-button:disabled {
+  opacity:.55;
+  cursor:not-allowed;
+}
+
+.erp-attendance-status-hint {
+  width:100%;
+  padding-left:3px;
+  color:var(--erp-muted);
+  font-size:11px;
+  font-weight:700;
+}
+
+.erp-attendance-notify-button {
+  height:30px;
+  padding:0 9px;
+  border:1px solid rgba(251,154,91,.38);
+  border-radius:999px;
+  display:inline-flex;
+  align-items:center;
+  gap:5px;
+  color:#fb9a5b;
+  background:rgba(251,154,91,.10);
+  font-size:11px;
+  font-weight:800;
+}
+
+.erp-shell.light-mode .erp-header .erp-profile-menu-wrap > button {
+  background:#eef1ff!important;
+  color:#4f46e5!important;
+}
+
+.erp-shell.light-mode .erp-mobile-nav-scroll,
+.erp-shell.light-mode .erp-mobile-submenu {
+  background:rgba(255,255,255,.94)!important;
+  border-color:rgba(3,53,0,.16)!important;
+  box-shadow:0 16px 34px rgba(3,53,0,.12)!important;
+}
+
+.erp-shell.light-mode .erp-mobile-nav-item,
+.erp-shell.light-mode .erp-mobile-subitem {
+  color:#536079!important;
+}
+
+.erp-shell.light-mode .erp-mobile-nav-item.is-active,
+.erp-shell.light-mode .erp-mobile-subitem.is-active {
+  color:#033500!important;
+  background:rgba(3,53,0,.10)!important;
+}
+
+.erp-shell.light-mode .erp-attendance-status-button {
+  background:#ffffff!important;
+  border-color:rgba(3,53,0,.18)!important;
+  color:#536079!important;
+}
+
+.erp-shell.light-mode .erp-attendance-status-button.is-present {
+  color:#047857!important;
+  border-color:rgba(4,120,87,.56)!important;
+  background:rgba(16,185,129,.12)!important;
+}
+
+.erp-shell.light-mode .erp-attendance-status-button.is-absent {
+  color:#be123c!important;
+  border-color:rgba(190,18,60,.46)!important;
+  background:rgba(244,63,94,.10)!important;
+}
+
+@media(max-width:1023px) {
+  .erp-main-scroll {
+    padding-bottom:100px!important;
+  }
+
+  .erp-header {
+    min-height:auto!important;
+  }
+
+  .erp-header-grid {
+    grid-template-columns:1fr;
+    gap:9px;
+  }
+
+  .erp-header-spacer {
+    display:none;
+  }
+
+  .erp-header-college-title {
+    max-width:100%;
+    justify-self:center;
+    font-size:15px;
+  }
+
+  .erp-header-actions {
+    width:100%;
+    justify-self:stretch;
+    justify-content:space-between;
+    gap:8px;
+  }
+
+  .erp-header-filters {
+    flex:1;
+    min-width:0;
+    display:grid;
+    grid-template-columns:minmax(0,1fr) auto;
+    gap:7px;
+  }
+
+  .erp-header-select,
+  .erp-header-year-select {
+    width:100%!important;
+    height:34px!important;
+    min-width:0;
+  }
+
+  .erp-header-year-select {
+    max-width:112px;
+  }
+
+  .erp-header-user-cluster {
+    flex:0 0 auto;
+    gap:8px;
+  }
+
+  .erp-header-user-cluster .text-right {
+    display:none;
+  }
+
+  .erp-workspace {
+    padding:14px!important;
+  }
+
+  .attendance-table {
+    min-width:720px;
+  }
+}
+
+@media(max-width:640px) {
+  .erp-mobile-nav {
+    left:8px;
+    right:8px;
+    bottom:8px;
+  }
+
+  .erp-mobile-nav-item {
+    min-width:62px;
+    font-size:9.5px;
+  }
+
+  .erp-mobile-subitem {
+    font-size:12.5px;
+  }
+
+  .erp-attendance-status-wrap {
+    min-width:220px;
+  }
+
+  .erp-attendance-status-button {
+    min-width:88px;
+    padding:0 9px;
+  }
+}

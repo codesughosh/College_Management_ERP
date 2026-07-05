@@ -1,4 +1,4 @@
-import { Component, useCallback, useEffect, useMemo, useState } from 'react';
+import { Component, Suspense, lazy, useCallback, useEffect, useMemo, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import {
   ArrowLeft,
@@ -27,7 +27,6 @@ import {
 } from '../../firebase/db';
 import { isFirebaseConfigured } from '../../firebase/config';
 import { getEnabledModules, getModuleById, getModuleByPath } from '../moduleRegistry';
-import DashboardManagement from '../dashboard/DashboardManagement';
 import Sidebar from './components/Sidebar';
 import StatusBadge from './components/StatusBadge';
 import StudentModal from './components/StudentModal';
@@ -48,24 +47,26 @@ import {
   statusRequiresSuperAdminApproval,
   validateStudentProfile,
 } from './studentUtils';
-import UserRoleManagement from '../userRoles/UserRoleManagement';
-import FacultyStaffManagement from '../facultyStaff/FacultyStaffManagement';
-import AttendanceManagement from '../attendance/AttendanceManagement';
-import TimetableManagement from '../timetable/TimetableManagement';
-import ExaminationResultManagement from '../exams/ExaminationResultManagement';
-import FeesManagement from '../fees/FeesManagement';
-import HostelManagement from '../hostel/HostelManagement';
-import NoticeBoardManagement from '../notices/NoticeBoardManagement';
-import DocumentManagement from '../documents/DocumentManagement';
-import ParentPortal from '../parentPortal/ParentPortal';
-import ReportsManagement from '../reports/ReportsManagement';
 import { canAccess, defaultRoles } from '../userRoles/rolePermissions';
-import AcademicsManagement from '../academics/AcademicsManagement';
-import CurriculumManagement from '../curriculum/CurriculumManagement';
-import SettingsManagement from '../settings/SettingsManagement';
 import { normalizeInstituteSettings } from '../settings/settingsModel';
 import { filterStudentScopedRecords, filterStudentsByCourse } from '../shared/courseFilters';
 import { getParentLinkedStudents } from '../parentPortal/parentPortalUtils';
+
+const AcademicsManagement = lazy(() => import('../academics/AcademicsManagement'));
+const AttendanceManagement = lazy(() => import('../attendance/AttendanceManagement'));
+const CurriculumManagement = lazy(() => import('../curriculum/CurriculumManagement'));
+const DashboardManagement = lazy(() => import('../dashboard/DashboardManagement'));
+const DocumentManagement = lazy(() => import('../documents/DocumentManagement'));
+const ExaminationResultManagement = lazy(() => import('../exams/ExaminationResultManagement'));
+const FacultyStaffManagement = lazy(() => import('../facultyStaff/FacultyStaffManagement'));
+const FeesManagement = lazy(() => import('../fees/FeesManagement'));
+const HostelManagement = lazy(() => import('../hostel/HostelManagement'));
+const NoticeBoardManagement = lazy(() => import('../notices/NoticeBoardManagement'));
+const ParentPortal = lazy(() => import('../parentPortal/ParentPortal'));
+const ReportsManagement = lazy(() => import('../reports/ReportsManagement'));
+const SettingsManagement = lazy(() => import('../settings/SettingsManagement'));
+const TimetableManagement = lazy(() => import('../timetable/TimetableManagement'));
+const UserRoleManagement = lazy(() => import('../userRoles/UserRoleManagement'));
 
 function csvValue(value) {
   return `"${String(value ?? '').replace(/"/g, '""')}"`;
@@ -103,6 +104,14 @@ class ModuleErrorBoundary extends Component {
     }
     return this.props.children;
   }
+}
+
+function ModuleLoadingState() {
+  return (
+    <div className="rounded-lg border border-slate-100 bg-white p-6 text-sm font-semibold text-slate-500">
+      Loading module...
+    </div>
+  );
 }
 
 function getPageFromPath(pathname) {
@@ -816,9 +825,10 @@ export default function StudentInformationManagement({ user, onLogout }) {
               onLogout={onLogout}
             />
 
-            <div className="flex-1 min-h-0 overflow-y-auto p-4 lg:p-5">
+            <div className="erp-main-scroll flex-1 min-h-0 overflow-y-auto p-4 lg:p-5">
               <section className="erp-workspace bg-white min-h-full p-5 lg:p-7">
                 <ModuleErrorBoundary resetKey={activePage}>
+                <Suspense fallback={<ModuleLoadingState />}>
                 {!canOpenActiveModule ? (
                   <div className="rounded-lg bg-[#f5f5f6] p-6 text-sm text-slate-600">
                     You do not have permission to open this module.
@@ -997,6 +1007,7 @@ export default function StudentInformationManagement({ user, onLogout }) {
                     This module is not available.
                   </div>
                 )}
+                </Suspense>
                 </ModuleErrorBoundary>
               </section>
             </div>

@@ -1,7 +1,58 @@
+import { memo, useMemo } from 'react';
 import { Bell, CheckCircle, XCircle } from 'lucide-react';
-import StatusBadge from '../../students/components/StatusBadge';
 
-export default function AttendanceTable({
+function AttendanceStatusControl({ canMark, mode, record, entity, onMark, canNotify, onNotify }) {
+  const currentStatus = record?.status || '';
+  const statuses = [
+    { label: 'Present', icon: <CheckCircle size={15} />, activeClass: 'is-present' },
+    { label: 'Absent', icon: <XCircle size={15} />, activeClass: 'is-absent' },
+  ];
+
+  return (
+    <div className="erp-attendance-status-wrap">
+      <div className="erp-attendance-status-actions" aria-label="Attendance status">
+        {statuses.map((status) => {
+          const active = currentStatus === status.label;
+          return (
+            <button
+              key={status.label}
+              type="button"
+              disabled={!canMark}
+              onClick={(event) => {
+                event.stopPropagation();
+                onMark(entity, status.label);
+              }}
+              className={`erp-attendance-status-button ${active ? status.activeClass : ''}`}
+              aria-pressed={active}
+              title={`Mark ${status.label}`}
+            >
+              {status.icon}
+              <span>{status.label}</span>
+            </button>
+          );
+        })}
+      </div>
+      {!currentStatus && <div className="erp-attendance-status-hint">Not marked</div>}
+      {mode === 'students' && record?.status === 'Absent' && (
+        <button
+          type="button"
+          disabled={!canNotify || record.parentNotified}
+          onClick={(event) => {
+            event.stopPropagation();
+            onNotify(entity, record);
+          }}
+          className="erp-attendance-notify-button"
+          title="Notify parent"
+        >
+          <Bell size={14} />
+          <span>{record.parentNotified ? 'Notified' : 'Notify'}</span>
+        </button>
+      )}
+    </div>
+  );
+}
+
+function AttendanceTable({
   canMark,
   canNotify,
   entities,
@@ -14,21 +65,28 @@ export default function AttendanceTable({
   selectedId,
   showActions = true,
 }) {
+  const recordsByEntityId = useMemo(() => records.reduce((map, record) => {
+    if (record.entityId && record.dateText === selectedDate) {
+      map.set(record.entityId, record);
+    }
+    return map;
+  }, new Map()), [records, selectedDate]);
+
   return (
-    <div className="overflow-x-auto">
-      <table className="w-full text-sm border-separate border-spacing-y-2">
+    <div className="attendance-table-wrap overflow-x-auto">
+      <table className="attendance-table w-full text-sm border-separate border-spacing-y-2">
         <thead>
           <tr className="bg-[#e7e7e9] text-left text-slate-900">
             <th className="px-5 py-3 rounded-l-lg">{mode === 'students' ? 'Student' : 'Faculty / Staff'}</th>
             <th className="px-5 py-3">Details</th>
-            <th className="px-5 py-3">Today Status</th>
+            <th className={`px-5 py-3 ${showActions ? '' : 'rounded-r-lg'}`}>Status</th>
             {showActions && <th className="px-5 py-3 rounded-r-lg text-right">Action</th>}
           </tr>
         </thead>
         <tbody>
           {entities.map((entity) => {
             const entityId = entity.studentId || entity.employeeId;
-            const record = records.find((item) => item.entityId === entityId && item.dateText === selectedDate);
+            const record = recordsByEntityId.get(entityId);
             return (
               <tr
                 key={entity.id}
@@ -52,25 +110,27 @@ export default function AttendanceTable({
                     </>
                   )}
                 </td>
-                <td className={`px-5 py-4 ${showActions ? '' : 'rounded-r-lg'}`}><StatusBadge value={record?.status || 'Not Marked'} /></td>
+                <td className={`px-5 py-4 ${showActions ? '' : 'rounded-r-lg'}`}>
+                  <AttendanceStatusControl
+                    canMark={canMark}
+                    canNotify={canNotify}
+                    entity={entity}
+                    mode={mode}
+                    record={record}
+                    onMark={onMark}
+                    onNotify={onNotify}
+                  />
+                </td>
                 {showActions && (
                 <td className="px-5 py-4 rounded-r-lg">
                   <div className="flex justify-end gap-2">
-                    {['Present', 'Absent'].map((status) => (
-                      <button
-                        key={status}
-                        disabled={!canMark || Boolean(record)}
-                        onClick={() => onMark(entity, status)}
-                        className="h-9 w-9 rounded-full border border-slate-200 flex items-center justify-center disabled:opacity-40"
-                        title={`Mark ${status}`}
-                      >
-                        {status === 'Present' ? <CheckCircle size={15} /> : <XCircle size={15} />}
-                      </button>
-                    ))}
                     {mode === 'students' && record?.status === 'Absent' && (
                       <button
                         disabled={!canNotify || record.parentNotified}
-                        onClick={() => onNotify(entity, record)}
+                        onClick={(event) => {
+                          event.stopPropagation();
+                          onNotify(entity, record);
+                        }}
                         className="h-9 w-9 rounded-full border border-slate-200 flex items-center justify-center disabled:opacity-40"
                         title="Notify parent"
                       >
@@ -95,3 +155,5 @@ export default function AttendanceTable({
     </div>
   );
 }
+
+export default memo(AttendanceTable);

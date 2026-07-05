@@ -6,6 +6,7 @@ import {
   createStudentAttendanceRecord,
   createStaffAttendanceRecord,
   getAttendanceManagementData,
+  updateStaffAttendanceRecord,
   updateStudentAttendanceRecord,
 } from '../../firebase/db';
 import { isFirebaseConfigured } from '../../firebase/config';
@@ -156,7 +157,6 @@ export default function AttendanceManagement({
   const selectedRecord = selectedEntityKey
     ? activeRecords.find((record) => record.entityId === selectedEntityKey && record.dateText === selectedDate)
     : null;
-  const canMarkActiveMode = mode === 'students' ? canMarkStudents : canMarkStaff;
 
   const openAttendanceTask = (taskId, nextMode = mode) => {
     setActiveAttendanceTask(taskId);
@@ -231,7 +231,28 @@ export default function AttendanceManagement({
     const key = buildAttendanceKey(entityId, selectedDate, subjectName);
     const exists = allModeRecords.find((record) => buildAttendanceKey(record.entityId, record.dateText, record.subjectName || record.subject || '') === key);
     if (exists) {
-      toast.error('Attendance already marked for selected date.');
+      if (exists.status === status) {
+        toast.success(`${entity.name} is already marked ${status.toLowerCase()}`);
+        return;
+      }
+      const updates = {
+        status,
+        markedAtText: formatDisplayDate(),
+        parentNotified: status === 'Absent' ? Boolean(exists.parentNotified) : false,
+      };
+      try {
+        if (mode === 'students') {
+          await updateStudentAttendanceRecord(exists.id, updates);
+          setStudentAttendance((prev) => prev.map((record) => record.id === exists.id ? { ...record, ...updates } : record));
+        } else {
+          await updateStaffAttendanceRecord(exists.id, updates);
+          setStaffAttendance((prev) => prev.map((record) => record.id === exists.id ? { ...record, ...updates } : record));
+        }
+        toast.success(`${entity.name} updated to ${status.toLowerCase()}`);
+      } catch (error) {
+        console.error('Unable to update live attendance record.', error);
+        toast.error('Attendance was not updated in live data.');
+      }
       return;
     }
 
@@ -458,18 +479,6 @@ export default function AttendanceManagement({
               <div className="rounded-lg bg-[#f5f5f6] p-3 mt-3 text-sm flex items-center justify-between">
                 <span>Status</span>
                 <span className="font-bold">{selectedRecord?.status || 'Not Marked'}</span>
-              </div>
-              <div className="grid grid-cols-2 gap-2 mt-5">
-                {['Present', 'Absent'].map((status) => (
-                  <button
-                    key={status}
-                    disabled={!canMarkActiveMode || Boolean(selectedRecord)}
-                    onClick={() => markAttendance(selectedEntity, status)}
-                    className="h-10 rounded-lg bg-[#33373e] text-white text-sm font-semibold disabled:bg-slate-300"
-                  >
-                    {status}
-                  </button>
-                ))}
               </div>
               {mode === 'students' && selectedRecord?.status === 'Absent' && (
                 <button

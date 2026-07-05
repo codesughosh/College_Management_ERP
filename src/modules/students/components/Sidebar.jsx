@@ -1,34 +1,48 @@
-import { useState } from 'react';
-import { ChevronLeft, ChevronRight, GraduationCap, Moon, Sun } from 'lucide-react';
+import { useMemo, useState } from 'react';
+import {
+  BookOpenCheck,
+  ChevronLeft,
+  ChevronRight,
+  ClipboardList,
+  FileCheck2,
+  GraduationCap,
+  Moon,
+  Sun,
+  UserCheck,
+  Users,
+  Wallet,
+} from 'lucide-react';
 import { getEnabledModules, sortModulesByDisplayOrder } from '../../moduleRegistry';
 import { canAccess, defaultRoles } from '../../userRoles/rolePermissions';
+import devloftLogo from '../../../../assets/logo.png';
 
-export default function Sidebar({ activePage, activeSubmenuId = '', collapsed = false, currentUser, institute, onNavigate, onThemeToggle, onToggleCollapse, themeMode = 'dark' }) {
-  const [hoveredModuleId, setHoveredModuleId] = useState('');
+export default function Sidebar({ activePage, activeSubmenuId = '', collapsed = false, currentUser, onNavigate, onThemeToggle, onToggleCollapse, themeMode = 'dark' }) {
+  const [expandedState, setExpandedState] = useState({ page: activePage, moduleId: activePage });
   const currentRoleId = currentUser?.roleId || 'admin';
   const isSuperAdmin = currentRoleId === 'super-admin';
   const isAdmin = currentRoleId === 'admin';
-  const canShowHiddenModule = (module) => {
-    if (module.id === 'dashboard') return isAdmin || isSuperAdmin;
-    if (module.id === 'parent-portal') return currentRoleId === 'parent';
-    return isSuperAdmin;
-  };
-  const collegeName = institute?.name || '-';
-  const navItems = sortModulesByDisplayOrder(getEnabledModules()
-    .filter((module) => !module.permission || canAccess(defaultRoles, currentRoleId, module.permission))
-    .filter((module) => !module.footer)
-    .filter((module) => !module.hideFromSidebar || canShowHiddenModule(module)))
-    .map((module) => {
-      const Icon = module.icon;
-      return {
-        id: module.id,
-        label: module.label,
-        group: module.group,
-        status: module.status,
-        icon: <Icon className="erp-sidebar-icon" size={18} />,
-      };
-    });
-  const footerItems = getEnabledModules()
+  const navItems = useMemo(() => {
+    const canShowHiddenModule = (module) => {
+      if (module.id === 'dashboard') return isAdmin || isSuperAdmin;
+      if (module.id === 'parent-portal') return currentRoleId === 'parent';
+      return isSuperAdmin;
+    };
+    return sortModulesByDisplayOrder(getEnabledModules()
+      .filter((module) => !module.permission || canAccess(defaultRoles, currentRoleId, module.permission))
+      .filter((module) => !module.footer)
+      .filter((module) => !module.hideFromSidebar || canShowHiddenModule(module)))
+      .map((module) => {
+        const Icon = module.icon;
+        return {
+          id: module.id,
+          label: module.label,
+          group: module.group,
+          status: module.status,
+          icon: <Icon className="erp-sidebar-icon" size={18} />,
+        };
+      });
+  }, [currentRoleId, isAdmin, isSuperAdmin]);
+  const footerItems = useMemo(() => getEnabledModules()
     .filter((module) => !module.permission || canAccess(defaultRoles, currentRoleId, module.permission))
     .filter((module) => !module.hideFromSidebar && module.footer)
     .map((module) => {
@@ -38,17 +52,18 @@ export default function Sidebar({ activePage, activeSubmenuId = '', collapsed = 
         label: module.label,
         icon: <Icon className="erp-sidebar-icon" size={18} />,
       };
-    });
+    }), [currentRoleId]);
 
   const selectTheme = (nextTheme) => {
     if (nextTheme !== themeMode) onThemeToggle?.();
   };
 
-  const submenuItemsByModule = {
+  const submenuItemsByModule = useMemo(() => ({
     attendance: [
       {
         id: 'student-attendance',
         label: 'Student Attendance',
+        icon: <Users size={16} />,
         moduleId: 'attendance',
         state: { attendanceSubmenu: 'student-attendance', attendanceTask: 'students', attendanceBranch: 'mark-students', attendanceMode: 'students' },
         enabled: canAccess(defaultRoles, currentRoleId, 'attendance.view'),
@@ -56,6 +71,7 @@ export default function Sidebar({ activePage, activeSubmenuId = '', collapsed = 
       {
         id: 'staff-attendance',
         label: 'Staff Attendance',
+        icon: <UserCheck size={16} />,
         moduleId: 'attendance',
         state: { attendanceSubmenu: 'staff-attendance', attendanceTask: 'staff', attendanceBranch: 'mark-staff', attendanceMode: 'staff' },
         enabled: canAccess(defaultRoles, currentRoleId, 'attendance.markStaff') || canAccess(defaultRoles, currentRoleId, 'staff.attendance'),
@@ -65,6 +81,7 @@ export default function Sidebar({ activePage, activeSubmenuId = '', collapsed = 
       {
         id: 'students',
         label: 'Student',
+        icon: <GraduationCap size={16} />,
         moduleId: 'reports',
         state: { reportCategory: 'students' },
         enabled: canAccess(defaultRoles, currentRoleId, 'students.view'),
@@ -72,6 +89,7 @@ export default function Sidebar({ activePage, activeSubmenuId = '', collapsed = 
       {
         id: 'attendance',
         label: 'Attendance',
+        icon: <ClipboardList size={16} />,
         moduleId: 'reports',
         state: { reportCategory: 'attendance' },
         enabled: canAccess(defaultRoles, currentRoleId, 'attendance.reports'),
@@ -79,6 +97,7 @@ export default function Sidebar({ activePage, activeSubmenuId = '', collapsed = 
       {
         id: 'documents',
         label: 'Documents',
+        icon: <FileCheck2 size={16} />,
         moduleId: 'reports',
         state: { reportCategory: 'documents' },
         enabled: canAccess(defaultRoles, currentRoleId, 'documents.view') || canAccess(defaultRoles, currentRoleId, 'students.documents'),
@@ -86,6 +105,7 @@ export default function Sidebar({ activePage, activeSubmenuId = '', collapsed = 
       {
         id: 'exams',
         label: 'Exams',
+        icon: <BookOpenCheck size={16} />,
         moduleId: 'reports',
         state: { reportCategory: 'exams' },
         enabled: canAccess(defaultRoles, currentRoleId, 'exams.view') || canAccess(defaultRoles, currentRoleId, 'exams.results'),
@@ -93,31 +113,40 @@ export default function Sidebar({ activePage, activeSubmenuId = '', collapsed = 
       {
         id: 'financial',
         label: 'Financial',
+        icon: <Wallet size={16} />,
         moduleId: 'reports',
         state: { reportCategory: 'financial' },
         enabled: canAccess(defaultRoles, currentRoleId, 'financialReports.view'),
       },
     ],
-  };
+  }), [currentRoleId]);
+  const visibleMobileItems = useMemo(() => [...navItems, ...footerItems], [footerItems, navItems]);
+  const activeDefaultExpandedModuleId = submenuItemsByModule[activePage]?.some((item) => item.enabled) ? activePage : '';
+  const expandedModuleId = expandedState.page === activePage ? expandedState.moduleId : activeDefaultExpandedModuleId;
 
   const renderNavButton = ({ id, label, icon, status }) => {
     const active = activePage === id;
     const submenuItems = (submenuItemsByModule[id] || []).filter((item) => item.enabled);
-    const expanded = Boolean(!collapsed && submenuItems.length && (active || hoveredModuleId === id));
+    const expanded = Boolean(!collapsed && submenuItems.length > 0 && expandedModuleId === id);
+    const handleClick = () => {
+      if (submenuItems.length && !collapsed) {
+        setExpandedState({ page: activePage, moduleId: expandedModuleId === id ? '' : id });
+        return;
+      }
+      setExpandedState({ page: activePage, moduleId: '' });
+      onNavigate(id);
+    };
     return (
-      <div
-        key={id}
-        className="erp-sidebar-item-wrap"
-        onMouseEnter={() => setHoveredModuleId(id)}
-        onMouseLeave={() => setHoveredModuleId('')}
-      >
+      <div key={id} className="erp-sidebar-item-wrap">
         <button
-          onClick={() => onNavigate(id)}
+          onClick={handleClick}
           className={`erp-sidebar-item ${active ? 'is-active' : ''}`}
           title={collapsed ? label : undefined}
+          aria-expanded={submenuItems.length > 0 ? expanded : undefined}
         >
           <span className="erp-sidebar-item-icon">{icon}</span>
           {!collapsed && <span className="erp-sidebar-item-label">{label}</span>}
+          {!collapsed && submenuItems.length > 0 && <ChevronRight className={`erp-sidebar-submenu-chevron ${expanded ? 'is-open' : ''}`} size={16} />}
           {!collapsed && status === 'planned' && <span className="erp-sidebar-item-badge">Soon</span>}
           {!collapsed && status === 'demo' && <span className="erp-sidebar-item-badge">Demo</span>}
         </button>
@@ -127,9 +156,13 @@ export default function Sidebar({ activePage, activeSubmenuId = '', collapsed = 
               <button
                 key={item.id}
                 type="button"
-                onClick={() => onNavigate(item.moduleId, { state: item.state })}
+                onClick={() => {
+                  setExpandedState({ page: activePage, moduleId: item.moduleId });
+                  onNavigate(item.moduleId, { state: item.state });
+                }}
                 className={`erp-sidebar-subitem ${activeSubmenuId === item.id || activeSubmenuId === item.state.reportCategory ? 'is-active' : ''}`}
               >
+                <span className="erp-sidebar-subitem-icon">{item.icon}</span>
                 {item.label}
               </button>
             ))}
@@ -140,6 +173,7 @@ export default function Sidebar({ activePage, activeSubmenuId = '', collapsed = 
   };
 
   return (
+    <>
     <aside className={`erp-sidebar ${collapsed ? 'is-collapsed' : ''} bg-white border-r border-slate-200 shrink-0 hidden lg:flex flex-col transition-all duration-300`}>
       <div className="erp-sidebar-sticky">
         <div className="erp-sidebar-brand-card">
@@ -150,24 +184,16 @@ export default function Sidebar({ activePage, activeSubmenuId = '', collapsed = 
               className="erp-sidebar-logo erp-sidebar-expand-logo"
               title="Expand sidebar"
             >
-              {institute?.logoUrl ? (
-                <img src={institute.logoUrl} alt="" className="h-full w-full object-contain rounded-lg" />
-              ) : (
-                <ChevronRight className="erp-sidebar-logo-icon" size={26} />
-              )}
+              <img src={devloftLogo} alt="" className="h-full w-full object-contain rounded-lg" />
             </button>
           ) : (
             <div className="erp-sidebar-logo">
-              {institute?.logoUrl ? (
-                <img src={institute.logoUrl} alt="" className="h-full w-full object-contain rounded-lg" />
-              ) : (
-                <GraduationCap className="erp-sidebar-logo-icon" size={26} />
-              )}
+              <img src={devloftLogo} alt="" className="h-full w-full object-contain rounded-lg" />
             </div>
           )}
           {!collapsed && (
             <div className="erp-sidebar-brand-copy">
-              <div className="erp-sidebar-brand-name">{collegeName}</div>
+              <div className="erp-sidebar-brand-name">Devloft College Management</div>
             </div>
           )}
           {!collapsed && (
@@ -211,5 +237,50 @@ export default function Sidebar({ activePage, activeSubmenuId = '', collapsed = 
         </div>
       </div>
     </aside>
+    <nav className="erp-mobile-nav lg:hidden" aria-label="Mobile navigation">
+      {expandedModuleId && (submenuItemsByModule[expandedModuleId] || []).filter((item) => item.enabled).length > 0 && (
+        <div className="erp-mobile-submenu">
+          {(submenuItemsByModule[expandedModuleId] || []).filter((item) => item.enabled).map((item) => (
+            <button
+              key={item.id}
+              type="button"
+              onClick={() => {
+                setExpandedState({ page: activePage, moduleId: item.moduleId });
+                onNavigate(item.moduleId, { state: item.state });
+              }}
+              className={`erp-mobile-subitem ${activeSubmenuId === item.id || activeSubmenuId === item.state.reportCategory ? 'is-active' : ''}`}
+            >
+              {item.icon}
+              <span>{item.label}</span>
+            </button>
+          ))}
+        </div>
+      )}
+      <div className="erp-mobile-nav-scroll">
+        {visibleMobileItems.map(({ id, label, icon }) => {
+          const active = activePage === id;
+          const submenuItems = (submenuItemsByModule[id] || []).filter((item) => item.enabled);
+          return (
+            <button
+              key={id}
+              type="button"
+              onClick={() => {
+                if (submenuItems.length) {
+                  setExpandedState({ page: activePage, moduleId: expandedModuleId === id ? '' : id });
+                  return;
+                }
+                setExpandedState({ page: activePage, moduleId: '' });
+                onNavigate(id);
+              }}
+              className={`erp-mobile-nav-item ${active ? 'is-active' : ''}`}
+            >
+              <span>{icon}</span>
+              <span>{label}</span>
+            </button>
+          );
+        })}
+      </div>
+    </nav>
+    </>
   );
 }

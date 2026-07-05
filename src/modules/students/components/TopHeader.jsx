@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { LogOut, UserRound } from 'lucide-react';
 import { defaultRoles, getRoleById } from '../../userRoles/rolePermissions';
 
@@ -21,9 +21,15 @@ export default function TopHeader({
   const isParent = currentRoleId === 'parent';
   const userDisplayId = user?.displayId || user?.adminId || user?.employeeId || user?.uid?.slice(0, 8) || '-';
   const instituteId = user?.selectedCollege?.code || institute?.instituteId || institute?.code || '-';
+  const collegeName = institute?.name || user?.selectedCollege?.name || 'College Management';
   const selectedCourseValue = isParent && !courses.some((course) => course.courseCode === courseCode)
     ? courses[0]?.courseCode || ''
     : courseCode;
+  const courseOptions = useMemo(() => courses.map((course) => (
+    <option key={course.courseCode} value={course.courseCode}>
+      {course.courseName} - {course.admissionType || course.courseYear}
+    </option>
+  )), [courses]);
 
   useEffect(() => {
     const closeProfileMenu = (event) => {
@@ -36,25 +42,24 @@ export default function TopHeader({
   }, []);
 
   return (
-    <header className="erp-header h-[72px] bg-white border-b border-slate-200 flex items-center justify-between px-5 lg:px-10 shrink-0">
-      <div className="flex items-center gap-5 min-w-0">
-        <div className="hidden md:flex items-center gap-3">
+    <header className="erp-header min-h-[72px] bg-white border-b border-slate-200 px-4 lg:px-8 py-3 shrink-0">
+      <div className="erp-header-grid">
+        <div className="erp-header-spacer" />
+        <div className="erp-header-college-title" title={collegeName}>{collegeName}</div>
+        <div className="erp-header-actions">
+        <div className="erp-header-filters">
           <label className="text-xs font-semibold text-slate-500">
             <span className="sr-only">Course</span>
             <select
               value={selectedCourseValue}
               onChange={(event) => onCourseChange?.(event.target.value)}
               disabled={isParent && courses.length <= 1}
-              className="w-72 h-11 bg-white border border-slate-200 rounded-lg shadow-[0_2px_8px_rgba(15,23,42,0.04)] px-4 text-sm text-slate-600 outline-none focus:border-[#fb9a5b] focus:ring-2 focus:ring-orange-100"
+              className="erp-header-select bg-white border border-slate-200 rounded-lg shadow-[0_2px_8px_rgba(15,23,42,0.04)] px-3 text-xs text-slate-600 outline-none focus:border-[#fb9a5b] focus:ring-2 focus:ring-orange-100"
               title="Select course"
             >
               {!isParent && <option value="all">All Courses</option>}
               {isParent && !courses.length && <option value="">Student Course</option>}
-              {courses.map((course) => (
-                <option key={course.courseCode} value={course.courseCode}>
-                  {course.courseName} - {course.admissionType || course.courseYear}
-                </option>
-              ))}
+              {courseOptions}
             </select>
           </label>
           {!isParent && (
@@ -64,7 +69,7 @@ export default function TopHeader({
               value={academicYear}
               onChange={(event) => onAcademicYearChange?.(event.target.value)}
               disabled={!academicYears.length}
-              className="w-44 h-11 bg-white border border-slate-200 rounded-lg shadow-[0_2px_8px_rgba(15,23,42,0.04)] px-4 text-sm text-slate-600 outline-none focus:border-[#fb9a5b] focus:ring-2 focus:ring-orange-100"
+              className="erp-header-year-select bg-white border border-slate-200 rounded-lg shadow-[0_2px_8px_rgba(15,23,42,0.04)] px-3 text-xs text-slate-600 outline-none focus:border-[#fb9a5b] focus:ring-2 focus:ring-orange-100"
             >
               {!academicYears.length && <option value="">Academic Year</option>}
               {academicYears.map((year) => (
@@ -74,9 +79,7 @@ export default function TopHeader({
           </label>
           )}
         </div>
-      </div>
-
-      <div className="flex items-center gap-5">
+        <div className="erp-header-user-cluster">
         {isSuperAdmin && (
           <>
             <div className="hidden sm:block h-9 w-px bg-slate-200" />
@@ -112,6 +115,8 @@ export default function TopHeader({
             </div>
           )}
         </div>
+      </div>
+      </div>
       </div>
     </header>
   );

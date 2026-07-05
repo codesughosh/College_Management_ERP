@@ -380,6 +380,14 @@ export async function createStaffAttendanceRecord(data) {
   return createCollectionDocument('staffAttendanceRecords', data);
 }
 
+export async function updateStaffAttendanceRecord(id, data) {
+  const store = requireWritableDocId(id, 'Staff attendance record');
+  await updateDoc(doc(store, 'staffAttendanceRecords', id), {
+    ...data,
+    updatedAt: serverTimestamp(),
+  });
+}
+
 export async function getAttendanceManagementData(academicYear = '') {
   const yearConstraints = academicYearWhere(academicYear);
   const [students, staff, studentAttendance, staffAttendance, notifications, academicSubjects] = await Promise.all([

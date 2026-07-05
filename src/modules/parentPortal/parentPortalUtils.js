@@ -1,31 +1,11 @@
 import { summarizeAttendance } from '../attendance/attendanceUtils.js';
 import { calculateDueAmount } from '../fees/feeUtils.js';
 
-const courseSubjectMap = {
-  ATOT: ['Anatomy', 'Physiology', 'Anesthesia Technology', 'Operation Theatre Technology', 'Microbiology'],
-  BSCN: ['Anatomy & Physiology', 'Nursing Foundation', 'Nutrition', 'Biochemistry', 'Psychology'],
-  BOT: ['Anatomy', 'Physiology', 'Occupational Therapy Foundation', 'Psychology', 'Biomechanics'],
-  BPT: ['Anatomy', 'Physiology', 'Exercise Therapy', 'Electrotherapy', 'Biomechanics'],
-  MIT: ['Anatomy', 'Radiographic Positioning', 'Imaging Physics', 'Patient Care', 'Darkroom Techniques'],
-  MLT: ['Anatomy', 'Physiology', 'Biochemistry', 'Pathology', 'Microbiology'],
-};
-
 function normalizeSubject(value = '') {
   return String(value).trim().toLowerCase();
 }
 
-function getCourseSubjectKey(student = {}) {
-  const source = `${student.courseCode || ''} ${student.courseName || ''} ${student.program || ''}`.toUpperCase();
-  if (source.includes('ATOT') || source.includes('ANAESTHESIA') || source.includes('ANESTHESIA') || source.includes('OPERATION THEATER') || source.includes('OPERATION THEATRE')) return 'ATOT';
-  if (source.includes('BSCN') || source.includes('NURSING')) return 'BSCN';
-  if (source.includes('BOT') || source.includes('OCCUPATIONAL')) return 'BOT';
-  if (source.includes('BPT') || source.includes('PHYSIOTHERAPY')) return 'BPT';
-  if (source.includes('MIT') || source.includes('IMAGING')) return 'MIT';
-  if (source.includes('MLT') || source.includes('MEDICAL LAB')) return 'MLT';
-  return '';
-}
-
-export function getCourseSubjects(student = {}, academicSubjects = []) {
+export function getCourseSubjects(student = {}, academicSubjects = [], records = []) {
   const studentPrograms = [student.program, student.courseName, student.courseCode]
     .filter(Boolean)
     .map((item) => String(item).trim().toLowerCase());
@@ -37,7 +17,7 @@ export function getCourseSubjects(student = {}, academicSubjects = []) {
     .map((item) => item.subjectName)
     .filter(Boolean);
   if (configuredSubjects.length) return [...new Set(configuredSubjects)];
-  return courseSubjectMap[getCourseSubjectKey(student)] || ['General Attendance'];
+  return [...new Set(records.map((record) => record.subjectName || record.subject).filter(Boolean))];
 }
 
 export function getParentLinkedStudents(students = [], currentUser = {}) {
@@ -64,7 +44,7 @@ export function recordsForStudent(records = [], student = {}) {
 
 export function buildParentAttendance(records = [], student = {}, academicSubjects = []) {
   const summary = summarizeAttendance(records);
-  const subjects = getCourseSubjects(student, academicSubjects);
+  const subjects = getCourseSubjects(student, academicSubjects, records);
   const hasSubjectRecords = records.some((record) => record.subject || record.subjectName);
   const subjectRows = subjects.map((subject) => {
     const subjectRecords = records.filter((record) => normalizeSubject(record.subjectName || record.subject) === normalizeSubject(subject));

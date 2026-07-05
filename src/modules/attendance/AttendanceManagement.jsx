@@ -118,23 +118,19 @@ export default function AttendanceManagement({
 
   const courseStudents = scopedStudents.length ? scopedStudents : filterStudentsByCourse(students, selectedCourseCode, selectedCourse);
   const subjectOptions = useMemo(() => {
-    const subjects = academicSubjects
+    return academicSubjects
       .filter((subject) => selectedCourseCode === 'all' || subject.courseCode === selectedCourseCode || subject.programName === selectedCourse?.courseName)
       .map((subject) => ({
         code: subject.subjectCode || subject.id || subject.subjectName,
         name: subject.subjectName || subject.name,
       }))
       .filter((subject) => subject.name);
-    if (subjects.length) return subjects;
-    return [
-      { code: 'general', name: selectedCourse?.courseName ? `${selectedCourse.courseName} Attendance` : 'General Attendance' },
-    ];
   }, [academicSubjects, selectedCourse, selectedCourseCode]);
-  const selectedSubject = subjectOptions.find((subject) => subject.code === selectedSubjectCode) || subjectOptions[0];
+  const selectedSubject = subjectOptions.find((subject) => subject.code === selectedSubjectCode) || null;
   const courseStudentAttendance = filterStudentScopedRecords(studentAttendance, courseStudents, selectedCourseCode, selectedCourse);
   const allModeRecords = mode === 'students' ? courseStudentAttendance : staffAttendance;
   const activeRecords = mode === 'students'
-    ? allModeRecords.filter((record) => !selectedSubject?.name || (record.subjectName || record.subject || 'General Attendance') === selectedSubject.name)
+    ? allModeRecords.filter((record) => !selectedSubject?.name || (record.subjectName || record.subject || '') === selectedSubject.name)
     : allModeRecords;
   const selectedDate = formatInputDate(selectedDateInput);
   const selectedDateRecords = activeRecords.filter((record) => record.dateText === selectedDate);
@@ -227,7 +223,11 @@ export default function AttendanceManagement({
   const activeBranch = activeBranches.find((branch) => branch.id === activeAttendanceBranch);
   const markAttendance = async (entity, status) => {
     const entityId = entity.studentId || entity.employeeId;
-    const subjectName = mode === 'students' ? selectedSubject?.name || 'General Attendance' : '';
+    if (mode === 'students' && !selectedSubject) {
+      toast.error('Select a live subject before marking student attendance.');
+      return;
+    }
+    const subjectName = mode === 'students' ? selectedSubject.name : '';
     const key = buildAttendanceKey(entityId, selectedDate, subjectName);
     const exists = allModeRecords.find((record) => buildAttendanceKey(record.entityId, record.dateText, record.subjectName || record.subject || '') === key);
     if (exists) {
@@ -317,6 +317,7 @@ export default function AttendanceManagement({
               className="h-10 rounded-lg border border-slate-200 px-3 text-sm"
               title="Subject"
             >
+              <option value="">{subjectOptions.length ? 'Select Subject' : 'No Live Subjects'}</option>
               {subjectOptions.map((subject) => (
                 <option key={subject.code} value={subject.code}>{subject.name}</option>
               ))}

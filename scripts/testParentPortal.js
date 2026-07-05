@@ -36,11 +36,7 @@ assert.deepEqual(buildParentAttendance(recordsForStudent(records, students[0]), 
   leave: 0,
   percentage: 100,
   subjectRows: [
-    { subject: 'Anatomy & Physiology', total: 0, present: 0, absent: 0, leave: 0, percentage: 0, status: 'Not Marked' },
     { subject: 'Nursing Foundation', total: 1, present: 1, absent: 0, leave: 0, percentage: 100, status: '100%' },
-    { subject: 'Nutrition', total: 0, present: 0, absent: 0, leave: 0, percentage: 0, status: 'Not Marked' },
-    { subject: 'Biochemistry', total: 0, present: 0, absent: 0, leave: 0, percentage: 0, status: 'Not Marked' },
-    { subject: 'Psychology', total: 0, present: 0, absent: 0, leave: 0, percentage: 0, status: 'Not Marked' },
   ],
 });
 

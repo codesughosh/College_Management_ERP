@@ -27,6 +27,184 @@ const tabs = [
   ['records', 'Records'],
 ];
 
+function HostelEntryModal({ activeTab, rooms, allocations, scopedStudents, academicYear, onClose, onSave }) {
+  const [form, setForm] = useState({
+    roomId: '',
+    roomNo: '',
+    hostelName: '',
+    blockName: '',
+    floor: '',
+    capacity: '',
+    occupiedCount: '',
+    wardenName: '',
+    studentRecordId: '',
+    allocatedOn: '',
+    recordType: '',
+    title: '',
+    recordDate: '',
+    notes: '',
+    status: activeTab === 'records' ? 'Open' : 'Active',
+  });
+  const label = tabs.find(([id]) => id === activeTab)?.[1].slice(0, -1) || 'Record';
+  const allocatedKeys = new Set(
+    allocations
+      .filter((item) => item.status === 'Active')
+      .flatMap((item) => [item.studentRecordId, item.studentId].filter(Boolean))
+  );
+  const availableStudents = scopedStudents.filter((student) => !allocatedKeys.has(student.id) && !allocatedKeys.has(student.studentId));
+  const availableRooms = rooms.filter((room) => room.status !== 'Archived' && Number(room.occupiedCount || 0) < Number(room.capacity || 0));
+  const update = (key, value) => setForm((prev) => ({ ...prev, [key]: value }));
+  const selectRoom = (roomId) => {
+    const room = rooms.find((item) => item.id === roomId);
+    setForm((prev) => ({
+      ...prev,
+      roomId,
+      roomNo: room?.roomNo || prev.roomNo,
+      hostelName: room?.hostelName || prev.hostelName,
+    }));
+  };
+
+  const submit = (event) => {
+    event.preventDefault();
+    onSave(form);
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 bg-slate-950/50 backdrop-blur-sm flex items-center justify-center p-4">
+      <form onSubmit={submit} className="w-full max-w-2xl bg-white rounded-xl shadow-2xl border border-slate-200">
+        <div className="px-6 py-5 border-b border-slate-100 flex items-center justify-between">
+          <div>
+            <h2 className="text-lg font-bold text-slate-900">New {label}</h2>
+            <p className="text-sm text-slate-500">Save a live hostel record for {academicYear}.</p>
+          </div>
+          <button type="button" onClick={onClose} className="h-9 w-9 rounded-full hover:bg-slate-100 text-slate-500">x</button>
+        </div>
+        <div className="p-6 grid sm:grid-cols-2 gap-4">
+          {activeTab === 'rooms' && (
+            <>
+              <label>
+                <span className="block text-xs font-semibold text-slate-500 mb-1.5">Room Number</span>
+                <input value={form.roomNo} onChange={(event) => update('roomNo', event.target.value)} className="w-full h-11 rounded-lg border border-slate-200 px-3 text-sm" autoFocus />
+              </label>
+              <label>
+                <span className="block text-xs font-semibold text-slate-500 mb-1.5">Hostel Name</span>
+                <input value={form.hostelName} onChange={(event) => update('hostelName', event.target.value)} className="w-full h-11 rounded-lg border border-slate-200 px-3 text-sm" />
+              </label>
+              <label>
+                <span className="block text-xs font-semibold text-slate-500 mb-1.5">Block</span>
+                <input value={form.blockName} onChange={(event) => update('blockName', event.target.value)} className="w-full h-11 rounded-lg border border-slate-200 px-3 text-sm" />
+              </label>
+              <label>
+                <span className="block text-xs font-semibold text-slate-500 mb-1.5">Floor</span>
+                <input value={form.floor} onChange={(event) => update('floor', event.target.value)} className="w-full h-11 rounded-lg border border-slate-200 px-3 text-sm" />
+              </label>
+              <label>
+                <span className="block text-xs font-semibold text-slate-500 mb-1.5">Capacity</span>
+                <input type="number" min="1" value={form.capacity} onChange={(event) => update('capacity', event.target.value)} className="w-full h-11 rounded-lg border border-slate-200 px-3 text-sm" />
+              </label>
+              <label>
+                <span className="block text-xs font-semibold text-slate-500 mb-1.5">Occupied Count</span>
+                <input type="number" min="0" value={form.occupiedCount} onChange={(event) => update('occupiedCount', event.target.value)} className="w-full h-11 rounded-lg border border-slate-200 px-3 text-sm" />
+              </label>
+              <label>
+                <span className="block text-xs font-semibold text-slate-500 mb-1.5">Warden Name</span>
+                <input value={form.wardenName} onChange={(event) => update('wardenName', event.target.value)} className="w-full h-11 rounded-lg border border-slate-200 px-3 text-sm" />
+              </label>
+              <label>
+                <span className="block text-xs font-semibold text-slate-500 mb-1.5">Status</span>
+                <select value={form.status} onChange={(event) => update('status', event.target.value)} className="w-full h-11 rounded-lg border border-slate-200 px-3 text-sm">
+                  {['Available', 'Full', 'Maintenance', 'Archived'].map((item) => <option key={item}>{item}</option>)}
+                </select>
+              </label>
+            </>
+          )}
+
+          {activeTab === 'allocations' && (
+            <>
+              <label>
+                <span className="block text-xs font-semibold text-slate-500 mb-1.5">Student</span>
+                <select value={form.studentRecordId} onChange={(event) => update('studentRecordId', event.target.value)} className="w-full h-11 rounded-lg border border-slate-200 px-3 text-sm" autoFocus>
+                  <option value="">Select student</option>
+                  {availableStudents.map((student) => (
+                    <option key={student.id} value={student.id}>{student.name} ({student.studentId})</option>
+                  ))}
+                </select>
+              </label>
+              <label>
+                <span className="block text-xs font-semibold text-slate-500 mb-1.5">Room</span>
+                <select value={form.roomId} onChange={(event) => selectRoom(event.target.value)} className="w-full h-11 rounded-lg border border-slate-200 px-3 text-sm">
+                  <option value="">Select room</option>
+                  {availableRooms.map((room) => (
+                    <option key={room.id} value={room.id}>{room.hostelName} / {room.roomNo}</option>
+                  ))}
+                </select>
+              </label>
+              <label>
+                <span className="block text-xs font-semibold text-slate-500 mb-1.5">Allocated On</span>
+                <input type="date" value={form.allocatedOn} onChange={(event) => update('allocatedOn', event.target.value)} className="w-full h-11 rounded-lg border border-slate-200 px-3 text-sm" />
+              </label>
+              <label>
+                <span className="block text-xs font-semibold text-slate-500 mb-1.5">Status</span>
+                <select value={form.status} onChange={(event) => update('status', event.target.value)} className="w-full h-11 rounded-lg border border-slate-200 px-3 text-sm">
+                  {['Active', 'Released'].map((item) => <option key={item}>{item}</option>)}
+                </select>
+              </label>
+            </>
+          )}
+
+          {activeTab === 'records' && (
+            <>
+              <label>
+                <span className="block text-xs font-semibold text-slate-500 mb-1.5">Record Type</span>
+                <input value={form.recordType} onChange={(event) => update('recordType', event.target.value)} className="w-full h-11 rounded-lg border border-slate-200 px-3 text-sm" autoFocus />
+              </label>
+              <label>
+                <span className="block text-xs font-semibold text-slate-500 mb-1.5">Title</span>
+                <input value={form.title} onChange={(event) => update('title', event.target.value)} className="w-full h-11 rounded-lg border border-slate-200 px-3 text-sm" />
+              </label>
+              <label>
+                <span className="block text-xs font-semibold text-slate-500 mb-1.5">Linked Room</span>
+                <select value={form.roomId} onChange={(event) => selectRoom(event.target.value)} className="w-full h-11 rounded-lg border border-slate-200 px-3 text-sm">
+                  <option value="">No linked room</option>
+                  {rooms.map((room) => (
+                    <option key={room.id} value={room.id}>{room.hostelName} / {room.roomNo}</option>
+                  ))}
+                </select>
+              </label>
+              <label>
+                <span className="block text-xs font-semibold text-slate-500 mb-1.5">Record Date</span>
+                <input type="date" value={form.recordDate} onChange={(event) => update('recordDate', event.target.value)} className="w-full h-11 rounded-lg border border-slate-200 px-3 text-sm" />
+              </label>
+              <label>
+                <span className="block text-xs font-semibold text-slate-500 mb-1.5">Hostel Name</span>
+                <input value={form.hostelName} onChange={(event) => update('hostelName', event.target.value)} className="w-full h-11 rounded-lg border border-slate-200 px-3 text-sm" />
+              </label>
+              <label>
+                <span className="block text-xs font-semibold text-slate-500 mb-1.5">Room Number</span>
+                <input value={form.roomNo} onChange={(event) => update('roomNo', event.target.value)} className="w-full h-11 rounded-lg border border-slate-200 px-3 text-sm" />
+              </label>
+              <label>
+                <span className="block text-xs font-semibold text-slate-500 mb-1.5">Status</span>
+                <select value={form.status} onChange={(event) => update('status', event.target.value)} className="w-full h-11 rounded-lg border border-slate-200 px-3 text-sm">
+                  {['Open', 'Closed', 'Archived'].map((item) => <option key={item}>{item}</option>)}
+                </select>
+              </label>
+              <label className="sm:col-span-2">
+                <span className="block text-xs font-semibold text-slate-500 mb-1.5">Notes</span>
+                <textarea value={form.notes} onChange={(event) => update('notes', event.target.value)} className="w-full min-h-24 rounded-lg border border-slate-200 px-3 py-2 text-sm" />
+              </label>
+            </>
+          )}
+        </div>
+        <div className="px-6 py-4 border-t border-slate-100 flex justify-end gap-3">
+          <button type="button" onClick={onClose} className="h-10 px-5 rounded-lg bg-slate-100 text-slate-700 font-semibold text-sm">Cancel</button>
+          <button type="submit" className="h-10 px-5 rounded-lg bg-[#33373e] text-white font-semibold text-sm">Save {label}</button>
+        </div>
+      </form>
+    </div>
+  );
+}
+
 export default function HostelManagement({ currentUser, academicYear = '', scopedStudents = [], selectedCourse = null, selectedCourseCode = 'all' }) {
   const [rooms, setRooms] = useState([]);
   const [allocations, setAllocations] = useState([]);
@@ -34,6 +212,7 @@ export default function HostelManagement({ currentUser, academicYear = '', scope
   const [activeTab, setActiveTab] = useState('rooms');
   const [search, setSearch] = useState('');
   const [loadError, setLoadError] = useState('');
+  const [showEntryModal, setShowEntryModal] = useState(false);
 
   useEffect(() => {
     const loadHostel = async () => {
@@ -68,7 +247,7 @@ export default function HostelManagement({ currentUser, academicYear = '', scope
     return filterHostelItems(source, search);
   }, [activeTab, records, rooms, search, visibleAllocations]);
 
-  const createQuickRecord = async () => {
+  const saveHostelEntry = async (form) => {
     if (!canManage) {
       toast.error('You do not have permission to manage hostel records.');
       return;
@@ -78,15 +257,15 @@ export default function HostelManagement({ currentUser, academicYear = '', scope
     try {
       if (activeTab === 'rooms') {
         const payload = {
-          roomNo: `${100 + rooms.length + 1}`,
-          hostelName: 'Main Hostel',
-          blockName: 'A Block',
-          floor: '1',
-          capacity: 4,
-          occupiedCount: 0,
-          status: 'Available',
+          roomNo: form.roomNo.trim(),
+          hostelName: form.hostelName.trim(),
+          blockName: form.blockName.trim(),
+          floor: form.floor.trim(),
+          capacity: Number(form.capacity || 0),
+          occupiedCount: Number(form.occupiedCount || 0),
+          status: form.status || 'Available',
           academicYear,
-          wardenName: currentUser?.name || 'Hostel Office',
+          wardenName: form.wardenName.trim(),
           createdAtText,
         };
         const message = validateHostelRoom(payload);
@@ -95,21 +274,18 @@ export default function HostelManagement({ currentUser, academicYear = '', scope
         if (!id) throw new Error('Live hostel room was not created.');
         setRooms((prev) => [{ id, ...payload }, ...prev]);
       } else if (activeTab === 'allocations') {
-        const room = rooms.find((item) => (
-          item.status !== 'Archived' && Number(item.occupiedCount || 0) < Number(item.capacity || 0)
-        ));
+        const room = rooms.find((item) => item.id === form.roomId);
         if (!room) {
-          toast.error('No available hostel room found.');
+          toast.error('Select an available hostel room.');
           return;
         }
-        const allocatedKeys = new Set(
-          allocations
-            .filter((item) => item.status === 'Active')
-            .flatMap((item) => [item.studentRecordId, item.studentId].filter(Boolean))
-        );
-        const student = scopedStudents.find((item) => !allocatedKeys.has(item.id) && !allocatedKeys.has(item.studentId));
+        if (Number(room.occupiedCount || 0) >= Number(room.capacity || 0)) {
+          toast.error('Selected hostel room is already full.');
+          return;
+        }
+        const student = scopedStudents.find((item) => item.id === form.studentRecordId);
         if (!student) {
-          toast.error('No unallocated student found for the selected course.');
+          toast.error('Select a student to allocate.');
           return;
         }
         const payload = {
@@ -120,9 +296,9 @@ export default function HostelManagement({ currentUser, academicYear = '', scope
           courseCode: student.courseCode || (selectedCourseCode === 'all' ? '' : selectedCourseCode),
           roomNo: room.roomNo,
           hostelName: room.hostelName,
-          allocatedOn: new Date().toISOString().slice(0, 10),
+          allocatedOn: form.allocatedOn || '',
           academicYear,
-          status: 'Active',
+          status: form.status || 'Active',
           guardianPhone: student.phone || '',
           createdAtText,
         };
@@ -139,15 +315,15 @@ export default function HostelManagement({ currentUser, academicYear = '', scope
         setAllocations((prev) => [{ id, ...payload }, ...prev]);
         setRooms((prev) => prev.map((item) => item.id === room.id ? { ...item, ...roomUpdates } : item));
       } else {
-        const room = rooms[0];
+        const room = rooms.find((item) => item.id === form.roomId);
         const payload = {
-          recordType: 'Inspection',
-          title: `Hostel record ${records.length + 1}`,
-          hostelName: room?.hostelName || 'Main Hostel',
-          roomNo: room?.roomNo || '',
-          recordDate: new Date().toISOString().slice(0, 10),
-          status: 'Open',
-          notes: 'New hostel record.',
+          recordType: form.recordType.trim(),
+          title: form.title.trim(),
+          hostelName: (room?.hostelName || form.hostelName).trim(),
+          roomNo: (room?.roomNo || form.roomNo).trim(),
+          recordDate: form.recordDate || '',
+          status: form.status || 'Open',
+          notes: form.notes.trim(),
           academicYear,
           createdAtText,
         };
@@ -157,10 +333,11 @@ export default function HostelManagement({ currentUser, academicYear = '', scope
         if (!id) throw new Error('Live hostel record was not created.');
         setRecords((prev) => [{ id, ...payload }, ...prev]);
       }
-      toast.success('Hostel record created');
+      toast.success('Record created');
+      setShowEntryModal(false);
     } catch (error) {
       console.error('Unable to create live hostel record.', error);
-      toast.error('Hostel record was not saved to live data.');
+      toast.error('Record was not saved to live data.');
     }
   };
 
@@ -206,7 +383,7 @@ export default function HostelManagement({ currentUser, academicYear = '', scope
           {!isFirebaseConfigured && <p className="text-xs text-rose-600 mt-2">Live Firebase data is not configured.</p>}
           {loadError && <p className="text-xs text-rose-600 mt-2">{loadError}</p>}
         </div>
-        <button onClick={createQuickRecord} disabled={!canManage} className="h-10 px-5 rounded-full bg-[#fb9a5b] text-white font-semibold text-sm flex items-center gap-2 disabled:bg-slate-300">
+        <button onClick={() => setShowEntryModal(true)} disabled={!canManage} className="h-10 px-5 rounded-full bg-[#fb9a5b] text-white font-semibold text-sm flex items-center gap-2 disabled:bg-slate-300">
           <Plus size={16} /> New {tabs.find(([id]) => id === activeTab)?.[1].slice(0, -1)}
         </button>
       </div>
@@ -248,6 +425,17 @@ export default function HostelManagement({ currentUser, academicYear = '', scope
         </table>
         </div>
       </div>
+      {showEntryModal && (
+        <HostelEntryModal
+          activeTab={activeTab}
+          rooms={rooms}
+          allocations={allocations}
+          scopedStudents={scopedStudents}
+          academicYear={academicYear}
+          onClose={() => setShowEntryModal(false)}
+          onSave={saveHostelEntry}
+        />
+      )}
     </div>
   );
 }

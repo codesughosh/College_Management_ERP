@@ -44,7 +44,8 @@ export function buildReport(records, scope) {
 
 export function buildSubjectReport(records = []) {
   return records.reduce((acc, record) => {
-    const key = record.subjectName || record.subject || 'General Attendance';
+    const key = record.subjectName || record.subject;
+    if (!key) return acc;
     if (!acc[key]) acc[key] = [];
     acc[key].push(record);
     return acc;

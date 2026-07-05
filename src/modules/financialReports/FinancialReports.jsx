@@ -22,8 +22,6 @@ import FeeVisualGraph from '../fees/components/FeeVisualGraph';
 import { filterByCourse, filterStudentScopedRecords } from '../shared/courseFilters';
 import { getStudentClassKey } from '../fees/feeUtils';
 
-const defaultPaymentModes = ['Cash', 'Cheque', 'Bank Transfer', 'UPI Manual Entry', 'Card Swipe Offline'];
-
 function csvValue(value) {
   return `"${String(value ?? '').replace(/"/g, '""')}"`;
 }
@@ -242,10 +240,7 @@ export default function FinancialReports({ currentUser, academicYear = '', scope
     ...courseAssignments.map((item) => item.classKey),
     ...scopedStudents.map((student) => getStudentClassKey(student)),
   ].filter(Boolean))].sort(), [courseStructures, courseAssignments, scopedStudents]);
-  const paymentModes = useMemo(() => [...new Set([
-    ...defaultPaymentModes,
-    ...courseCollections.map((item) => item.paymentMode).filter(Boolean),
-  ])].sort(), [courseCollections]);
+  const paymentModes = useMemo(() => [...new Set(courseCollections.map((item) => item.paymentMode).filter(Boolean))].sort(), [courseCollections]);
   const collectionReport = useMemo(() => buildCollectionReport(courseCollections, filters), [courseCollections, filters]);
   const outstandingReport = useMemo(() => buildOutstandingReport(courseAssignments), [courseAssignments]);
   const classAnalytics = useMemo(() => buildClassAnalytics(courseAssignments, courseCollections, courseAdjustments), [courseAdjustments, courseAssignments, courseCollections]);

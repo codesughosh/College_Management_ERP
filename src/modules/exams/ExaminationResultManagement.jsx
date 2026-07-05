@@ -21,6 +21,97 @@ import MarksEntryModal from './components/MarksEntryModal';
 import ResultsPanel from './components/ResultsPanel';
 import { filterByCourse, filterStudentScopedRecords, filterStudentsByCourse } from '../shared/courseFilters';
 
+function AssessmentModal({ schedules, onClose, onSave }) {
+  const [form, setForm] = useState({
+    examScheduleId: '',
+    title: '',
+    maxMarks: '',
+    status: 'Active',
+  });
+  const update = (key, value) => setForm((prev) => ({ ...prev, [key]: value }));
+
+  const submit = (event) => {
+    event.preventDefault();
+    onSave(form);
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 bg-slate-950/50 backdrop-blur-sm flex items-center justify-center p-4">
+      <form onSubmit={submit} className="w-full max-w-xl bg-white rounded-xl shadow-2xl border border-slate-200">
+        <div className="px-6 py-5 border-b border-slate-100 flex items-center justify-between">
+          <div>
+            <h2 className="text-lg font-bold text-slate-900">Create Assessment</h2>
+            <p className="text-sm text-slate-500">Create an assessment from a live exam schedule.</p>
+          </div>
+          <button type="button" onClick={onClose} className="h-9 w-9 rounded-full hover:bg-slate-100 text-slate-500">x</button>
+        </div>
+        <div className="p-6 grid sm:grid-cols-2 gap-4">
+          <label className="sm:col-span-2">
+            <span className="block text-xs font-semibold text-slate-500 mb-1.5">Exam Schedule</span>
+            <select value={form.examScheduleId} onChange={(event) => update('examScheduleId', event.target.value)} className="w-full h-11 rounded-lg border border-slate-200 px-3 text-sm" autoFocus>
+              <option value="">Select schedule</option>
+              {schedules.map((schedule) => (
+                <option key={schedule.id} value={schedule.id}>{schedule.examName} - {schedule.subject}</option>
+              ))}
+            </select>
+          </label>
+          <label className="sm:col-span-2">
+            <span className="block text-xs font-semibold text-slate-500 mb-1.5">Assessment Title</span>
+            <input value={form.title} onChange={(event) => update('title', event.target.value)} className="w-full h-11 rounded-lg border border-slate-200 px-3 text-sm" />
+          </label>
+          <label>
+            <span className="block text-xs font-semibold text-slate-500 mb-1.5">Max Marks</span>
+            <input type="number" min="1" value={form.maxMarks} onChange={(event) => update('maxMarks', event.target.value)} className="w-full h-11 rounded-lg border border-slate-200 px-3 text-sm" />
+          </label>
+          <label>
+            <span className="block text-xs font-semibold text-slate-500 mb-1.5">Status</span>
+            <select value={form.status} onChange={(event) => update('status', event.target.value)} className="w-full h-11 rounded-lg border border-slate-200 px-3 text-sm">
+              {['Active', 'Draft', 'Archived'].map((item) => <option key={item}>{item}</option>)}
+            </select>
+          </label>
+        </div>
+        <div className="px-6 py-4 border-t border-slate-100 flex justify-end gap-3">
+          <button type="button" onClick={onClose} className="h-10 px-5 rounded-lg bg-slate-100 text-slate-700 font-semibold text-sm">Cancel</button>
+          <button type="submit" className="h-10 px-5 rounded-lg bg-[#33373e] text-white font-semibold text-sm">Save Assessment</button>
+        </div>
+      </form>
+    </div>
+  );
+}
+
+function ResultNameModal({ onClose, onSave }) {
+  const [resultName, setResultName] = useState('');
+
+  const submit = (event) => {
+    event.preventDefault();
+    onSave(resultName);
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 bg-slate-950/50 backdrop-blur-sm flex items-center justify-center p-4">
+      <form onSubmit={submit} className="w-full max-w-lg bg-white rounded-xl shadow-2xl border border-slate-200">
+        <div className="px-6 py-5 border-b border-slate-100 flex items-center justify-between">
+          <div>
+            <h2 className="text-lg font-bold text-slate-900">Generate Results</h2>
+            <p className="text-sm text-slate-500">Name this result set before saving it to live data.</p>
+          </div>
+          <button type="button" onClick={onClose} className="h-9 w-9 rounded-full hover:bg-slate-100 text-slate-500">x</button>
+        </div>
+        <div className="p-6">
+          <label>
+            <span className="block text-xs font-semibold text-slate-500 mb-1.5">Result Name</span>
+            <input value={resultName} onChange={(event) => setResultName(event.target.value)} className="w-full h-11 rounded-lg border border-slate-200 px-3 text-sm" autoFocus />
+          </label>
+        </div>
+        <div className="px-6 py-4 border-t border-slate-100 flex justify-end gap-3">
+          <button type="button" onClick={onClose} className="h-10 px-5 rounded-lg bg-slate-100 text-slate-700 font-semibold text-sm">Cancel</button>
+          <button type="submit" className="h-10 px-5 rounded-lg bg-[#33373e] text-white font-semibold text-sm">Generate</button>
+        </div>
+      </form>
+    </div>
+  );
+}
+
 export default function ExaminationResultManagement({ currentUser, academicYear = '', scopedStudents = [], selectedCourse = null, selectedCourseCode = 'all' }) {
   const [students, setStudents] = useState([]);
   const [staff, setStaff] = useState([]);
@@ -33,6 +124,8 @@ export default function ExaminationResultManagement({ currentUser, academicYear 
   const [loadError, setLoadError] = useState('');
   const [showScheduleModal, setShowScheduleModal] = useState(false);
   const [showMarksModal, setShowMarksModal] = useState(false);
+  const [showAssessmentModal, setShowAssessmentModal] = useState(false);
+  const [showResultModal, setShowResultModal] = useState(false);
   const [editingSchedule, setEditingSchedule] = useState(null);
   const [activeExamTask, setActiveExamTask] = useState('');
   const [activeExamBranch, setActiveExamBranch] = useState('');
@@ -73,6 +166,8 @@ export default function ExaminationResultManagement({ currentUser, academicYear 
       const flow = event.state?.examFlow;
       setShowScheduleModal(false);
       setShowMarksModal(false);
+      setShowAssessmentModal(false);
+      setShowResultModal(false);
       setEditingSchedule(null);
       if (!flow) {
         setActiveExamTask('');
@@ -257,22 +352,32 @@ export default function ExaminationResultManagement({ currentUser, academicYear 
     }
   };
 
-  const createAssessment = async () => {
+  const createAssessment = async (form) => {
     if (!canAssess) {
       toast.error('You do not have permission to manage assessments.');
       return;
     }
-    const base = courseSchedules[0];
+    const base = courseSchedules.find((schedule) => schedule.id === form.examScheduleId);
     if (!base) {
-      toast.error('Create an exam schedule first.');
+      toast.error('Select a live exam schedule first.');
+      return;
+    }
+    const maxMarks = Number(form.maxMarks || 0);
+    if (!form.title?.trim()) {
+      toast.error('Assessment title is required.');
+      return;
+    }
+    if (maxMarks < 1) {
+      toast.error('Max marks must be at least 1.');
       return;
     }
     const payload = {
-      title: `${base.subject} Internal Assessment`,
+      examScheduleId: base.id,
+      title: form.title.trim(),
       classKey: base.classKey,
       subject: base.subject,
-      maxMarks: 20,
-      status: 'Active',
+      maxMarks,
+      status: form.status || 'Active',
       academicYear,
       createdAtText: formatDisplayDate(),
     };
@@ -281,6 +386,7 @@ export default function ExaminationResultManagement({ currentUser, academicYear 
       if (!id) throw new Error('Live assessment was not created.');
       setAssessments((prev) => [{ id, ...payload }, ...prev]);
       toast.success('Assessment created');
+      setShowAssessmentModal(false);
     } catch (error) {
       console.error('Unable to create live assessment.', error);
       toast.error('Assessment was not saved to live data.');
@@ -334,9 +440,14 @@ export default function ExaminationResultManagement({ currentUser, academicYear 
     }
   };
 
-  const generateResults = async () => {
+  const generateResults = async (resultName) => {
     if (!canGenerateResults) {
       toast.error('You do not have permission to generate results.');
+      return;
+    }
+    const examName = resultName.trim();
+    if (!examName) {
+      toast.error('Result name is required.');
       return;
     }
     const generated = courseStudents.map((student) => {
@@ -347,18 +458,23 @@ export default function ExaminationResultManagement({ currentUser, academicYear 
         studentId: student.studentId,
         studentName: student.name,
         classKey: `${student.className} - ${student.section}`,
-        examName: 'Combined Result',
+        examName,
         academicYear,
         ...summary,
         status: calculateResultStatus(summary.percentage),
         generatedAtText: formatDisplayDate(),
       };
     }).filter((item) => item.totalMax > 0);
+    if (!generated.length) {
+      toast.error('No marks are available for generating results.');
+      return;
+    }
     try {
       const ids = await Promise.all(generated.map((item) => createStudentResult(item)));
       if (ids.some((id) => !id)) throw new Error('One or more live results were not created.');
       setResults((prev) => [...generated.map((item, index) => ({ id: ids[index], ...item })), ...prev]);
       toast.success('Results generated');
+      setShowResultModal(false);
     } catch (error) {
       console.error('Unable to generate live results.', error);
       toast.error('Results were not saved to live data.');
@@ -518,10 +634,10 @@ export default function ExaminationResultManagement({ currentUser, academicYear 
           <ResultsPanel marks={courseMarks} results={courseResults} reportCards={courseReportCards} />
           <div className="grid sm:grid-cols-2 gap-3 mt-5">
             {activeExamBranch === 'internal-assessment' && (
-              <button onClick={createAssessment} disabled={!canAssess} className="h-11 rounded-full bg-[#fb9a5b] text-white font-semibold text-sm disabled:bg-slate-300">Create Assessment</button>
+              <button onClick={() => setShowAssessmentModal(true)} disabled={!canAssess} className="h-11 rounded-full bg-[#fb9a5b] text-white font-semibold text-sm disabled:bg-slate-300">Create Assessment</button>
             )}
             {activeExamBranch === 'generate-results' && (
-              <button onClick={generateResults} disabled={!canGenerateResults} className="h-11 rounded-full bg-[#fb9a5b] text-white font-semibold text-sm disabled:bg-slate-300">Generate Results</button>
+              <button onClick={() => setShowResultModal(true)} disabled={!canGenerateResults} className="h-11 rounded-full bg-[#fb9a5b] text-white font-semibold text-sm disabled:bg-slate-300">Generate Results</button>
             )}
             {activeExamBranch === 'report-cards' && (
               <button onClick={generateReportCards} disabled={!canGenerateReportCards} className="h-11 rounded-full bg-[#fb9a5b] text-white font-semibold text-sm disabled:bg-slate-300">Generate Report Cards</button>
@@ -574,6 +690,8 @@ export default function ExaminationResultManagement({ currentUser, academicYear 
       {showScheduleModal && <ExamScheduleModal classOptions={classOptions} faculty={faculty} onClose={() => setShowScheduleModal(false)} onSave={saveSchedule} />}
       {editingSchedule && <ExamScheduleModal mode="edit" initialSchedule={editingSchedule} classOptions={classOptions} faculty={faculty} onClose={() => setEditingSchedule(null)} onSave={saveSchedule} />}
       {showMarksModal && <MarksEntryModal schedules={courseSchedules} students={courseStudents} onClose={() => setShowMarksModal(false)} onSave={saveMarks} />}
+      {showAssessmentModal && <AssessmentModal schedules={courseSchedules} onClose={() => setShowAssessmentModal(false)} onSave={createAssessment} />}
+      {showResultModal && <ResultNameModal onClose={() => setShowResultModal(false)} onSave={generateResults} />}
     </div>
   );
 }

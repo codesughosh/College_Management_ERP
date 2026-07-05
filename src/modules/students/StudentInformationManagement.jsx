@@ -1090,7 +1090,8 @@ function StudentDetailPage({
   ];
 
   const attendanceSubjectRows = Object.values(attendanceRecords.reduce((map, record) => {
-    const subject = record.subjectName || record.subject || 'General Attendance';
+    const subject = record.subjectName || record.subject;
+    if (!subject) return map;
     const row = map[subject] || { subject, total: 0, present: 0, absent: 0, leave: 0 };
     row.total += 1;
     if (record.status === 'Present') row.present += 1;

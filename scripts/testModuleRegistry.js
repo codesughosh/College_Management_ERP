@@ -22,11 +22,12 @@ assert.deepEqual(modulesWithoutPermission, []);
 const visibleSidebarIds = (roleId) => sortModulesByDisplayOrder(enabled
   .filter((module) => canAccess(defaultRoles, roleId, module.permission))
   .filter((module) => !module.footer)
-  .filter((module) => !module.hideFromSidebar || (module.id === 'parent-portal' && roleId === 'parent') || (module.id !== 'dashboard' && roleId === 'super-admin')))
+  .filter((module) => !module.hideFromSidebar || (module.id === 'dashboard' && ['admin', 'super-admin'].includes(roleId)) || (module.id === 'parent-portal' && roleId === 'parent') || (module.id !== 'dashboard' && roleId === 'super-admin')))
   .map((module) => module.id);
 
 const adminSidebarVisible = visibleSidebarIds('admin');
 assert.deepEqual(adminSidebarVisible, [
+  'dashboard',
   'students',
   'faculty-staff',
   'attendance',
@@ -38,6 +39,23 @@ assert.deepEqual(adminSidebarVisible, [
   'document-management',
   'fees',
   'reports',
+]);
+assert.deepEqual(visibleSidebarIds('super-admin'), [
+  'dashboard',
+  'students',
+  'faculty-staff',
+  'attendance',
+  'timetable',
+  'examination-results',
+  'communication',
+  'calendar',
+  'hostel-management',
+  'document-management',
+  'fees',
+  'reports',
+  'academics',
+  'user-roles',
+  'parent-portal',
 ]);
 
 const footerVisible = enabled.filter((module) => module.footer).map((module) => module.id);

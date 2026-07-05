@@ -15,6 +15,7 @@ import {
 } from 'lucide-react';
 
 export const moduleDisplayOrder = [
+  'dashboard',
   'students',
   'faculty-staff',
   'attendance',

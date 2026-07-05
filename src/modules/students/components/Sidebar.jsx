@@ -5,8 +5,9 @@ import { canAccess, defaultRoles } from '../../userRoles/rolePermissions';
 export default function Sidebar({ activePage, collapsed = false, currentUser, institute, onNavigate, onThemeToggle, onToggleCollapse, themeMode = 'dark' }) {
   const currentRoleId = currentUser?.roleId || 'admin';
   const isSuperAdmin = currentRoleId === 'super-admin';
+  const isAdmin = currentRoleId === 'admin';
   const canShowHiddenModule = (module) => {
-    if (module.id === 'dashboard') return false;
+    if (module.id === 'dashboard') return isAdmin || isSuperAdmin;
     if (module.id === 'parent-portal') return currentRoleId === 'parent';
     return isSuperAdmin;
   };

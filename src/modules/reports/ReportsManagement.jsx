@@ -324,9 +324,7 @@ export default function ReportsManagement({
     },
   ], [academicYear, admissions, attendanceRecords, currentRoleId, currentUser, documents, marksEntries, promotions, scopedStudents, selectedCourse, selectedCourseCode, studentResults]);
   const visibleCategories = categories.filter((category) => category.enabled);
-  const [activeCategoryId, setActiveCategoryId] = useState(initialCategoryId || visibleCategories[0]?.id || '');
-
-  const activeCategory = visibleCategories.find((category) => category.id === activeCategoryId) || visibleCategories[0];
+  const activeCategory = visibleCategories.find((category) => category.id === initialCategoryId) || visibleCategories[0];
 
   if (!visibleCategories.length) {
     return (
@@ -346,28 +344,9 @@ export default function ReportsManagement({
         </div>
       </div>
 
-      <div className="grid lg:grid-cols-[240px_1fr] gap-5 pt-5">
-        <aside className="space-y-2">
-          {visibleCategories.map((category) => (
-            <button
-              key={category.id}
-              onClick={() => setActiveCategoryId(category.id)}
-              className={`w-full min-h-20 rounded-lg border p-4 text-left flex gap-3 ${activeCategory?.id === category.id ? 'bg-[#33373e] text-white border-[#33373e]' : 'bg-white text-slate-700 border-slate-100'}`}
-            >
-              <span className={`h-10 w-10 rounded-lg flex items-center justify-center shrink-0 ${activeCategory?.id === category.id ? 'bg-white/15' : 'bg-[#f5f5f6]'}`}>
-                {category.icon}
-              </span>
-              <span className="min-w-0">
-                <span className="block text-sm font-bold">{category.label}</span>
-                <span className={`block text-xs mt-1 ${activeCategory?.id === category.id ? 'text-white/75' : 'text-slate-500'}`}>{category.description}</span>
-              </span>
-            </button>
-          ))}
-        </aside>
-        <section className="min-w-0">
-          {activeCategory?.content}
-        </section>
-      </div>
+      <section className="min-w-0 pt-5">
+        {activeCategory?.content}
+      </section>
     </div>
   );
 }

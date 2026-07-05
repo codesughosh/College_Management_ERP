@@ -17,6 +17,46 @@ import DocumentTable from './components/DocumentTable';
 import DocumentUploadModal from './components/DocumentUploadModal';
 import { filterStudentScopedRecords, filterStudentsByCourse } from '../shared/courseFilters';
 
+function normalizeIdentity(value) {
+  return String(value || '').trim().toLowerCase();
+}
+
+function collectUserIdentityTokens(user = {}) {
+  return new Set([
+    user.uid,
+    user.id,
+    user.email,
+    user.displayId,
+    user.employeeId,
+    user.staffId,
+    user.name,
+    user.displayName,
+  ].map(normalizeIdentity).filter(Boolean));
+}
+
+function documentMatchesCurrentStaff(document = {}, identityTokens = new Set()) {
+  if (!identityTokens.size) return false;
+  const uploadFields = [
+    document.uploadedByUid,
+    document.createdByUid,
+    document.uploadedById,
+    document.createdById,
+    document.userId,
+    document.staffId,
+    document.uploadedByEmail,
+    document.createdByEmail,
+    document.uploadedBy,
+    document.createdByName,
+  ].map(normalizeIdentity).filter(Boolean);
+  if (uploadFields.some((value) => identityTokens.has(value))) return true;
+
+  if (document.ownerType !== 'Staff') return false;
+  return [document.ownerRecordId, document.ownerId, document.ownerName, document.employeeId, document.email]
+    .map(normalizeIdentity)
+    .filter(Boolean)
+    .some((value) => identityTokens.has(value));
+}
+
 export default function DocumentManagement({ currentUser, academicYear = '2026-2027', ownerFilter = null, scopedStudents = [], selectedCourse = null, selectedCourseCode = 'all' }) {
   const [students, setStudents] = useState(isFirebaseConfigured ? [] : demoDocumentStudents);
   const [staff, setStaff] = useState(isFirebaseConfigured ? [] : demoDocumentStaff);
@@ -51,11 +91,14 @@ export default function DocumentManagement({ currentUser, academicYear = '2026-2
   const canUpload = canAccess(defaultRoles, currentRoleId, 'documents.upload');
   const canVerify = canAccess(defaultRoles, currentRoleId, 'documents.verify');
   const canArchive = canAccess(defaultRoles, currentRoleId, 'documents.archive');
+  const isRoleScopedDocumentView = currentRoleId === 'parent' || currentRoleId === 'faculty';
+  const hideOwnerFilter = currentRoleId === 'parent' || currentRoleId === 'faculty';
   const courseStudents = scopedStudents.length ? scopedStudents : filterStudentsByCourse(students, selectedCourseCode, selectedCourse);
   const ownerFilterKey = ownerFilter
     ? [ownerFilter.ownerType, ownerFilter.ownerRecordId, ownerFilter.ownerId].join('|')
     : '';
   const isOwnerFilterActive = Boolean(ownerFilterKey);
+  const canModerateDocuments = !isRoleScopedDocumentView && !isOwnerFilterActive;
   const courseDocuments = useMemo(
     () => filterStudentScopedRecords(documents, courseStudents, selectedCourseCode, selectedCourse),
     [courseStudents, documents, selectedCourse, selectedCourseCode]
@@ -69,8 +112,20 @@ export default function DocumentManagement({ currentUser, academicYear = '2026-2
       return ownerTypeMatches && (ownerRecordMatches || ownerIdMatches);
     });
   }, [documents, isOwnerFilterActive, ownerFilter]);
-  const activeFilters = useMemo(() => (isOwnerFilterActive ? {} : filters), [filters, isOwnerFilterActive]);
-  const sourceDocuments = isOwnerFilterActive ? ownerScopedDocuments : courseDocuments;
+  const currentStaffTokens = useMemo(() => collectUserIdentityTokens(currentUser), [currentUser]);
+  const staffScopedDocuments = useMemo(
+    () => documents.filter((item) => documentMatchesCurrentStaff(item, currentStaffTokens)),
+    [currentStaffTokens, documents]
+  );
+  const activeFilters = useMemo(
+    () => (isOwnerFilterActive ? {} : { ...filters, ownerType: hideOwnerFilter ? '' : filters.ownerType }),
+    [filters, hideOwnerFilter, isOwnerFilterActive]
+  );
+  const sourceDocuments = isOwnerFilterActive
+    ? ownerScopedDocuments
+    : currentRoleId === 'faculty'
+      ? staffScopedDocuments
+      : courseDocuments;
   const visibleDocuments = useMemo(() => filterDocuments(sourceDocuments, activeFilters), [activeFilters, sourceDocuments]);
   const normalizedDocuments = useMemo(() => visibleDocuments.map((item) => ({
     ...item,
@@ -108,6 +163,10 @@ export default function DocumentManagement({ currentUser, academicYear = '2026-2
       verificationStatus: 'Pending Review',
       uploadedAtText: formatDisplayDate(),
       verifiedAtText: '',
+      uploadedByUid: currentUser?.uid || '',
+      uploadedByEmail: currentUser?.email || '',
+      uploadedById: currentUser?.employeeId || currentUser?.displayId || currentUser?.id || '',
+      uploadedByName: currentUser?.name || currentUser?.displayName || '',
       ...fileData,
     };
   };
@@ -232,15 +291,17 @@ export default function DocumentManagement({ currentUser, academicYear = '2026-2
       <div className="flex flex-col xl:flex-row gap-5">
         <div className={`${selectedDocument ? 'xl:w-[68%]' : 'xl:w-full'} min-w-0 transition-all duration-300`}>
           {!isOwnerFilterActive && (
-            <div className="grid md:grid-cols-4 gap-3 mb-4">
+            <div className={`grid ${hideOwnerFilter ? 'md:grid-cols-3' : 'md:grid-cols-4'} gap-3 mb-4`}>
               <div className="relative">
                 <Search size={17} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
                 <input value={filters.search} onChange={(event) => updateFilter('search', event.target.value)} placeholder="Search..." className="w-full h-10 rounded-lg bg-[#f0f0f2] border-0 pl-10 pr-3 text-sm" />
               </div>
-              <select value={activeFilters.ownerType || ''} onChange={(event) => updateFilter('ownerType', event.target.value)} className="h-10 rounded-lg bg-[#f0f0f2] border-0 px-3 text-sm">
-                <option value="">All Owners</option>
-                {documentOwnerTypes.map((item) => <option key={item}>{item}</option>)}
-              </select>
+              {!hideOwnerFilter && (
+                <select value={activeFilters.ownerType || ''} onChange={(event) => updateFilter('ownerType', event.target.value)} className="h-10 rounded-lg bg-[#f0f0f2] border-0 px-3 text-sm">
+                  <option value="">All Owners</option>
+                  {documentOwnerTypes.map((item) => <option key={item}>{item}</option>)}
+                </select>
+              )}
               <select value={filters.category} onChange={(event) => updateFilter('category', event.target.value)} className="h-10 rounded-lg bg-[#f0f0f2] border-0 px-3 text-sm">
                 <option value="">All Categories</option>
                 {documentCategories.map((item) => <option key={item}>{item}</option>)}
@@ -253,23 +314,23 @@ export default function DocumentManagement({ currentUser, academicYear = '2026-2
           )}
           <DocumentTable
             documents={normalizedDocuments}
-            canVerify={!isOwnerFilterActive && canVerify}
-            canArchive={!isOwnerFilterActive && canArchive}
+            canVerify={canModerateDocuments && canVerify}
+            canArchive={canModerateDocuments && canArchive}
             onArchive={archiveDocument}
             onPreview={(document) => setSelectedId(document.id)}
             onVerify={updateVerification}
             onSelect={setSelectedId}
             selectedId={selectedDocumentId}
-            emptyMessage={isOwnerFilterActive ? '' : 'No documents found.'}
+            emptyMessage="No documents found."
             showActions={false}
           />
         </div>
         {selectedDocument && (
           <DocumentPreviewPanel
-            canArchive={!isOwnerFilterActive && canArchive}
-            canVerify={!isOwnerFilterActive && canVerify}
+            canArchive={canModerateDocuments && canArchive}
+            canVerify={canModerateDocuments && canVerify}
             document={selectedDocument}
-            showActions={!isOwnerFilterActive}
+            showActions={canModerateDocuments}
             onArchive={archiveDocument}
             onVerify={updateVerification}
           />

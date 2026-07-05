@@ -54,7 +54,6 @@ export default function AuthPage() {
 
       if (profileRoleId && profileRoleId !== 'pending' && !selectedRole.aliases.includes(profileRoleId)) {
         await logoutUser().catch(() => {});
-        toast.error(`This account is registered as ${profileRoleId}. Choose the correct login type.`);
         return;
       }
 

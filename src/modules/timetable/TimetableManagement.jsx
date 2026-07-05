@@ -51,6 +51,12 @@ export default function TimetableManagement({ currentUser, academicYear = '2026-
   const canCreate = canAccess(defaultRoles, currentRoleId, 'timetable.create');
   const canEdit = canAccess(defaultRoles, currentRoleId, 'timetable.edit');
   const canManageTimetable = canCreate || canEdit;
+  const statusOptions = canEdit
+    ? [
+        ['active', 'Active Timetable'],
+        ['archived', 'Archive'],
+      ]
+    : [['active', 'Active Timetable']];
 
   const faculty = staff.filter((member) => member.staffType === 'Faculty' && member.status !== 'Archived');
   const courseStudents = scopedStudents.length ? scopedStudents : filterStudentsByCourse(students, selectedCourseCode, selectedCourse);
@@ -208,10 +214,7 @@ export default function TimetableManagement({ currentUser, academicYear = '2026-
             <input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search subject, faculty, classroom..." className="w-full h-11 rounded-lg bg-[#f0f0f2] border-0 pl-10 pr-4 text-sm outline-none focus:ring-2 focus:ring-orange-100" />
           </div>
           <div className="flex items-center gap-2 mb-4">
-            {[
-              ['active', 'Active Timetable'],
-              ['archived', 'Archive'],
-            ].map(([value, label]) => (
+            {statusOptions.map(([value, label]) => (
               <button
                 key={value}
                 onClick={() => setStatusView(value)}

@@ -37,20 +37,30 @@ function formatInputDate(inputDate) {
   return formatDisplayDate(new Date(`${inputDate}T00:00:00`));
 }
 
-export default function AttendanceManagement({ currentUser, academicYear = '2026-2027', onOpenReports, scopedStudents = [], selectedCourse = null, selectedCourseCode = 'all' }) {
+export default function AttendanceManagement({
+  currentUser,
+  academicYear = '2026-2027',
+  initialBranch = '',
+  initialMode = 'students',
+  initialTask = '',
+  onOpenReports,
+  scopedStudents = [],
+  selectedCourse = null,
+  selectedCourseCode = 'all',
+}) {
   const [students, setStudents] = useState(isFirebaseConfigured ? [] : demoAttendanceStudents);
   const [staff, setStaff] = useState(isFirebaseConfigured ? [] : demoAttendanceStaff);
   const [studentAttendance, setStudentAttendance] = useState(isFirebaseConfigured ? [] : demoStudentAttendance);
   const [staffAttendance, setStaffAttendance] = useState(isFirebaseConfigured ? [] : demoStaffAttendance);
   const [academicSubjects, setAcademicSubjects] = useState(isFirebaseConfigured ? [] : demoAcademicSubjects);
-  const [mode, setMode] = useState('students');
+  const [mode, setMode] = useState(initialMode || 'students');
   const [selectedSubjectCode, setSelectedSubjectCode] = useState('');
   const [search, setSearch] = useState('');
   const [selectedDateInput, setSelectedDateInput] = useState(getTodayInputValue);
   const [loading, setLoading] = useState(isFirebaseConfigured);
   const [loadError, setLoadError] = useState('');
-  const [activeAttendanceTask, setActiveAttendanceTask] = useState('');
-  const [activeAttendanceBranch, setActiveAttendanceBranch] = useState('');
+  const [activeAttendanceTask, setActiveAttendanceTask] = useState(initialTask || '');
+  const [activeAttendanceBranch, setActiveAttendanceBranch] = useState(initialBranch || '');
   const [selectedEntityId, setSelectedEntityId] = useState('');
 
   useEffect(() => {
@@ -77,7 +87,12 @@ export default function AttendanceManagement({ currentUser, academicYear = '2026
     const currentState = window.history.state || {};
     window.history.replaceState({
       ...currentState,
-      attendanceFlow: currentState.attendanceFlow || { task: '', branch: '', mode: 'students', scope: 'daily' },
+      attendanceFlow: currentState.attendanceFlow || {
+        task: initialTask || '',
+        branch: initialBranch || '',
+        mode: initialMode || 'students',
+        scope: 'daily',
+      },
     }, '');
 
     const handleHistoryBack = (event) => {
@@ -97,7 +112,7 @@ export default function AttendanceManagement({ currentUser, academicYear = '2026
 
     window.addEventListener('popstate', handleHistoryBack);
     return () => window.removeEventListener('popstate', handleHistoryBack);
-  }, []);
+  }, [initialBranch, initialMode, initialTask]);
 
   const currentRoleId = currentUser?.roleId || 'admin';
   const canMarkStudents = canAccess(defaultRoles, currentRoleId, 'attendance.markStudents');

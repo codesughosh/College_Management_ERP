@@ -52,6 +52,9 @@ export default function StudentProfileCard({
     { id: 'profile', label: 'Profile', icon: <UserRound size={14} /> },
     { id: 'documents', label: 'Docs', value: `${student.documents?.length || 0}`, icon: <FileText size={14} /> },
   ];
+  const hasDocumentsSummaryTab = showSummaryTabs && resolvedSummaryTabs.some((tab) => (
+    tab.id === 'documents' || String(tab.label || '').toLowerCase() === 'docs'
+  ));
 
   return (
     <div className="bg-white border border-slate-100 rounded-lg p-5 mb-5 shadow-sm">
@@ -87,12 +90,14 @@ export default function StudentProfileCard({
               Approve Admission
             </button>
           )}
-          <button
-            onClick={() => onSummaryTabSelect ? onSummaryTabSelect('documents', student) : onOpenDocuments?.(student)}
-            className="h-9 px-4 rounded-full bg-[#f5f5f6] text-slate-700 border border-slate-200 font-semibold text-xs flex items-center justify-center gap-2"
-          >
-            <FileText size={14} /> Documents
-          </button>
+          {!hasDocumentsSummaryTab && (
+            <button
+              onClick={() => onSummaryTabSelect ? onSummaryTabSelect('documents', student) : onOpenDocuments?.(student)}
+              className="h-9 px-4 rounded-full bg-[#f5f5f6] text-slate-700 border border-slate-200 font-semibold text-xs flex items-center justify-center gap-2"
+            >
+              <FileText size={14} /> Documents
+            </button>
+          )}
           <StatusBadge value={student.status} />
         </div>
       </div>

@@ -80,8 +80,9 @@ assert.deepEqual(
     { id: 'mlt-lateral', courseCode: 'MLTLAT', courseName: 'II B Sc MLT' },
     { id: 'mlt-regular', courseCode: 'MLTREG', courseName: 'I B Sc MLT' },
     { id: 'atot-regular', courseCode: 'ATOTREG', courseName: 'I B Sc Anaesthesia and Operation Theater Technology' },
+    { id: 'legacy-entry', subject: 'Anatomy' },
   ], 'MLTLAT').map((entry) => entry.id),
-  ['mlt-lateral']
+  ['mlt-lateral', 'legacy-entry']
 );
 
 console.log('Timetable tests passed.');

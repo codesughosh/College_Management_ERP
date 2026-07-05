@@ -96,7 +96,7 @@ export function filterTimetableEntriesByCourse(entries = [], selectedCourseCode 
     const scopedCodes = new Set(courseCodes.filter(Boolean));
     return scopedCodes.size ? entries.filter((entry) => scopedCodes.has(entry.courseCode)) : entries;
   }
-  return entries.filter((entry) => entry.courseCode === selectedCourseCode);
+  return entries.filter((entry) => entry.courseCode === selectedCourseCode || (!entry.courseCode && !entry.courseName));
 }
 
 export function hasTimetableConflict(entries, candidate, ignoreId = '') {

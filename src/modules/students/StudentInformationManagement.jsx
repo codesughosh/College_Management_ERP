@@ -270,6 +270,11 @@ export default function StudentInformationManagement({ user, onLogout }) {
   const canOpenActiveModule = activePage === 'reports'
     ? canViewReportsModule
     : !activeModule?.permission || canAccess(defaultRoles, currentRoleId, activeModule.permission);
+  const activeSubmenuId = activePage === 'reports'
+    ? location.state?.reportCategory || ''
+    : activePage === 'attendance'
+      ? location.state?.attendanceSubmenu || ''
+      : '';
   const navigateToModule = useCallback((moduleId, options = {}) => {
     const nextModule = getModuleById(moduleId);
     setFocusedStudentContext(options.state?.studentContext || null);
@@ -781,6 +786,7 @@ export default function StudentInformationManagement({ user, onLogout }) {
         <div className="flex h-screen overflow-hidden">
           <Sidebar
             activePage={activePage}
+            activeSubmenuId={activeSubmenuId}
             collapsed={sidebarCollapsed}
             currentUser={user}
             institute={institute}
@@ -918,6 +924,7 @@ export default function StudentInformationManagement({ user, onLogout }) {
                 )
                 ) : activePage === 'reports' ? (
                   <ReportsManagement
+                    key={`reports-${location.state?.reportCategory || 'default'}`}
                     academicYear={academicYear}
                     admissions={courseScopedAdmissions}
                     attendanceRecords={courseScopedAttendanceRecords}
@@ -946,8 +953,12 @@ export default function StudentInformationManagement({ user, onLogout }) {
                   <CurriculumManagement currentUser={user} academicYear={academicYear} selectedCourse={selectedCourse} selectedCourseCode={effectiveSelectedCourseCode} />
                 ) : activePage === 'attendance' ? (
                   <AttendanceManagement
+                    key={`attendance-${location.state?.attendanceSubmenu || 'home'}`}
                     currentUser={user}
                     academicYear={academicYear}
+                    initialBranch={location.state?.attendanceBranch}
+                    initialMode={location.state?.attendanceMode}
+                    initialTask={location.state?.attendanceTask}
                     onOpenReports={(reportCategory) => navigateToModule('reports', { state: { reportCategory } })}
                     selectedCourse={selectedCourse}
                     selectedCourseCode={effectiveSelectedCourseCode}

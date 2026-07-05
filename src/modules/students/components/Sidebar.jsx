@@ -1,8 +1,10 @@
+import { useState } from 'react';
 import { ChevronLeft, ChevronRight, GraduationCap, Moon, Sun } from 'lucide-react';
 import { getEnabledModules, sortModulesByDisplayOrder } from '../../moduleRegistry';
 import { canAccess, defaultRoles } from '../../userRoles/rolePermissions';
 
-export default function Sidebar({ activePage, collapsed = false, currentUser, institute, onNavigate, onThemeToggle, onToggleCollapse, themeMode = 'dark' }) {
+export default function Sidebar({ activePage, activeSubmenuId = '', collapsed = false, currentUser, institute, onNavigate, onThemeToggle, onToggleCollapse, themeMode = 'dark' }) {
+  const [hoveredModuleId, setHoveredModuleId] = useState('');
   const currentRoleId = currentUser?.roleId || 'admin';
   const isSuperAdmin = currentRoleId === 'super-admin';
   const isAdmin = currentRoleId === 'admin';
@@ -42,20 +44,105 @@ export default function Sidebar({ activePage, collapsed = false, currentUser, in
     if (nextTheme !== themeMode) onThemeToggle?.();
   };
 
+  const submenuItemsByModule = {
+    attendance: [
+      {
+        id: 'student-attendance',
+        label: 'Student Attendance',
+        moduleId: 'attendance',
+        state: { attendanceSubmenu: 'student-attendance', attendanceTask: 'students', attendanceBranch: 'mark-students', attendanceMode: 'students' },
+        enabled: canAccess(defaultRoles, currentRoleId, 'attendance.view'),
+      },
+      {
+        id: 'staff-attendance',
+        label: 'Staff Attendance',
+        moduleId: 'attendance',
+        state: { attendanceSubmenu: 'staff-attendance', attendanceTask: 'staff', attendanceBranch: 'mark-staff', attendanceMode: 'staff' },
+        enabled: canAccess(defaultRoles, currentRoleId, 'attendance.markStaff') || canAccess(defaultRoles, currentRoleId, 'staff.attendance'),
+      },
+      {
+        id: 'attendance-reports',
+        label: 'Attendance Reports',
+        moduleId: 'reports',
+        state: { reportCategory: 'attendance', sourceModule: 'attendance' },
+        enabled: canAccess(defaultRoles, currentRoleId, 'reports.view') && canAccess(defaultRoles, currentRoleId, 'attendance.reports'),
+      },
+    ],
+    reports: [
+      {
+        id: 'students',
+        label: 'Student',
+        moduleId: 'reports',
+        state: { reportCategory: 'students' },
+        enabled: canAccess(defaultRoles, currentRoleId, 'students.view'),
+      },
+      {
+        id: 'attendance',
+        label: 'Attendance',
+        moduleId: 'reports',
+        state: { reportCategory: 'attendance' },
+        enabled: canAccess(defaultRoles, currentRoleId, 'attendance.reports'),
+      },
+      {
+        id: 'documents',
+        label: 'Documents',
+        moduleId: 'reports',
+        state: { reportCategory: 'documents' },
+        enabled: canAccess(defaultRoles, currentRoleId, 'documents.view') || canAccess(defaultRoles, currentRoleId, 'students.documents'),
+      },
+      {
+        id: 'exams',
+        label: 'Exams',
+        moduleId: 'reports',
+        state: { reportCategory: 'exams' },
+        enabled: canAccess(defaultRoles, currentRoleId, 'exams.view') || canAccess(defaultRoles, currentRoleId, 'exams.results'),
+      },
+      {
+        id: 'financial',
+        label: 'Financial',
+        moduleId: 'reports',
+        state: { reportCategory: 'financial' },
+        enabled: canAccess(defaultRoles, currentRoleId, 'financialReports.view'),
+      },
+    ],
+  };
+
   const renderNavButton = ({ id, label, icon, status }) => {
     const active = activePage === id;
+    const submenuItems = (submenuItemsByModule[id] || []).filter((item) => item.enabled);
+    const expanded = !collapsed && submenuItems.length && (active || hoveredModuleId === id);
     return (
-      <button
+      <div
         key={id}
-        onClick={() => onNavigate(id)}
-        className={`erp-sidebar-item ${active ? 'is-active' : ''}`}
-        title={collapsed ? label : undefined}
+        className="erp-sidebar-item-wrap"
+        onMouseEnter={() => setHoveredModuleId(id)}
+        onMouseLeave={() => setHoveredModuleId('')}
       >
-        <span className="erp-sidebar-item-icon">{icon}</span>
-        {!collapsed && <span className="erp-sidebar-item-label">{label}</span>}
-        {!collapsed && status === 'planned' && <span className="erp-sidebar-item-badge">Soon</span>}
-        {!collapsed && status === 'demo' && <span className="erp-sidebar-item-badge">Demo</span>}
-      </button>
+        <button
+          onClick={() => onNavigate(id)}
+          className={`erp-sidebar-item ${active ? 'is-active' : ''}`}
+          title={collapsed ? label : undefined}
+        >
+          <span className="erp-sidebar-item-icon">{icon}</span>
+          {!collapsed && <span className="erp-sidebar-item-label">{label}</span>}
+          {!collapsed && status === 'planned' && <span className="erp-sidebar-item-badge">Soon</span>}
+          {!collapsed && status === 'demo' && <span className="erp-sidebar-item-badge">Demo</span>}
+        </button>
+        {expanded && (
+          <div className="erp-sidebar-submenu">
+            {submenuItems.map((item) => (
+              <button
+                key={item.id}
+                type="button"
+                onClick={() => onNavigate(item.moduleId, { state: item.state })}
+                className={`erp-sidebar-subitem ${activeSubmenuId === item.id || activeSubmenuId === item.state.reportCategory ? 'is-active' : ''}`}
+              >
+                {item.label}
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
     );
   };
 

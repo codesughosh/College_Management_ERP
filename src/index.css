@@ -3496,7 +3496,7 @@ html{color-scheme:dark}::selection{background:rgba(0,255,136,.18);color:#eafff5}
   background:rgba(244,63,94,.10)!important;
 }
 
-@media(max-width:1023px) {
+@media(max-width:767px) {
   .erp-main-scroll {
     padding-bottom:14px!important;
   }

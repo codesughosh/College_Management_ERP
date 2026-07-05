@@ -232,7 +232,7 @@ export default function Sidebar({ activePage, activeSubmenuId = '', collapsed = 
 
   return (
     <>
-    <aside className={`erp-sidebar ${collapsed ? 'is-collapsed' : ''} bg-white border-r border-slate-200 shrink-0 hidden lg:flex flex-col transition-all duration-300`}>
+    <aside className={`erp-sidebar ${collapsed ? 'is-collapsed' : ''} bg-white border-r border-slate-200 shrink-0 hidden md:flex flex-col transition-all duration-300`}>
       <div className="erp-sidebar-sticky">
         <div className="erp-sidebar-brand-card">
           {collapsed ? (
@@ -298,12 +298,12 @@ export default function Sidebar({ activePage, activeSubmenuId = '', collapsed = 
     <button
       type="button"
       onClick={() => setMobileMenuOpen(true)}
-      className="erp-mobile-menu-button lg:hidden"
+      className="erp-mobile-menu-button md:hidden"
       aria-label="Open menu"
     >
       <Menu size={22} />
     </button>
-    <div className={`erp-mobile-drawer-shell lg:hidden ${mobileMenuOpen ? 'is-open' : ''}`} aria-hidden={!mobileMenuOpen}>
+    <div className={`erp-mobile-drawer-shell md:hidden ${mobileMenuOpen ? 'is-open' : ''}`} aria-hidden={!mobileMenuOpen}>
       <button
         type="button"
         className="erp-mobile-drawer-backdrop"

@@ -78,8 +78,8 @@ function AttendanceTable({
         <thead>
           <tr className="bg-[#e7e7e9] text-left text-slate-900">
             <th className="px-5 py-3 rounded-l-lg">{mode === 'students' ? 'Student' : 'Faculty / Staff'}</th>
-            <th className="px-5 py-3">Details</th>
             <th className={`px-5 py-3 ${showActions ? '' : 'rounded-r-lg'}`}>Status</th>
+            <th className="px-5 py-3">Details</th>
             {showActions && <th className="px-5 py-3 rounded-r-lg text-right">Action</th>}
           </tr>
         </thead>
@@ -98,6 +98,17 @@ function AttendanceTable({
                   <div className="text-xs text-slate-500">{entityId}</div>
                 </td>
                 <td className="px-5 py-4">
+                  <AttendanceStatusControl
+                    canMark={canMark}
+                    canNotify={canNotify}
+                    entity={entity}
+                    mode={mode}
+                    record={record}
+                    onMark={onMark}
+                    onNotify={onNotify}
+                  />
+                </td>
+                <td className={`px-5 py-4 ${showActions ? '' : 'rounded-r-lg'}`}>
                   {mode === 'students' ? (
                     <>
                       <div>{entity.className} - {entity.section}</div>
@@ -109,17 +120,6 @@ function AttendanceTable({
                       <div className="text-xs text-slate-500">{entity.designation}</div>
                     </>
                   )}
-                </td>
-                <td className={`px-5 py-4 ${showActions ? '' : 'rounded-r-lg'}`}>
-                  <AttendanceStatusControl
-                    canMark={canMark}
-                    canNotify={canNotify}
-                    entity={entity}
-                    mode={mode}
-                    record={record}
-                    onMark={onMark}
-                    onNotify={onNotify}
-                  />
                 </td>
                 {showActions && (
                 <td className="px-5 py-4 rounded-r-lg">

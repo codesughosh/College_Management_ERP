@@ -136,7 +136,7 @@ export default function StudentModal({
                 <UserRound size={34} />
               )}
             </div>
-            <label className="inline-flex h-10 px-4 rounded-lg bg-white border border-slate-200 text-sm font-semibold items-center justify-center gap-2 cursor-pointer w-fit">
+            <label className="erp-profile-photo-upload inline-flex h-10 px-4 rounded-lg bg-white border border-slate-200 text-sm font-semibold items-center justify-center gap-2 cursor-pointer w-fit">
               <Upload size={16} /> Profile Photo
               <input type="file" accept="image/*" className="sr-only" onChange={(event) => uploadProfilePhoto(event.target.files?.[0])} />
             </label>

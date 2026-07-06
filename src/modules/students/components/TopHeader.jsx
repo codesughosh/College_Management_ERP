@@ -92,7 +92,7 @@ export default function TopHeader({
         )}
         <div className="erp-header-user-text text-right leading-tight min-w-0">
           <div className="text-sm font-bold text-slate-900 whitespace-nowrap">{user?.name || 'Admin'}</div>
-          <span className="inline-flex bg-[#ff9f68] text-white text-[10px] px-3 py-1 rounded-md font-bold uppercase whitespace-nowrap leading-none">
+          <span className="erp-header-role-badge inline-flex bg-[#ff9f68] text-white text-[10px] px-3 py-1 rounded-md font-bold uppercase whitespace-nowrap leading-none">
             {roleLabel}
           </span>
         </div>

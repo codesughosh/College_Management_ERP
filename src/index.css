@@ -3844,3 +3844,149 @@ html{color-scheme:dark}::selection{background:rgba(0,255,136,.18);color:#eafff5}
     font-size:15px;
   }
 }
+
+/* Light-mode contrast authority: final pass for sidebar, header badges, and upload controls. */
+.erp-header-role-badge,
+.erp-shell.light-mode .erp-header-role-badge {
+  background:#033500!important;
+  border:1px solid #033500!important;
+  color:#ffffff!important;
+  -webkit-text-fill-color:#ffffff!important;
+  box-shadow:0 6px 14px rgba(3,53,0,.18)!important;
+}
+
+.erp-profile-photo-upload,
+.erp-shell.light-mode .erp-profile-photo-upload {
+  background:#033500!important;
+  border-color:#033500!important;
+  color:#ffffff!important;
+  -webkit-text-fill-color:#ffffff!important;
+  box-shadow:0 10px 22px rgba(3,53,0,.18)!important;
+}
+
+.erp-profile-photo-upload svg,
+.erp-shell.light-mode .erp-profile-photo-upload svg {
+  color:#ffffff!important;
+  stroke:#ffffff!important;
+}
+
+.erp-profile-photo-upload:hover {
+  background:#022800!important;
+  border-color:#022800!important;
+}
+
+.erp-shell.light-mode .erp-sidebar .erp-sidebar-menu-card > nav.erp-sidebar-nav > button.erp-sidebar-item {
+  min-height:58px!important;
+  height:58px!important;
+  padding:0 16px!important;
+  gap:12px!important;
+  align-items:center!important;
+  background:#ffffff!important;
+  border:1px solid #dbe3d8!important;
+  color:#4f4a64!important;
+  overflow:hidden!important;
+}
+
+.erp-shell.light-mode .erp-sidebar .erp-sidebar-menu-card > nav.erp-sidebar-nav > button.erp-sidebar-item:hover {
+  background:#f5faf3!important;
+  border-color:#b8d4b0!important;
+  color:#033500!important;
+}
+
+.erp-shell.light-mode .erp-sidebar .erp-sidebar-menu-card > nav.erp-sidebar-nav > button.erp-sidebar-item.is-active {
+  background:#e1f0de!important;
+  border-color:#8fbc86!important;
+  color:#033500!important;
+  box-shadow:inset 0 0 0 1px rgba(3,53,0,.10)!important;
+}
+
+.erp-shell .erp-sidebar-item-icon,
+.erp-shell.light-mode .erp-sidebar .erp-sidebar-menu-card > nav.erp-sidebar-nav > button.erp-sidebar-item > span.erp-sidebar-item-icon {
+  width:24px!important;
+  min-width:24px!important;
+  height:24px!important;
+  flex:0 0 24px!important;
+  display:inline-flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  color:currentColor!important;
+}
+
+.erp-shell .erp-sidebar-item-icon svg,
+.erp-shell.light-mode .erp-sidebar .erp-sidebar-menu-card > nav.erp-sidebar-nav > button.erp-sidebar-item > span.erp-sidebar-item-icon svg {
+  width:21px!important;
+  height:21px!important;
+  color:currentColor!important;
+  stroke:currentColor!important;
+}
+
+.erp-shell .erp-sidebar-item-label,
+.erp-shell.light-mode .erp-sidebar .erp-sidebar-menu-card > nav.erp-sidebar-nav > button.erp-sidebar-item > span.erp-sidebar-item-label {
+  min-width:0!important;
+  flex:1 1 auto!important;
+  overflow:hidden!important;
+  text-overflow:ellipsis!important;
+  white-space:nowrap!important;
+  color:currentColor!important;
+}
+
+.erp-shell.light-mode .erp-sidebar-subitem-icon svg,
+.erp-shell.light-mode .erp-mobile-drawer-item-icon svg,
+.erp-shell.light-mode .erp-mobile-drawer-subitem svg {
+  color:currentColor!important;
+  stroke:currentColor!important;
+}
+
+.erp-shell.light-mode .erp-sidebar.is-collapsed .erp-sidebar-menu-card > nav.erp-sidebar-nav > button.erp-sidebar-item {
+  width:58px!important;
+  min-width:58px!important;
+  padding:0!important;
+  justify-content:center!important;
+}
+
+.erp-shell.light-mode .erp-sidebar.is-collapsed .erp-sidebar-menu-card > nav.erp-sidebar-nav > button.erp-sidebar-item > span.erp-sidebar-item-icon {
+  margin:0!important;
+}
+
+.erp-shell.light-mode .erp-sidebar-theme-switch {
+  background:#ffffff!important;
+  border-color:#dbe3d8!important;
+}
+
+.erp-shell.light-mode .erp-sidebar-theme-switch button {
+  background:#ffffff!important;
+  border:1px solid #dbe3d8!important;
+  color:#4f4a64!important;
+}
+
+.erp-shell.light-mode .erp-sidebar-theme-switch button.is-active {
+  background:#033500!important;
+  border-color:#033500!important;
+  color:#ffffff!important;
+  -webkit-text-fill-color:#ffffff!important;
+  box-shadow:0 10px 22px rgba(3,53,0,.18)!important;
+}
+
+.erp-shell.light-mode .erp-sidebar-theme-switch button.is-active svg {
+  color:#ffffff!important;
+  stroke:#ffffff!important;
+}
+
+.erp-shell.light-mode .erp-sidebar-theme-switch button:not(.is-active):hover {
+  background:#f5faf3!important;
+  border-color:#b8d4b0!important;
+  color:#033500!important;
+}
+
+.erp-shell.light-mode .erp-profile-menu-wrap > button,
+.erp-shell.light-mode .erp-header .erp-profile-menu-wrap > button {
+  background:#ffffff!important;
+  border:1px solid #dbe3d8!important;
+  color:#033500!important;
+}
+
+.erp-shell.light-mode .erp-profile-menu-wrap > button svg,
+.erp-shell.light-mode .erp-header .erp-profile-menu-wrap > button svg {
+  color:#033500!important;
+  stroke:#033500!important;
+}

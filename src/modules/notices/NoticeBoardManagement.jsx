@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Plus, Search } from 'lucide-react';
+import { Megaphone, MessageCircle, Plus, Search, UserRound } from 'lucide-react';
 import toast from 'react-hot-toast';
 import {
   archiveNoticeItem,
@@ -22,13 +22,20 @@ import NoticeModal from './components/NoticeModal';
 import NoticePreviewPanel from './components/NoticePreviewPanel';
 import NoticeTable from './components/NoticeTable';
 
-export default function NoticeBoardManagement({ currentUser, academicYear = '', selectedCourse = null, selectedCourseCode = 'all' }) {
+export default function NoticeBoardManagement({
+  currentUser,
+  academicYear = '',
+  initialTask = 'notices',
+  selectedCourse = null,
+  selectedCourseCode = 'all',
+}) {
   const [notices, setNotices] = useState([]);
   const [selectedId, setSelectedId] = useState('');
   const [filters, setFilters] = useState({ search: '', type: '', audience: '', status: '' });
   const [loadError, setLoadError] = useState('');
   const [showModal, setShowModal] = useState(false);
   const [editingNotice, setEditingNotice] = useState(null);
+  const [activeCommunicationTask, setActiveCommunicationTask] = useState(initialTask || 'notices');
 
   useEffect(() => {
     const loadNotices = async () => {
@@ -64,8 +71,46 @@ export default function NoticeBoardManagement({ currentUser, academicYear = '', 
     [canManageNotices, courseNotices, currentRoleId],
   );
   const activeFilters = useMemo(() => (canManageNotices ? filters : { ...filters, status: '' }), [canManageNotices, filters]);
-  const visibleNotices = useMemo(() => filterNotices(roleScopedNotices, activeFilters), [roleScopedNotices, activeFilters]);
-  const selectedNotice = roleScopedNotices.find((item) => item.id === selectedId) || visibleNotices[0] || roleScopedNotices[0];
+  const taskScopedNotices = useMemo(() => {
+    if (activeCommunicationTask === 'alerts') {
+      return roleScopedNotices.filter((item) => item.type === 'SMS/WhatsApp Alert' || item.communicationFeature === 'alerts');
+    }
+    if (activeCommunicationTask === 'parents') {
+      return roleScopedNotices.filter((item) => item.audience === 'Parents' || item.type === 'Parent Communication' || item.communicationFeature === 'parents');
+    }
+    return roleScopedNotices;
+  }, [activeCommunicationTask, roleScopedNotices]);
+  const visibleNotices = useMemo(() => filterNotices(taskScopedNotices, activeFilters), [taskScopedNotices, activeFilters]);
+  const selectedNotice = taskScopedNotices.find((item) => item.id === selectedId) || visibleNotices[0] || taskScopedNotices[0];
+  const communicationTaskOptions = [
+    {
+      id: 'notices',
+      title: 'Notices & Announcements',
+      helper: 'Circulars, public notices, and event announcements.',
+      icon: <Megaphone size={22} />,
+      count: roleScopedNotices.length,
+    },
+    {
+      id: 'alerts',
+      title: 'SMS/WhatsApp Alerts',
+      helper: 'Short alerts for urgent updates and reminders.',
+      icon: <MessageCircle size={22} />,
+      count: roleScopedNotices.filter((item) => item.type === 'SMS/WhatsApp Alert' || item.communicationFeature === 'alerts').length,
+    },
+    {
+      id: 'parents',
+      title: 'Parent Communication',
+      helper: 'Parent-facing messages and guardian updates.',
+      icon: <UserRound size={22} />,
+      count: roleScopedNotices.filter((item) => item.audience === 'Parents' || item.type === 'Parent Communication' || item.communicationFeature === 'parents').length,
+    },
+  ];
+  const activeCommunicationOption = communicationTaskOptions.find((item) => item.id === activeCommunicationTask) || communicationTaskOptions[0];
+  const modalDefaults = activeCommunicationTask === 'alerts'
+    ? { type: 'SMS/WhatsApp Alert' }
+    : activeCommunicationTask === 'parents'
+      ? { type: 'Parent Communication', audience: 'Parents' }
+      : {};
 
   const buildPayload = (form) => ({
     ...form,
@@ -75,6 +120,8 @@ export default function NoticeBoardManagement({ currentUser, academicYear = '', 
     createdByName: currentUser?.name || 'Admin Office',
     courseCode: selectedCourseCode === 'all' ? '' : selectedCourseCode,
     courseName: selectedCourseCode === 'all' ? '' : selectedCourse?.courseName || selectedCourse?.name || '',
+    communicationFeature: activeCommunicationTask,
+    channel: activeCommunicationTask === 'alerts' ? 'SMS/WhatsApp' : 'Notice Board',
   });
 
   const saveNotice = async (form) => {
@@ -175,13 +222,39 @@ export default function NoticeBoardManagement({ currentUser, academicYear = '', 
         </div>
         {canCreate && (
           <button onClick={() => setShowModal(true)} className="h-10 px-5 rounded-full bg-[#fb9a5b] text-white font-semibold text-sm flex items-center gap-2">
-            <Plus size={16} /> Announcement
+            <Plus size={16} /> {activeCommunicationTask === 'alerts' ? 'Alert' : activeCommunicationTask === 'parents' ? 'Parent Message' : 'Announcement'}
           </button>
         )}
       </div>
 
+      <div className="grid md:grid-cols-3 gap-4 py-5">
+        {communicationTaskOptions.map((task) => (
+          <button
+            key={task.id}
+            type="button"
+            onClick={() => {
+              setActiveCommunicationTask(task.id);
+              setSelectedId('');
+            }}
+            className={`erp-communication-task min-h-32 rounded-lg border p-4 text-left flex flex-col justify-between ${activeCommunicationTask === task.id ? 'is-active border-emerald-300 bg-emerald-50' : 'border-slate-100 bg-white'}`}
+          >
+            <span className="flex items-start justify-between gap-3">
+              <span className="h-11 w-11 rounded-lg bg-[#f5f5f6] text-[#34363d] flex items-center justify-center">{task.icon}</span>
+              <span className="rounded-full bg-[#f5f5f6] px-3 py-1 text-xs font-bold text-slate-600">{task.count}</span>
+            </span>
+            <span>
+              <span className="block text-base font-bold text-slate-900">{task.title}</span>
+              <span className="block text-sm text-slate-500 mt-1">{task.helper}</span>
+            </span>
+          </button>
+        ))}
+      </div>
+
       <div className="flex flex-col xl:flex-row gap-5">
         <div className="xl:w-[68%] min-w-0">
+          <div className="mb-4">
+            <h2 className="text-lg font-bold text-slate-900">{activeCommunicationOption.title}</h2>
+          </div>
           <div className={`grid gap-3 mb-4 ${canManageNotices ? 'md:grid-cols-4' : 'md:grid-cols-3'}`}>
             <div className="relative md:col-span-1">
               <Search size={17} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
@@ -222,7 +295,7 @@ export default function NoticeBoardManagement({ currentUser, academicYear = '', 
         <NoticePreviewPanel canPublish={canEdit} notice={selectedNotice} showActions={canManageNotices} onPublish={publishNotice} />
       </div>
 
-      {showModal && <NoticeModal onClose={() => setShowModal(false)} onSave={saveNotice} />}
+      {showModal && <NoticeModal defaultValues={modalDefaults} onClose={() => setShowModal(false)} onSave={saveNotice} />}
       {editingNotice && <NoticeModal mode="edit" initialNotice={editingNotice} onClose={() => setEditingNotice(null)} onSave={saveNotice} />}
     </div>
   );

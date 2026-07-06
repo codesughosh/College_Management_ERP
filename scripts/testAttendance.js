@@ -4,6 +4,7 @@ import {
   buildReport,
   getMonthKey,
   getYearKey,
+  isAttendanceRecordEditable,
   relationMatchesEntity,
   summarizeAttendance,
 } from '../src/modules/attendance/attendanceUtils.js';
@@ -21,6 +22,8 @@ assert.equal(getMonthKey('18 Jun 2026'), 'Jun 2026');
 assert.equal(getYearKey('18 Jun 2026'), '2026');
 assert.equal(relationMatchesEntity(records[0], student), true);
 assert.equal(relationMatchesEntity(records[1], student), false);
+assert.equal(isAttendanceRecordEditable({ markedAtIso: '2026-07-06T10:00:00.000Z' }, new Date('2026-07-07T09:59:00.000Z')), true);
+assert.equal(isAttendanceRecordEditable({ markedAtIso: '2026-07-06T10:00:00.000Z' }, new Date('2026-07-07T10:01:00.000Z')), false);
 
 assert.deepEqual(summarizeAttendance(records), {
   total: 3,

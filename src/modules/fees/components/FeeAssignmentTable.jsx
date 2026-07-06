@@ -5,10 +5,14 @@ export default function FeeAssignmentTable({
   assignments,
   canCollect,
   onCollect,
+  onNotifyDue,
   onSelect,
   selectedId,
   showActions = true,
+  showDueNotify = false,
 }) {
+  const hasActionColumn = showActions || showDueNotify;
+
   return (
     <div className="overflow-hidden border border-slate-100 rounded-lg bg-white">
       <div className="overflow-x-auto">
@@ -22,7 +26,7 @@ export default function FeeAssignmentTable({
               <th className="text-right px-4 py-3 font-semibold">Due</th>
               <th className="text-left px-4 py-3 font-semibold">Status</th>
               <th className="text-left px-4 py-3 font-semibold">Aging</th>
-              {showActions && <th className="text-right px-4 py-3 font-semibold">Action</th>}
+              {hasActionColumn && <th className="text-right px-4 py-3 font-semibold">Action</th>}
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100">
@@ -42,18 +46,24 @@ export default function FeeAssignmentTable({
                 <td className="px-4 py-3 text-right text-rose-700">{formatCurrency(item.dueAmount)}</td>
                 <td className="px-4 py-3"><StatusBadge value={item.status} /></td>
                 <td className="px-4 py-3"><StatusBadge value={getDueBucket(item.dueDate, item.status)} /></td>
-                {showActions && (
+                {hasActionColumn && (
                 <td className="px-4 py-3 text-right">
-                  <button onClick={(event) => { event.stopPropagation(); onCollect(item.id); }} disabled={!canCollect || item.dueAmount <= 0} className="h-8 px-3 rounded-md bg-[#33373e] text-white text-xs font-semibold disabled:bg-slate-300">
-                    Collect
-                  </button>
+                  {showDueNotify ? (
+                    <button onClick={(event) => { event.stopPropagation(); onNotifyDue?.(item.id); }} disabled={Number(item.dueAmount || 0) <= 0} className="h-8 px-3 rounded-md bg-[#25d366] text-white text-xs font-semibold disabled:bg-slate-300">
+                      Notify
+                    </button>
+                  ) : (
+                    <button onClick={(event) => { event.stopPropagation(); onCollect(item.id); }} disabled={!canCollect || item.dueAmount <= 0} className="h-8 px-3 rounded-md bg-[#33373e] text-white text-xs font-semibold disabled:bg-slate-300">
+                      Collect
+                    </button>
+                  )}
                 </td>
                 )}
               </tr>
             ))}
             {!assignments.length && (
               <tr>
-                <td colSpan={showActions ? 8 : 7} className="px-4 py-10 text-center text-slate-500">No fee assignments found.</td>
+                <td colSpan={hasActionColumn ? 8 : 7} className="px-4 py-10 text-center text-slate-500">No fee assignments found.</td>
               </tr>
             )}
           </tbody>

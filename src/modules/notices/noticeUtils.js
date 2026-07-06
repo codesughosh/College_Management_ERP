@@ -1,6 +1,6 @@
 import { isAllCourses, recordMatchesCourse } from '../shared/courseFilters.js';
 
-export const noticeTypes = ['Digital Notice', 'Circular', 'Event Announcement'];
+export const noticeTypes = ['Digital Notice', 'Circular', 'Event Announcement', 'SMS/WhatsApp Alert', 'Parent Communication'];
 export const noticeAudiences = ['All', 'Students', 'Faculty', 'Parents', 'Administration'];
 export const noticePriorities = ['Normal', 'Important', 'Urgent'];
 

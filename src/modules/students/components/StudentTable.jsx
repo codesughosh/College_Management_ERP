@@ -44,11 +44,11 @@ export default function StudentTable({
             >
               <td className="px-5 py-4 rounded-l-lg">
                 <div className="flex items-center gap-3 text-left">
-                  <span className="h-10 w-10 rounded-full bg-[#30343c] text-emerald-300 flex items-center justify-center overflow-hidden">
+                  <span className="h-[68px] w-[68px] rounded-full bg-[#30343c] text-emerald-300 flex items-center justify-center overflow-hidden shrink-0">
                     {student.profilePhotoUrl ? (
                       <img src={student.profilePhotoUrl} alt="" className="h-full w-full object-cover" />
                     ) : (
-                      <UserRound size={20} />
+                      <UserRound size={34} />
                     )}
                   </span>
                   <span>

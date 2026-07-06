@@ -33,7 +33,15 @@ import FeeStructureModal from './components/FeeStructureModal';
 import FeeStructurePanel from './components/FeeStructurePanel';
 import { filterByCourse, filterStudentScopedRecords, filterStudentsByCourse } from '../shared/courseFilters';
 
-export default function FeesManagement({ currentUser, academicYear = '', scopedStudents = [], selectedCourse = null, selectedCourseCode = 'all' }) {
+export default function FeesManagement({
+  currentUser,
+  academicYear = '',
+  initialBranch = '',
+  initialTask = '',
+  scopedStudents = [],
+  selectedCourse = null,
+  selectedCourseCode = 'all',
+}) {
   const [students, setStudents] = useState([]);
   const [structures, setStructures] = useState([]);
   const [assignments, setAssignments] = useState([]);
@@ -46,8 +54,8 @@ export default function FeesManagement({ currentUser, academicYear = '', scopedS
   const [showCollectionModal, setShowCollectionModal] = useState(false);
   const [collectionAssignmentId, setCollectionAssignmentId] = useState('');
   const [showAdjustmentModal, setShowAdjustmentModal] = useState(false);
-  const [activeFeeTask, setActiveFeeTask] = useState('');
-  const [activeFeeBranch, setActiveFeeBranch] = useState('');
+  const [activeFeeTask, setActiveFeeTask] = useState(initialTask || '');
+  const [activeFeeBranch, setActiveFeeBranch] = useState(initialBranch || '');
   const [selectedAssignmentId, setSelectedAssignmentId] = useState('');
 
   useEffect(() => {
@@ -76,7 +84,7 @@ export default function FeesManagement({ currentUser, academicYear = '', scopedS
     const currentState = window.history.state || {};
     window.history.replaceState({
       ...currentState,
-      feeFlow: currentState.feeFlow || { task: '', branch: '' },
+      feeFlow: currentState.feeFlow || { task: initialTask || '', branch: initialBranch || '' },
     }, '');
 
     const handleHistoryBack = (event) => {
@@ -99,7 +107,7 @@ export default function FeesManagement({ currentUser, academicYear = '', scopedS
 
     window.addEventListener('popstate', handleHistoryBack);
     return () => window.removeEventListener('popstate', handleHistoryBack);
-  }, []);
+  }, [initialBranch, initialTask]);
 
   const currentRoleId = currentUser?.roleId || 'admin';
   const canSetup = canAccess(defaultRoles, currentRoleId, 'fees.setup');
@@ -221,7 +229,7 @@ export default function FeesManagement({ currentUser, academicYear = '', scopedS
     },
     {
       id: 'structures',
-      title: 'Payment Setup',
+      title: 'Payment Settings',
       description: 'Create, edit, and assign fee structures.',
       icon: <Settings size={22} />,
       meta: [`${courseStructures.length} active`, canSetup ? 'Setup enabled' : 'View only'],
@@ -255,7 +263,7 @@ export default function FeesManagement({ currentUser, academicYear = '', scopedS
       { id: 'adjustment-history', title: 'Adjustment History', description: 'Review recent waivers and corrections.', icon: <FileText size={20} /> },
     ],
     'due-tracking': [
-      { id: 'due-list', title: 'Due Fee Tracking', description: 'Click a due student to send a WhatsApp reminder to the parent.', icon: <MessageCircle size={20} /> },
+      { id: 'due-list', title: 'Due Fee Tracking', description: 'Review due students and notify parents on WhatsApp.', icon: <MessageCircle size={20} /> },
     ],
   };
 
@@ -547,15 +555,15 @@ export default function FeesManagement({ currentUser, academicYear = '', scopedS
       </>
       ) : !activeFeeBranch ? (
       <>
-      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3 my-5 rounded-lg bg-[#f5f5f6] p-4">
-        <div className="flex items-center gap-3">
-          <button onClick={goBackOneFeeStep} className="erp-back-button h-10 px-4 rounded-lg bg-white border border-slate-200 text-slate-700 font-semibold text-sm flex items-center gap-2">
-            <ArrowLeft size={15} /> Back
-          </button>
-          <div>
-            <div className="text-xs font-bold text-slate-500">Payment / <span className="text-[#fb8d49]">{activeTask?.title}</span></div>
-            <h2 className="text-lg font-bold text-slate-900 mt-1">Choose next step</h2>
-          </div>
+      <div className="erp-back-row my-5">
+        <button onClick={goBackOneFeeStep} className="erp-back-button h-10 px-4 rounded-lg bg-white border border-slate-200 text-slate-700 font-semibold text-sm flex items-center gap-2">
+          <ArrowLeft size={15} /> Back
+        </button>
+      </div>
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3 mb-5 rounded-lg bg-[#f5f5f6] p-4">
+        <div>
+          <div className="text-xs font-bold text-slate-500">Payment / <span className="text-[#fb8d49]">{activeTask?.title}</span></div>
+          <h2 className="text-lg font-bold text-slate-900 mt-1">Choose next step</h2>
         </div>
       </div>
       <div className="grid md:grid-cols-2 gap-4">
@@ -578,11 +586,13 @@ export default function FeesManagement({ currentUser, academicYear = '', scopedS
       </>
       ) : (
       <>
-      <div className="erp-branch-focus flex flex-col lg:flex-row lg:items-center justify-between gap-4 my-5 rounded-lg bg-[#f5f5f6] p-5 border border-slate-100">
+      <div className="erp-back-row my-5">
+        <button onClick={goBackOneFeeStep} className="erp-back-button h-10 px-4 rounded-lg bg-white border border-slate-200 text-slate-700 font-semibold text-sm flex items-center gap-2">
+          <ArrowLeft size={15} /> Back
+        </button>
+      </div>
+      <div className="erp-branch-focus flex flex-col lg:flex-row lg:items-center justify-between gap-4 mb-5 rounded-lg bg-[#f5f5f6] p-5 border border-slate-100">
         <div className="flex items-center gap-4 min-w-0">
-          <button onClick={goBackOneFeeStep} className="erp-back-button h-10 px-4 rounded-lg bg-white border border-slate-200 text-slate-700 font-semibold text-sm flex items-center gap-2 shrink-0">
-            <ArrowLeft size={15} /> Back
-          </button>
           <div className="erp-branch-icon h-16 w-16 rounded-lg bg-white text-[#fb8d49] flex items-center justify-center shrink-0">{activeBranch?.icon}</div>
           <div className="min-w-0">
             <h2 className="text-2xl font-extrabold text-slate-900">{activeBranch?.title}</h2>
@@ -654,9 +664,11 @@ export default function FeesManagement({ currentUser, academicYear = '', scopedS
             assignments={visibleAssignments}
             canCollect={canCollect}
             onCollect={collectForAssignment}
-            onSelect={activeFeeBranch === 'due-list' ? sendDueReminder : setSelectedAssignmentId}
+            onNotifyDue={sendDueReminder}
+            onSelect={setSelectedAssignmentId}
             selectedId={selectedAssignmentId}
-            showActions={false}
+            showActions={activeFeeBranch === 'due-list'}
+            showDueNotify={activeFeeBranch === 'due-list'}
           />
         </div>
         <aside className="xl:w-[32%] erp-sticky-inspector">

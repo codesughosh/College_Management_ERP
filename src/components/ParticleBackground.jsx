@@ -9,17 +9,11 @@ export default function ParticleBackground() {
     const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     let animationId;
     let particles = [];
-    const mouse = { x: null, y: null };
 
     const resize = () => {
       canvas.width = window.innerWidth;
       canvas.height = window.innerHeight;
     };
-    const handleMouse = (event) => {
-      mouse.x = event.clientX;
-      mouse.y = event.clientY;
-    };
-
     class Particle {
       constructor() {
         this.x = Math.random() * canvas.width;
@@ -34,16 +28,6 @@ export default function ParticleBackground() {
         this.y += this.vy;
         if (this.x < 0 || this.x > canvas.width) this.vx *= -1;
         if (this.y < 0 || this.y > canvas.height) this.vy *= -1;
-        if (mouse.x !== null) {
-          const dx = this.x - mouse.x;
-          const dy = this.y - mouse.y;
-          const distance = Math.sqrt(dx * dx + dy * dy);
-          if (distance > 0 && distance < 200) {
-            const force = ((200 - distance) / 200) * 0.02;
-            this.vx += (dx / distance) * force;
-            this.vy += (dy / distance) * force;
-          }
-        }
         this.vx *= 0.999;
         this.vy *= 0.999;
       }
@@ -78,15 +62,13 @@ export default function ParticleBackground() {
     };
 
     resize();
-    particles = Array.from({ length: Math.min(60, Math.floor(window.innerWidth / 25)) }, () => new Particle());
+    particles = Array.from({ length: Math.min(24, Math.floor(window.innerWidth / 60)) }, () => new Particle());
     window.addEventListener('resize', resize);
-    window.addEventListener('mousemove', handleMouse);
     draw();
 
     return () => {
       cancelAnimationFrame(animationId);
       window.removeEventListener('resize', resize);
-      window.removeEventListener('mousemove', handleMouse);
     };
   }, []);
 

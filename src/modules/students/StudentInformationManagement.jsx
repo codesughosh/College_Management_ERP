@@ -278,18 +278,26 @@ export default function StudentInformationManagement({ user, onLogout }) {
   const canOpenActiveModule = activePage === 'reports'
     ? canViewReportsModule
     : !activeModule?.permission || canAccess(defaultRoles, currentRoleId, activeModule.permission);
-  const activeSubmenuId = activePage === 'reports'
+  const activeSubmenuId = location.state?.moduleSubmenu || (activePage === 'reports'
     ? location.state?.reportCategory || ''
     : activePage === 'attendance'
       ? location.state?.attendanceSubmenu || ''
-      : '';
+      : '');
   const navigateToModule = useCallback((moduleId, options = {}) => {
     const nextModule = getModuleById(moduleId);
+    if (moduleId === 'students') {
+      if (options.state?.studentStatusFilter) {
+        setStatusFilter(options.state.studentStatusFilter);
+      }
+      if (options.state?.studentAction === 'new-admission' && canCreateAdmission) {
+        setShowModal(true);
+      }
+    }
     setFocusedStudentContext(options.state?.studentContext || null);
     setSelectedId('');
     setSearch('');
     navigate(nextModule?.path || '/dashboard', options);
-  }, [navigate]);
+  }, [canCreateAdmission, navigate]);
 
   useEffect(() => {
     localStorage.setItem('erpThemeMode', themeMode);
@@ -980,13 +988,38 @@ export default function StudentInformationManagement({ user, onLogout }) {
                 ) : activePage === 'timetable' ? (
                   <TimetableManagement currentUser={user} academicYear={academicYear} selectedCourse={selectedCourse} selectedCourseCode={effectiveSelectedCourseCode} scopedStudents={courseStudents} />
                 ) : activePage === 'examination-results' ? (
-                  <ExaminationResultManagement currentUser={user} academicYear={academicYear} selectedCourse={selectedCourse} selectedCourseCode={effectiveSelectedCourseCode} scopedStudents={moduleScopedStudents} />
+                  <ExaminationResultManagement
+                    key={`exams-${location.state?.moduleSubmenu || 'home'}-${location.state?.examTask || ''}-${location.state?.examBranch || ''}`}
+                    currentUser={user}
+                    academicYear={academicYear}
+                    initialBranch={location.state?.examBranch}
+                    initialTask={location.state?.examTask}
+                    selectedCourse={selectedCourse}
+                    selectedCourseCode={effectiveSelectedCourseCode}
+                    scopedStudents={moduleScopedStudents}
+                  />
                 ) : activePage === 'fees' ? (
-                  <FeesManagement currentUser={user} academicYear={academicYear} selectedCourse={selectedCourse} selectedCourseCode={effectiveSelectedCourseCode} scopedStudents={moduleScopedStudents} />
+                  <FeesManagement
+                    key={`fees-${location.state?.moduleSubmenu || 'home'}-${location.state?.feeTask || ''}-${location.state?.feeBranch || ''}`}
+                    currentUser={user}
+                    academicYear={academicYear}
+                    initialBranch={location.state?.feeBranch}
+                    initialTask={location.state?.feeTask}
+                    selectedCourse={selectedCourse}
+                    selectedCourseCode={effectiveSelectedCourseCode}
+                    scopedStudents={moduleScopedStudents}
+                  />
                 ) : activePage === 'hostel-management' ? (
                   <HostelManagement currentUser={user} academicYear={academicYear} selectedCourse={selectedCourse} selectedCourseCode={effectiveSelectedCourseCode} scopedStudents={moduleScopedStudents} />
                 ) : activePage === 'communication' ? (
-                  <NoticeBoardManagement currentUser={user} academicYear={academicYear} selectedCourse={selectedCourse} selectedCourseCode={effectiveSelectedCourseCode} />
+                  <NoticeBoardManagement
+                    key={`communication-${location.state?.moduleSubmenu || 'home'}-${location.state?.communicationTask || ''}`}
+                    currentUser={user}
+                    academicYear={academicYear}
+                    initialTask={location.state?.communicationTask}
+                    selectedCourse={selectedCourse}
+                    selectedCourseCode={effectiveSelectedCourseCode}
+                  />
                 ) : activePage === 'document-management' ? (
                   <DocumentManagement
                     currentUser={user}

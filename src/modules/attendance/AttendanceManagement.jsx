@@ -1,8 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
-import { ArrowLeft, ArrowRight, Bell, CalendarDays, CheckCircle, Search, UserCheck, Users, XCircle } from 'lucide-react';
+import { ArrowLeft, ArrowRight, CalendarDays, CheckCircle, Search, UserCheck, Users, XCircle } from 'lucide-react';
 import toast from 'react-hot-toast';
 import {
-  createAttendanceNotification,
   createStudentAttendanceRecord,
   createStaffAttendanceRecord,
   getAttendanceManagementData,
@@ -14,6 +13,7 @@ import { canAccess, defaultRoles } from '../userRoles/rolePermissions';
 import {
   buildAttendanceKey,
   formatDisplayDate,
+  isAttendanceRecordEditable,
   summarizeAttendance,
 } from './attendanceUtils';
 import AttendanceTable from './components/AttendanceTable';
@@ -115,7 +115,6 @@ export default function AttendanceManagement({
   const currentRoleId = currentUser?.roleId || 'admin';
   const canMarkStudents = canAccess(defaultRoles, currentRoleId, 'attendance.markStudents');
   const canMarkStaff = canAccess(defaultRoles, currentRoleId, 'attendance.markStaff');
-  const canNotifyParents = canAccess(defaultRoles, currentRoleId, 'attendance.notifyParents');
 
   const courseStudents = scopedStudents.length ? scopedStudents : filterStudentsByCourse(students, selectedCourseCode, selectedCourse);
   const subjectOptions = useMemo(() => {
@@ -152,12 +151,6 @@ export default function AttendanceManagement({
     { label: 'Absent', value: summary.absent, icon: <XCircle size={22} /> },
     { label: 'Attendance %', value: `${summary.percentage}%`, icon: <CalendarDays size={22} /> },
   ];
-  const selectedEntity = selectedEntityId ? activeEntities.find((entity) => entity.id === selectedEntityId) || null : null;
-  const selectedEntityKey = selectedEntity?.studentId || selectedEntity?.employeeId || '';
-  const selectedRecord = selectedEntityKey
-    ? activeRecords.find((record) => record.entityId === selectedEntityKey && record.dateText === selectedDate)
-    : null;
-
   const openAttendanceTask = (taskId, nextMode = mode) => {
     setActiveAttendanceTask(taskId);
     setActiveAttendanceBranch('');
@@ -211,7 +204,6 @@ export default function AttendanceManagement({
   const attendanceBranchOptions = {
     students: [
       { id: 'mark-students', title: 'Mark Student Attendance', description: 'Select a student, then mark present or absent.', icon: <CheckCircle size={20} />, nextMode: 'students' },
-      { id: 'absent-followup', title: 'Absent Follow-up', description: 'Select an absent student, then notify parent.', icon: <Bell size={20} />, nextMode: 'students' },
     ],
     staff: [
       { id: 'mark-staff', title: 'Mark Staff Attendance', description: 'Select a staff member, then mark attendance.', icon: <UserCheck size={20} />, nextMode: 'staff' },
@@ -235,10 +227,14 @@ export default function AttendanceManagement({
         toast.success(`${entity.name} is already marked ${status.toLowerCase()}`);
         return;
       }
+      if (!isAttendanceRecordEditable(exists)) {
+        toast.error('Attendance can only be edited within 24 hours of marking.');
+        return;
+      }
       const updates = {
         status,
-        markedAtText: formatDisplayDate(),
-        parentNotified: status === 'Absent' ? Boolean(exists.parentNotified) : false,
+        editedAtText: formatDisplayDate(),
+        editedAtIso: new Date().toISOString(),
       };
       try {
         if (mode === 'students') {
@@ -272,6 +268,7 @@ export default function AttendanceManagement({
       dateText: selectedDate,
       status,
       markedAtText: formatDisplayDate(),
+      markedAtIso: new Date().toISOString(),
       parentNotified: false,
     };
 
@@ -287,36 +284,6 @@ export default function AttendanceManagement({
     } catch (error) {
       console.error('Unable to create live attendance record.', error);
       toast.error('Attendance was not saved to live data.');
-    }
-  };
-
-  const notifyParent = async (student, attendanceRecord) => {
-    if (!canNotifyParents) {
-      toast.error('You do not have permission to notify parents.');
-      return;
-    }
-
-    const notification = {
-      studentRecordId: student.id,
-      studentId: student.studentId,
-      studentName: student.name,
-      channel: 'Parent Portal',
-      academicYear,
-      reason: `Absent on ${attendanceRecord.dateText}`,
-      status: 'Queued',
-      attendanceRecordId: attendanceRecord.id,
-      createdAtText: formatDisplayDate(),
-    };
-    const attendanceUpdate = { parentNotified: true, parentNotifiedAtText: formatDisplayDate() };
-
-    try {
-      await createAttendanceNotification(notification);
-      await updateStudentAttendanceRecord(attendanceRecord.id, attendanceUpdate);
-      setStudentAttendance((prev) => prev.map((record) => record.id === attendanceRecord.id ? { ...record, ...attendanceUpdate } : record));
-      toast.success('Parent notification queued');
-    } catch (error) {
-      console.error('Unable to queue live parent notification.', error);
-      toast.error('Parent notification was not saved to live data.');
     }
   };
 
@@ -387,15 +354,15 @@ export default function AttendanceManagement({
       </>
       ) : !activeAttendanceBranch ? (
       <>
-      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3 my-5 rounded-lg bg-[#f5f5f6] p-4">
-        <div className="flex items-center gap-3">
-          <button onClick={goBackOneAttendanceStep} className="erp-back-button h-10 px-4 rounded-lg bg-white border border-slate-200 text-slate-700 font-semibold text-sm flex items-center gap-2">
-            <ArrowLeft size={15} /> Back
-          </button>
-          <div>
-            <div className="text-xs font-bold text-slate-500">Attendance / <span className="text-[#fb8d49]">{activeTask?.title}</span></div>
-            <h2 className="text-lg font-bold text-slate-900 mt-1">Choose next step</h2>
-          </div>
+      <div className="erp-back-row my-5">
+        <button onClick={goBackOneAttendanceStep} className="erp-back-button h-10 px-4 rounded-lg bg-white border border-slate-200 text-slate-700 font-semibold text-sm flex items-center gap-2">
+          <ArrowLeft size={15} /> Back
+        </button>
+      </div>
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3 mb-5 rounded-lg bg-[#f5f5f6] p-4">
+        <div>
+          <div className="text-xs font-bold text-slate-500">Attendance / <span className="text-[#fb8d49]">{activeTask?.title}</span></div>
+          <h2 className="text-lg font-bold text-slate-900 mt-1">Choose next step</h2>
         </div>
       </div>
       <div className="grid md:grid-cols-2 xl:grid-cols-3 gap-4">
@@ -417,11 +384,13 @@ export default function AttendanceManagement({
       </>
       ) : (
       <>
-      <div className="erp-branch-focus flex flex-col lg:flex-row lg:items-center justify-between gap-4 my-5 rounded-lg bg-[#f5f5f6] p-5 border border-slate-100">
+      <div className="erp-back-row my-5">
+        <button onClick={goBackOneAttendanceStep} className="erp-back-button h-10 px-4 rounded-lg bg-white border border-slate-200 text-slate-700 font-semibold text-sm flex items-center gap-2">
+          <ArrowLeft size={15} /> Back
+        </button>
+      </div>
+      <div className="erp-branch-focus flex flex-col lg:flex-row lg:items-center justify-between gap-4 mb-5 rounded-lg bg-[#f5f5f6] p-5 border border-slate-100">
         <div className="flex items-center gap-4 min-w-0">
-          <button onClick={goBackOneAttendanceStep} className="erp-back-button h-10 px-4 rounded-lg bg-white border border-slate-200 text-slate-700 font-semibold text-sm flex items-center gap-2 shrink-0">
-            <ArrowLeft size={15} /> Back
-          </button>
           <div className="erp-branch-icon h-16 w-16 rounded-lg bg-white text-[#fb8d49] flex items-center justify-center shrink-0">{activeBranch?.icon}</div>
           <div className="min-w-0">
             <h2 className="text-2xl font-extrabold text-slate-900">{activeBranch?.title}</h2>
@@ -429,8 +398,8 @@ export default function AttendanceManagement({
         </div>
       </div>
 
-      <div className="flex flex-col xl:flex-row gap-5">
-        <div className="xl:w-[68%] min-w-0">
+      <div>
+        <div className="min-w-0">
           {!canMarkStudents && mode === 'students' && (
             <div className="mb-4 rounded-lg bg-amber-50 border border-amber-200 text-amber-700 px-4 py-3 text-sm">
               You can view student attendance but cannot mark it.
@@ -454,50 +423,17 @@ export default function AttendanceManagement({
 
           <AttendanceTable
             canMark={mode === 'students' ? canMarkStudents : canMarkStaff}
-            canNotify={canNotifyParents}
             entities={activeEntities}
+            isRecordEditable={isAttendanceRecordEditable}
             mode={mode}
             records={activeRecords}
             selectedDate={selectedDate}
             onMark={markAttendance}
-            onNotify={notifyParent}
             onSelect={setSelectedEntityId}
             selectedId={selectedEntityId}
             showActions={false}
           />
         </div>
-
-        <aside className="xl:w-[32%] erp-sticky-inspector">
-          {selectedEntity ? (
-            <div className="erp-selected-detail bg-white border border-slate-100 rounded-lg p-5 shadow-sm">
-              <h3 className="font-bold text-slate-900">{selectedEntity.name}</h3>
-              <p className="text-xs text-slate-500 mt-1">{selectedEntityKey} | {mode === 'students' ? `${selectedEntity.className} - ${selectedEntity.section}` : selectedEntity.department}</p>
-              <div className="rounded-lg bg-[#f5f5f6] p-3 mt-5 text-sm flex items-center justify-between">
-                <span>Selected Date</span>
-                <b>{selectedDate}</b>
-              </div>
-              <div className="rounded-lg bg-[#f5f5f6] p-3 mt-3 text-sm flex items-center justify-between">
-                <span>Status</span>
-                <span className="font-bold">{selectedRecord?.status || 'Not Marked'}</span>
-              </div>
-              {mode === 'students' && selectedRecord?.status === 'Absent' && (
-                <button
-                  disabled={!canNotifyParents || selectedRecord.parentNotified}
-                  onClick={() => notifyParent(selectedEntity, selectedRecord)}
-                  className="mt-3 w-full h-10 rounded-full bg-[#fb9a5b] text-white font-semibold text-sm disabled:bg-slate-300"
-                >
-                  Notify Parent
-                </button>
-              )}
-            </div>
-          ) : (
-            <div className="bg-white border border-slate-100 rounded-lg p-6 shadow-sm text-sm text-slate-600 min-h-72 flex flex-col items-center justify-center text-center">
-              <div className="h-14 w-14 rounded-lg bg-[#f5f5f6] text-[#fb8d49] flex items-center justify-center mb-4">{activeBranch?.icon}</div>
-              <h3 className="font-bold text-slate-900 mb-2">Attendance Details</h3>
-              <p>{activeEntities.length ? 'Click a row to view attendance actions for the selected person.' : 'No matching roster records found.'}</p>
-            </div>
-          )}
-        </aside>
       </div>
       </>
       )}

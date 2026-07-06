@@ -1,13 +1,13 @@
 import { useState } from 'react';
 import { noticeAudiences, noticePriorities, noticeTypes } from '../noticeUtils';
 
-export default function NoticeModal({ initialNotice = null, mode = 'create', onClose, onSave }) {
+export default function NoticeModal({ defaultValues = {}, initialNotice = null, mode = 'create', onClose, onSave }) {
   const isEdit = mode === 'edit';
   const [form, setForm] = useState({
-    type: initialNotice?.type || 'Digital Notice',
+    type: initialNotice?.type || defaultValues.type || 'Digital Notice',
     title: initialNotice?.title || '',
     referenceNo: initialNotice?.referenceNo || '',
-    audience: initialNotice?.audience || 'All',
+    audience: initialNotice?.audience || defaultValues.audience || 'All',
     priority: initialNotice?.priority || 'Normal',
     body: initialNotice?.body || '',
     publishDate: initialNotice?.publishDate || new Date().toISOString().slice(0, 10),

@@ -22,6 +22,7 @@ export default function TopHeader({
   const userDisplayId = user?.displayId || user?.adminId || user?.employeeId || user?.uid?.slice(0, 8) || '-';
   const instituteId = user?.selectedCollege?.code || institute?.instituteId || institute?.code || '-';
   const collegeName = institute?.name || user?.selectedCollege?.name || 'College Management';
+  const roleLabel = (currentRole?.name || 'Admin').toUpperCase();
   const selectedCourseValue = isParent && !courses.some((course) => course.courseCode === courseCode)
     ? courses[0]?.courseCode || ''
     : courseCode;
@@ -44,7 +45,6 @@ export default function TopHeader({
   return (
     <header className="erp-header min-h-[72px] bg-white border-b border-slate-200 px-4 lg:px-8 py-3 shrink-0">
       <div className="erp-header-grid">
-        <div className="erp-header-spacer" />
         <div className="erp-header-college-title" title={collegeName}>{collegeName}</div>
         <div className="erp-header-actions">
         <div className="erp-header-filters">
@@ -83,17 +83,17 @@ export default function TopHeader({
         {isSuperAdmin && (
           <>
             <div className="hidden sm:block h-9 w-px bg-slate-200" />
-            <div className="hidden sm:block text-xs text-slate-700 leading-5">
+            <div className="hidden xl:block text-xs text-slate-700 leading-5 whitespace-nowrap">
               <div>User ID : {userDisplayId}</div>
               <div>Institute ID : {instituteId}</div>
             </div>
-            <div className="hidden sm:block h-9 w-px bg-slate-200" />
+            <div className="hidden xl:block h-9 w-px bg-slate-200" />
           </>
         )}
-        <div className="text-right leading-tight">
-          <div className="text-sm font-bold text-slate-900">{user?.name || 'Admin'}</div>
-          <span className="inline-flex bg-[#ff9f68] text-white text-[9px] px-2 py-0.5 rounded-sm font-bold uppercase">
-            {currentRole?.name || 'Admin'}
+        <div className="erp-header-user-text text-right leading-tight min-w-0">
+          <div className="text-sm font-bold text-slate-900 whitespace-nowrap">{user?.name || 'Admin'}</div>
+          <span className="inline-flex bg-[#ff9f68] text-white text-[10px] px-3 py-1 rounded-md font-bold uppercase whitespace-nowrap leading-none">
+            {roleLabel}
           </span>
         </div>
         <div ref={profileMenuRef} className="erp-profile-menu-wrap relative">

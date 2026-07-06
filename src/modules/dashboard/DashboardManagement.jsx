@@ -221,6 +221,7 @@ export default function DashboardManagement({ academicYear = '', currentUser, on
       label: `${courseFeeSummary.dueStudents} students have pending dues`,
       helper: 'Open payment due list',
       page: 'fees',
+      state: { moduleSubmenu: 'due-fee-tracking', feeTask: 'due-tracking', feeBranch: 'due-list' },
     },
   ].filter(Boolean);
 
@@ -293,7 +294,7 @@ export default function DashboardManagement({ academicYear = '', currentUser, on
           </div>
           <div className="space-y-3">
             {pendingWork.map((item) => (
-              <button key={item.label} onClick={() => onNavigate?.(item.page)} className="w-full rounded-lg bg-[#f5f5f6] p-4 text-left">
+              <button key={item.label} onClick={() => onNavigate?.(item.page, item.state ? { state: item.state } : undefined)} className="w-full rounded-lg bg-[#f5f5f6] p-4 text-left">
                 <span className="block font-bold text-sm text-slate-900">{item.label}</span>
                 <span className="block text-xs text-slate-500 mt-1">{item.helper}</span>
               </button>

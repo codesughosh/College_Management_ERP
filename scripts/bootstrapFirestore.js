@@ -122,11 +122,11 @@ const collections = {
   },
   staffAttendanceRecords: {
     purpose: 'Faculty and staff daily attendance tracking',
-    fields: ['staffRecordId', 'employeeId', 'academicYear', 'dateText', 'status', 'markedAtText'],
+    fields: ['staffRecordId', 'employeeId', 'academicYear', 'dateText', 'status', 'markedAtText', 'markedAtIso', 'editedAtText', 'editedAtIso'],
   },
   studentAttendanceRecords: {
     purpose: 'Student daily attendance tracking',
-    fields: ['entityType', 'entityRecordId', 'entityId', 'entityName', 'className', 'section', 'courseCode', 'courseName', 'subjectCode', 'subjectName', 'dateText', 'status', 'markedAtText', 'parentNotified', 'parentNotifiedAtText'],
+    fields: ['entityType', 'entityRecordId', 'entityId', 'entityName', 'className', 'section', 'courseCode', 'courseName', 'subjectCode', 'subjectName', 'dateText', 'status', 'markedAtText', 'markedAtIso', 'editedAtText', 'editedAtIso'],
   },
   attendanceNotifications: {
     purpose: 'Parent notification queue metadata for attendance events',

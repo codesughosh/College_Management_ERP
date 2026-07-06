@@ -60,11 +60,11 @@ export default function StudentProfileCard({
     <div className="bg-white border border-slate-100 rounded-lg p-5 mb-5 shadow-sm">
       <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-5 pb-5 border-b border-slate-100">
         <div className="flex items-center gap-4 min-w-0">
-          <div className="h-20 w-20 rounded-full bg-[#30343c] text-emerald-300 flex items-center justify-center shrink-0 overflow-hidden">
+          <div className="h-[136px] w-[136px] rounded-full bg-[#30343c] text-emerald-300 flex items-center justify-center shrink-0 overflow-hidden">
             {student.profilePhotoUrl ? (
               <img src={student.profilePhotoUrl} alt="" className="h-full w-full object-cover" />
             ) : (
-              <UserRound size={38} />
+              <UserRound size={64} />
             )}
           </div>
           <div className="min-w-0">

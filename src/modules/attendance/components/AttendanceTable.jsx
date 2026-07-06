@@ -1,12 +1,13 @@
 import { memo, useMemo } from 'react';
-import { Bell, CheckCircle, XCircle } from 'lucide-react';
+import { CheckCircle, XCircle } from 'lucide-react';
 
-function AttendanceStatusControl({ canMark, mode, record, entity, onMark, canNotify, onNotify }) {
+function AttendanceStatusControl({ canMark, record, entity, onMark, recordEditable = true }) {
   const currentStatus = record?.status || '';
   const statuses = [
     { label: 'Present', icon: <CheckCircle size={15} />, activeClass: 'is-present' },
     { label: 'Absent', icon: <XCircle size={15} />, activeClass: 'is-absent' },
   ];
+  const canEditStatus = canMark && recordEditable;
 
   return (
     <div className="erp-attendance-status-wrap">
@@ -17,7 +18,7 @@ function AttendanceStatusControl({ canMark, mode, record, entity, onMark, canNot
             <button
               key={status.label}
               type="button"
-              disabled={!canMark}
+              disabled={!canEditStatus}
               onClick={(event) => {
                 event.stopPropagation();
                 onMark(entity, status.label);
@@ -33,34 +34,19 @@ function AttendanceStatusControl({ canMark, mode, record, entity, onMark, canNot
         })}
       </div>
       {!currentStatus && <div className="erp-attendance-status-hint">Not marked</div>}
-      {mode === 'students' && record?.status === 'Absent' && (
-        <button
-          type="button"
-          disabled={!canNotify || record.parentNotified}
-          onClick={(event) => {
-            event.stopPropagation();
-            onNotify(entity, record);
-          }}
-          className="erp-attendance-notify-button"
-          title="Notify parent"
-        >
-          <Bell size={14} />
-          <span>{record.parentNotified ? 'Notified' : 'Notify'}</span>
-        </button>
-      )}
+      {currentStatus && !recordEditable && <div className="erp-attendance-status-hint">Edit window closed</div>}
     </div>
   );
 }
 
 function AttendanceTable({
   canMark,
-  canNotify,
   entities,
   mode,
   records,
   selectedDate,
+  isRecordEditable,
   onMark,
-  onNotify,
   onSelect,
   selectedId,
   showActions = true,
@@ -79,7 +65,6 @@ function AttendanceTable({
           <tr className="bg-[#e7e7e9] text-left text-slate-900">
             <th className="px-5 py-3 rounded-l-lg">{mode === 'students' ? 'Student' : 'Faculty / Staff'}</th>
             <th className={`px-5 py-3 ${showActions ? '' : 'rounded-r-lg'}`}>Status</th>
-            <th className="px-5 py-3">Details</th>
             {showActions && <th className="px-5 py-3 rounded-r-lg text-right">Action</th>}
           </tr>
         </thead>
@@ -87,6 +72,7 @@ function AttendanceTable({
           {entities.map((entity) => {
             const entityId = entity.studentId || entity.employeeId;
             const record = recordsByEntityId.get(entityId);
+            const recordEditable = isRecordEditable ? isRecordEditable(record) : true;
             return (
               <tr
                 key={entity.id}
@@ -100,44 +86,16 @@ function AttendanceTable({
                 <td className="px-5 py-4">
                   <AttendanceStatusControl
                     canMark={canMark}
-                    canNotify={canNotify}
                     entity={entity}
                     mode={mode}
                     record={record}
+                    recordEditable={recordEditable}
                     onMark={onMark}
-                    onNotify={onNotify}
                   />
-                </td>
-                <td className={`px-5 py-4 ${showActions ? '' : 'rounded-r-lg'}`}>
-                  {mode === 'students' ? (
-                    <>
-                      <div>{entity.className} - {entity.section}</div>
-                      <div className="text-xs text-slate-500">{entity.program}</div>
-                    </>
-                  ) : (
-                    <>
-                      <div>{entity.department}</div>
-                      <div className="text-xs text-slate-500">{entity.designation}</div>
-                    </>
-                  )}
                 </td>
                 {showActions && (
                 <td className="px-5 py-4 rounded-r-lg">
-                  <div className="flex justify-end gap-2">
-                    {mode === 'students' && record?.status === 'Absent' && (
-                      <button
-                        disabled={!canNotify || record.parentNotified}
-                        onClick={(event) => {
-                          event.stopPropagation();
-                          onNotify(entity, record);
-                        }}
-                        className="h-9 w-9 rounded-full border border-slate-200 flex items-center justify-center disabled:opacity-40"
-                        title="Notify parent"
-                      >
-                        <Bell size={15} />
-                      </button>
-                    )}
-                  </div>
+                  <div className="flex justify-end gap-2" />
                 </td>
                 )}
               </tr>
@@ -145,7 +103,7 @@ function AttendanceTable({
           })}
           {!entities.length && (
             <tr>
-              <td colSpan={showActions ? 4 : 3} className="bg-white text-center text-sm text-slate-500 px-5 py-10 shadow-[0_0_0_1px_rgba(226,232,240,0.9)] rounded-lg">
+              <td colSpan={showActions ? 3 : 2} className="bg-white text-center text-sm text-slate-500 px-5 py-10 shadow-[0_0_0_1px_rgba(226,232,240,0.9)] rounded-lg">
                 No records found.
               </td>
             </tr>

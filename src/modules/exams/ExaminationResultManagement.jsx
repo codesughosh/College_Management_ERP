@@ -112,7 +112,15 @@ function ResultNameModal({ onClose, onSave }) {
   );
 }
 
-export default function ExaminationResultManagement({ currentUser, academicYear = '', scopedStudents = [], selectedCourse = null, selectedCourseCode = 'all' }) {
+export default function ExaminationResultManagement({
+  currentUser,
+  academicYear = '',
+  initialBranch = '',
+  initialTask = '',
+  scopedStudents = [],
+  selectedCourse = null,
+  selectedCourseCode = 'all',
+}) {
   const [students, setStudents] = useState([]);
   const [staff, setStaff] = useState([]);
   const [schedules, setSchedules] = useState([]);
@@ -127,8 +135,8 @@ export default function ExaminationResultManagement({ currentUser, academicYear 
   const [showAssessmentModal, setShowAssessmentModal] = useState(false);
   const [showResultModal, setShowResultModal] = useState(false);
   const [editingSchedule, setEditingSchedule] = useState(null);
-  const [activeExamTask, setActiveExamTask] = useState('');
-  const [activeExamBranch, setActiveExamBranch] = useState('');
+  const [activeExamTask, setActiveExamTask] = useState(initialTask || '');
+  const [activeExamBranch, setActiveExamBranch] = useState(initialBranch || '');
   const [selectedScheduleId, setSelectedScheduleId] = useState('');
 
   useEffect(() => {
@@ -159,7 +167,7 @@ export default function ExaminationResultManagement({ currentUser, academicYear 
     const currentState = window.history.state || {};
     window.history.replaceState({
       ...currentState,
-      examFlow: currentState.examFlow || { task: '', branch: '' },
+      examFlow: currentState.examFlow || { task: initialTask || '', branch: initialBranch || '' },
     }, '');
 
     const handleHistoryBack = (event) => {
@@ -183,7 +191,7 @@ export default function ExaminationResultManagement({ currentUser, academicYear 
 
     window.addEventListener('popstate', handleHistoryBack);
     return () => window.removeEventListener('popstate', handleHistoryBack);
-  }, []);
+  }, [initialBranch, initialTask]);
 
   const currentRoleId = currentUser?.roleId || 'admin';
   const canSchedule = canAccess(defaultRoles, currentRoleId, 'exams.schedule');
@@ -581,15 +589,15 @@ export default function ExaminationResultManagement({ currentUser, academicYear 
       </>
       ) : !activeExamBranch ? (
       <>
-      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3 my-5 rounded-lg bg-[#f5f5f6] p-4">
-        <div className="flex items-center gap-3">
-          <button onClick={goBackOneExamStep} className="erp-back-button h-10 px-4 rounded-lg bg-white border border-slate-200 text-slate-700 font-semibold text-sm flex items-center gap-2">
-            <ArrowLeft size={15} /> Back
-          </button>
-          <div>
-            <div className="text-xs font-bold text-slate-500">Exams / <span className="text-[#fb8d49]">{activeTask?.title}</span></div>
-            <h2 className="text-lg font-bold text-slate-900 mt-1">Choose next step</h2>
-          </div>
+      <div className="erp-back-row my-5">
+        <button onClick={goBackOneExamStep} className="erp-back-button h-10 px-4 rounded-lg bg-white border border-slate-200 text-slate-700 font-semibold text-sm flex items-center gap-2">
+          <ArrowLeft size={15} /> Back
+        </button>
+      </div>
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3 mb-5 rounded-lg bg-[#f5f5f6] p-4">
+        <div>
+          <div className="text-xs font-bold text-slate-500">Exams / <span className="text-[#fb8d49]">{activeTask?.title}</span></div>
+          <h2 className="text-lg font-bold text-slate-900 mt-1">Choose next step</h2>
         </div>
       </div>
       <div className="grid md:grid-cols-2 gap-4">
@@ -612,11 +620,13 @@ export default function ExaminationResultManagement({ currentUser, academicYear 
       </>
       ) : (
       <>
-      <div className="erp-branch-focus flex flex-col lg:flex-row lg:items-center justify-between gap-4 my-5 rounded-lg bg-[#f5f5f6] p-5 border border-slate-100">
+      <div className="erp-back-row my-5">
+        <button onClick={goBackOneExamStep} className="erp-back-button h-10 px-4 rounded-lg bg-white border border-slate-200 text-slate-700 font-semibold text-sm flex items-center gap-2">
+          <ArrowLeft size={15} /> Back
+        </button>
+      </div>
+      <div className="erp-branch-focus flex flex-col lg:flex-row lg:items-center justify-between gap-4 mb-5 rounded-lg bg-[#f5f5f6] p-5 border border-slate-100">
         <div className="flex items-center gap-4 min-w-0">
-          <button onClick={goBackOneExamStep} className="erp-back-button h-10 px-4 rounded-lg bg-white border border-slate-200 text-slate-700 font-semibold text-sm flex items-center gap-2 shrink-0">
-            <ArrowLeft size={15} /> Back
-          </button>
           <div className="erp-branch-icon h-16 w-16 rounded-lg bg-white text-[#fb8d49] flex items-center justify-center shrink-0">{activeBranch?.icon}</div>
           <div className="min-w-0">
             <h2 className="text-2xl font-extrabold text-slate-900">{activeBranch?.title}</h2>

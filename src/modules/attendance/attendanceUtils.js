@@ -20,6 +20,27 @@ export function buildAttendanceKey(entityId, dateText, subjectName = '') {
   return [entityId, dateText, subjectName].filter(Boolean).join('-');
 }
 
+export function getAttendanceMarkedAt(record = {}) {
+  const timestamp = record.markedAtIso || record.createdAtIso || '';
+  if (timestamp) {
+    const parsed = new Date(timestamp);
+    if (!Number.isNaN(parsed.getTime())) return parsed;
+  }
+
+  const textDate = record.markedAtText || record.dateText || '';
+  if (!textDate) return null;
+  const parsedTextDate = new Date(textDate);
+  return Number.isNaN(parsedTextDate.getTime()) ? null : parsedTextDate;
+}
+
+export function isAttendanceRecordEditable(record, now = new Date()) {
+  if (!record) return true;
+  const markedAt = getAttendanceMarkedAt(record);
+  if (!markedAt) return true;
+  const elapsedMs = now.getTime() - markedAt.getTime();
+  return elapsedMs >= 0 && elapsedMs <= 24 * 60 * 60 * 1000;
+}
+
 export function relationMatchesEntity(record, entity) {
   return record.entityRecordId === entity.id || record.entityId === entity.studentId || record.entityId === entity.employeeId;
 }

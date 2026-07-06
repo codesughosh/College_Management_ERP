@@ -1,24 +1,15 @@
 import { useMemo, useState } from 'react';
 import {
-  Banknote,
-  BedDouble,
   BookOpenCheck,
-  CalendarDays,
   ChevronLeft,
   ChevronRight,
   ClipboardList,
   FileCheck2,
-  FileText,
   GraduationCap,
   Menu,
-  MessageCircle,
-  Megaphone,
   Moon,
-  Plus,
-  Settings,
   Sun,
   UserCheck,
-  UserRound,
   Users,
   Wallet,
   X,
@@ -71,65 +62,13 @@ export default function Sidebar({ activePage, activeSubmenuId = '', collapsed = 
   };
 
   const submenuItemsByModule = useMemo(() => ({
-    students: [
-      {
-        id: 'student-records',
-        label: 'Student Records',
-        icon: <GraduationCap size={16} />,
-        moduleId: 'students',
-        state: { moduleSubmenu: 'student-records', studentStatusFilter: 'active' },
-        enabled: canAccess(defaultRoles, currentRoleId, 'students.view'),
-      },
-      {
-        id: 'student-admissions',
-        label: 'New Admissions',
-        icon: <Plus size={16} />,
-        moduleId: 'students',
-        state: { moduleSubmenu: 'student-admissions', studentAction: 'new-admission' },
-        enabled: canAccess(defaultRoles, currentRoleId, 'students.create'),
-      },
-      {
-        id: 'archived-students',
-        label: 'Archived Students',
-        icon: <FileText size={16} />,
-        moduleId: 'students',
-        state: { moduleSubmenu: 'archived-students', studentStatusFilter: 'archived' },
-        enabled: canAccess(defaultRoles, currentRoleId, 'students.archive'),
-      },
-    ],
-    'faculty-staff': [
-      {
-        id: 'faculty-records',
-        label: 'Faculty Records',
-        icon: <Users size={16} />,
-        moduleId: 'faculty-staff',
-        state: { moduleSubmenu: 'faculty-records' },
-        enabled: canAccess(defaultRoles, currentRoleId, 'staff.view'),
-      },
-      {
-        id: 'staff-leave',
-        label: 'Leave Records',
-        icon: <CalendarDays size={16} />,
-        moduleId: 'faculty-staff',
-        state: { moduleSubmenu: 'staff-leave' },
-        enabled: canAccess(defaultRoles, currentRoleId, 'staff.leave'),
-      },
-      {
-        id: 'staff-documents',
-        label: 'Staff Documents',
-        icon: <FileCheck2 size={16} />,
-        moduleId: 'document-management',
-        state: { moduleSubmenu: 'staff-documents' },
-        enabled: canAccess(defaultRoles, currentRoleId, 'documents.view'),
-      },
-    ],
     attendance: [
       {
         id: 'student-attendance',
         label: 'Student Attendance',
         icon: <Users size={16} />,
         moduleId: 'attendance',
-        state: { moduleSubmenu: 'student-attendance', attendanceSubmenu: 'student-attendance', attendanceTask: 'students', attendanceBranch: 'mark-students', attendanceMode: 'students' },
+        state: { attendanceSubmenu: 'student-attendance', attendanceTask: 'students', attendanceBranch: 'mark-students', attendanceMode: 'students' },
         enabled: canAccess(defaultRoles, currentRoleId, 'attendance.view'),
       },
       {
@@ -137,190 +76,8 @@ export default function Sidebar({ activePage, activeSubmenuId = '', collapsed = 
         label: 'Staff Attendance',
         icon: <UserCheck size={16} />,
         moduleId: 'attendance',
-        state: { moduleSubmenu: 'staff-attendance', attendanceSubmenu: 'staff-attendance', attendanceTask: 'staff', attendanceBranch: 'mark-staff', attendanceMode: 'staff' },
+        state: { attendanceSubmenu: 'staff-attendance', attendanceTask: 'staff', attendanceBranch: 'mark-staff', attendanceMode: 'staff' },
         enabled: canAccess(defaultRoles, currentRoleId, 'attendance.markStaff') || canAccess(defaultRoles, currentRoleId, 'staff.attendance'),
-      },
-    ],
-    timetable: [
-      {
-        id: 'class-timetable',
-        label: 'Class Timetable',
-        icon: <CalendarDays size={16} />,
-        moduleId: 'timetable',
-        state: { moduleSubmenu: 'class-timetable' },
-        enabled: canAccess(defaultRoles, currentRoleId, 'timetable.view'),
-      },
-      {
-        id: 'publish-timetable',
-        label: 'Publishing',
-        icon: <BookOpenCheck size={16} />,
-        moduleId: 'timetable',
-        state: { moduleSubmenu: 'publish-timetable' },
-        enabled: canAccess(defaultRoles, currentRoleId, 'timetable.publish'),
-      },
-      {
-        id: 'classrooms',
-        label: 'Classrooms',
-        icon: <ClipboardList size={16} />,
-        moduleId: 'timetable',
-        state: { moduleSubmenu: 'classrooms' },
-        enabled: canAccess(defaultRoles, currentRoleId, 'timetable.classrooms'),
-      },
-    ],
-    'examination-results': [
-      {
-        id: 'exam-schedules',
-        label: 'Exam Schedules',
-        icon: <ClipboardList size={16} />,
-        moduleId: 'examination-results',
-        state: { moduleSubmenu: 'exam-schedules', examTask: 'schedules', examBranch: 'review-schedules' },
-        enabled: canAccess(defaultRoles, currentRoleId, 'exams.view'),
-      },
-      {
-        id: 'exam-marks',
-        label: 'Marks Entry',
-        icon: <GraduationCap size={16} />,
-        moduleId: 'examination-results',
-        state: { moduleSubmenu: 'exam-marks', examTask: 'marks', examBranch: 'review-marks' },
-        enabled: canAccess(defaultRoles, currentRoleId, 'exams.marks'),
-      },
-      {
-        id: 'exam-results',
-        label: 'Results',
-        icon: <BookOpenCheck size={16} />,
-        moduleId: 'examination-results',
-        state: { moduleSubmenu: 'exam-results', examTask: 'results', examBranch: 'generate-results' },
-        enabled: canAccess(defaultRoles, currentRoleId, 'exams.results'),
-      },
-      {
-        id: 'exam-report-cards',
-        label: 'Report Cards',
-        icon: <FileText size={16} />,
-        moduleId: 'examination-results',
-        state: { moduleSubmenu: 'exam-report-cards', examTask: 'results', examBranch: 'report-cards' },
-        enabled: canAccess(defaultRoles, currentRoleId, 'exams.reportCards'),
-      },
-    ],
-    communication: [
-      {
-        id: 'communication-notices',
-        label: 'Notices & Announcements',
-        icon: <Megaphone size={16} />,
-        moduleId: 'communication',
-        state: { moduleSubmenu: 'communication-notices', communicationTask: 'notices' },
-        enabled: canAccess(defaultRoles, currentRoleId, 'notices.view'),
-      },
-      {
-        id: 'communication-alerts',
-        label: 'SMS / WhatsApp Alerts',
-        icon: <MessageCircle size={16} />,
-        moduleId: 'communication',
-        state: { moduleSubmenu: 'communication-alerts', communicationTask: 'alerts' },
-        enabled: canAccess(defaultRoles, currentRoleId, 'notices.view'),
-      },
-      {
-        id: 'communication-parents',
-        label: 'Parent Communication',
-        icon: <UserRound size={16} />,
-        moduleId: 'communication',
-        state: { moduleSubmenu: 'communication-parents', communicationTask: 'parents' },
-        enabled: canAccess(defaultRoles, currentRoleId, 'notices.view'),
-      },
-    ],
-    calendar: [
-      {
-        id: 'academic-calendar',
-        label: 'Academic Calendar',
-        icon: <CalendarDays size={16} />,
-        moduleId: 'calendar',
-        state: { moduleSubmenu: 'academic-calendar' },
-        enabled: canAccess(defaultRoles, currentRoleId, 'academicCurriculum.view'),
-      },
-      {
-        id: 'curriculum-plan',
-        label: 'Curriculum Plan',
-        icon: <BookOpenCheck size={16} />,
-        moduleId: 'calendar',
-        state: { moduleSubmenu: 'curriculum-plan' },
-        enabled: canAccess(defaultRoles, currentRoleId, 'academicCurriculum.view'),
-      },
-    ],
-    'hostel-management': [
-      {
-        id: 'hostel-rooms',
-        label: 'Rooms',
-        icon: <BedDouble size={16} />,
-        moduleId: 'hostel-management',
-        state: { moduleSubmenu: 'hostel-rooms' },
-        enabled: canAccess(defaultRoles, currentRoleId, 'hostel.view'),
-      },
-      {
-        id: 'hostel-allocation',
-        label: 'Allocations',
-        icon: <UserCheck size={16} />,
-        moduleId: 'hostel-management',
-        state: { moduleSubmenu: 'hostel-allocation' },
-        enabled: canAccess(defaultRoles, currentRoleId, 'hostel.manage'),
-      },
-    ],
-    'document-management': [
-      {
-        id: 'document-review',
-        label: 'Review Queue',
-        icon: <FileCheck2 size={16} />,
-        moduleId: 'document-management',
-        state: { moduleSubmenu: 'document-review' },
-        enabled: canAccess(defaultRoles, currentRoleId, 'documents.verify') || canAccess(defaultRoles, currentRoleId, 'documents.view'),
-      },
-      {
-        id: 'document-upload',
-        label: 'Upload Documents',
-        icon: <Plus size={16} />,
-        moduleId: 'document-management',
-        state: { moduleSubmenu: 'document-upload' },
-        enabled: canAccess(defaultRoles, currentRoleId, 'documents.upload'),
-      },
-      {
-        id: 'document-archive',
-        label: 'Archive',
-        icon: <FileText size={16} />,
-        moduleId: 'document-management',
-        state: { moduleSubmenu: 'document-archive' },
-        enabled: canAccess(defaultRoles, currentRoleId, 'documents.archive'),
-      },
-    ],
-    fees: [
-      {
-        id: 'payment-collections',
-        label: 'Fee Collections',
-        icon: <Banknote size={16} />,
-        moduleId: 'fees',
-        state: { moduleSubmenu: 'payment-collections', feeTask: 'collections', feeBranch: 'collect-fee' },
-        enabled: canAccess(defaultRoles, currentRoleId, 'fees.view'),
-      },
-      {
-        id: 'payment-settings',
-        label: 'Payment Settings',
-        icon: <Settings size={16} />,
-        moduleId: 'fees',
-        state: { moduleSubmenu: 'payment-settings', feeTask: 'structures', feeBranch: 'manage-structures' },
-        enabled: canAccess(defaultRoles, currentRoleId, 'fees.setup') || canAccess(defaultRoles, currentRoleId, 'fees.assign'),
-      },
-      {
-        id: 'due-fee-tracking',
-        label: 'Due Fee Tracking',
-        icon: <MessageCircle size={16} />,
-        moduleId: 'fees',
-        state: { moduleSubmenu: 'due-fee-tracking', feeTask: 'due-tracking', feeBranch: 'due-list' },
-        enabled: canAccess(defaultRoles, currentRoleId, 'fees.view'),
-      },
-      {
-        id: 'payment-adjustments',
-        label: 'Adjustments',
-        icon: <Wallet size={16} />,
-        moduleId: 'fees',
-        state: { moduleSubmenu: 'payment-adjustments', feeTask: 'adjustments', feeBranch: 'adjustment-history' },
-        enabled: canAccess(defaultRoles, currentRoleId, 'fees.adjust'),
       },
     ],
     reports: [
@@ -365,32 +122,6 @@ export default function Sidebar({ activePage, activeSubmenuId = '', collapsed = 
         enabled: canAccess(defaultRoles, currentRoleId, 'financialReports.view'),
       },
     ],
-    settings: [
-      {
-        id: 'institute-settings',
-        label: 'Institute Profile',
-        icon: <Settings size={16} />,
-        moduleId: 'settings',
-        state: { moduleSubmenu: 'institute-settings' },
-        enabled: canAccess(defaultRoles, currentRoleId, 'settings.view'),
-      },
-      {
-        id: 'academic-year-settings',
-        label: 'Academic Year',
-        icon: <CalendarDays size={16} />,
-        moduleId: 'settings',
-        state: { moduleSubmenu: 'academic-year-settings' },
-        enabled: canAccess(defaultRoles, currentRoleId, 'settings.manage'),
-      },
-      {
-        id: 'module-settings',
-        label: 'Module Defaults',
-        icon: <ClipboardList size={16} />,
-        moduleId: 'settings',
-        state: { moduleSubmenu: 'module-settings' },
-        enabled: canAccess(defaultRoles, currentRoleId, 'settings.manage'),
-      },
-    ],
   }), [currentRoleId]);
   const visibleMobileItems = useMemo(() => [...navItems, ...footerItems], [footerItems, navItems]);
   const activeDefaultExpandedModuleId = submenuItemsByModule[activePage]?.some((item) => item.enabled) ? activePage : '';
@@ -432,7 +163,7 @@ export default function Sidebar({ activePage, activeSubmenuId = '', collapsed = 
                   setExpandedState({ page: activePage, moduleId: item.moduleId });
                   onNavigate(item.moduleId, { state: item.state });
                 }}
-                className={`erp-sidebar-subitem ${activeSubmenuId === item.id || activeSubmenuId === item.state?.moduleSubmenu || activeSubmenuId === item.state?.reportCategory || activeSubmenuId === item.state?.attendanceSubmenu ? 'is-active' : ''}`}
+                className={`erp-sidebar-subitem ${activeSubmenuId === item.id || activeSubmenuId === item.state.reportCategory ? 'is-active' : ''}`}
               >
                 <span className="erp-sidebar-subitem-icon">{item.icon}</span>
                 {item.label}
@@ -487,7 +218,7 @@ export default function Sidebar({ activePage, activeSubmenuId = '', collapsed = 
                 key={item.id}
                 type="button"
                 onClick={() => handleMobileSubmenuNavigate(item)}
-                className={`erp-mobile-drawer-subitem ${activeSubmenuId === item.id || activeSubmenuId === item.state?.moduleSubmenu || activeSubmenuId === item.state?.reportCategory || activeSubmenuId === item.state?.attendanceSubmenu ? 'is-active' : ''}`}
+                className={`erp-mobile-drawer-subitem ${activeSubmenuId === item.id || activeSubmenuId === item.state.reportCategory ? 'is-active' : ''}`}
               >
                 <span className="erp-sidebar-subitem-icon">{item.icon}</span>
                 <span>{item.label}</span>

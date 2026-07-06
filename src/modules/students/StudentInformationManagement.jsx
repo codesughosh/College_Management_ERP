@@ -278,26 +278,18 @@ export default function StudentInformationManagement({ user, onLogout }) {
   const canOpenActiveModule = activePage === 'reports'
     ? canViewReportsModule
     : !activeModule?.permission || canAccess(defaultRoles, currentRoleId, activeModule.permission);
-  const activeSubmenuId = location.state?.moduleSubmenu || (activePage === 'reports'
+  const activeSubmenuId = activePage === 'reports'
     ? location.state?.reportCategory || ''
     : activePage === 'attendance'
       ? location.state?.attendanceSubmenu || ''
-      : '');
+      : '';
   const navigateToModule = useCallback((moduleId, options = {}) => {
     const nextModule = getModuleById(moduleId);
-    if (moduleId === 'students') {
-      if (options.state?.studentStatusFilter) {
-        setStatusFilter(options.state.studentStatusFilter);
-      }
-      if (options.state?.studentAction === 'new-admission' && canCreateAdmission) {
-        setShowModal(true);
-      }
-    }
     setFocusedStudentContext(options.state?.studentContext || null);
     setSelectedId('');
     setSearch('');
     navigate(nextModule?.path || '/dashboard', options);
-  }, [canCreateAdmission, navigate]);
+  }, [navigate]);
 
   useEffect(() => {
     localStorage.setItem('erpThemeMode', themeMode);
@@ -989,7 +981,7 @@ export default function StudentInformationManagement({ user, onLogout }) {
                   <TimetableManagement currentUser={user} academicYear={academicYear} selectedCourse={selectedCourse} selectedCourseCode={effectiveSelectedCourseCode} scopedStudents={courseStudents} />
                 ) : activePage === 'examination-results' ? (
                   <ExaminationResultManagement
-                    key={`exams-${location.state?.moduleSubmenu || 'home'}-${location.state?.examTask || ''}-${location.state?.examBranch || ''}`}
+                    key={`exams-${location.state?.examTask || 'home'}-${location.state?.examBranch || ''}`}
                     currentUser={user}
                     academicYear={academicYear}
                     initialBranch={location.state?.examBranch}
@@ -1000,7 +992,7 @@ export default function StudentInformationManagement({ user, onLogout }) {
                   />
                 ) : activePage === 'fees' ? (
                   <FeesManagement
-                    key={`fees-${location.state?.moduleSubmenu || 'home'}-${location.state?.feeTask || ''}-${location.state?.feeBranch || ''}`}
+                    key={`fees-${location.state?.feeTask || 'home'}-${location.state?.feeBranch || ''}`}
                     currentUser={user}
                     academicYear={academicYear}
                     initialBranch={location.state?.feeBranch}
@@ -1013,7 +1005,7 @@ export default function StudentInformationManagement({ user, onLogout }) {
                   <HostelManagement currentUser={user} academicYear={academicYear} selectedCourse={selectedCourse} selectedCourseCode={effectiveSelectedCourseCode} scopedStudents={moduleScopedStudents} />
                 ) : activePage === 'communication' ? (
                   <NoticeBoardManagement
-                    key={`communication-${location.state?.moduleSubmenu || 'home'}-${location.state?.communicationTask || ''}`}
+                    key={`communication-${location.state?.communicationTask || 'home'}`}
                     currentUser={user}
                     academicYear={academicYear}
                     initialTask={location.state?.communicationTask}

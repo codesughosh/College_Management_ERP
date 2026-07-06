@@ -221,7 +221,7 @@ export default function DashboardManagement({ academicYear = '', currentUser, on
       label: `${courseFeeSummary.dueStudents} students have pending dues`,
       helper: 'Open payment due list',
       page: 'fees',
-      state: { moduleSubmenu: 'due-fee-tracking', feeTask: 'due-tracking', feeBranch: 'due-list' },
+      state: { feeTask: 'due-tracking', feeBranch: 'due-list' },
     },
   ].filter(Boolean);
 

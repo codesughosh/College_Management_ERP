@@ -3846,6 +3846,16 @@ html{color-scheme:dark}::selection{background:rgba(0,255,136,.18);color:#eafff5}
 }
 
 /* Light-mode contrast authority: final pass for sidebar, header badges, and upload controls. */
+.erp-shell.light-mode .erp-sidebar {
+  width:300px!important;
+  min-width:300px!important;
+  flex:0 0 300px!important;
+}
+
+.erp-shell.light-mode .erp-sidebar > .erp-sidebar-sticky {
+  width:100%!important;
+}
+
 .erp-header-role-badge,
 .erp-shell.light-mode .erp-header-role-badge {
   background:#033500!important;
@@ -3931,10 +3941,64 @@ html{color-scheme:dark}::selection{background:rgba(0,255,136,.18);color:#eafff5}
 }
 
 .erp-shell.light-mode .erp-sidebar-subitem-icon svg,
+.erp-shell .erp-sidebar-subitem-icon svg,
 .erp-shell.light-mode .erp-mobile-drawer-item-icon svg,
 .erp-shell.light-mode .erp-mobile-drawer-subitem svg {
   color:currentColor!important;
   stroke:currentColor!important;
+  opacity:1!important;
+}
+
+.erp-shell.light-mode .erp-sidebar .erp-sidebar-submenu {
+  margin:8px 0 10px 24px!important;
+  padding-left:14px!important;
+  padding-right:0!important;
+  border-left:1px solid #dbe3d8!important;
+  gap:6px!important;
+}
+
+.erp-shell.light-mode .erp-sidebar .erp-sidebar-subitem {
+  width:100%!important;
+  max-width:100%!important;
+  min-height:40px!important;
+  height:40px!important;
+  padding:0 12px!important;
+  gap:10px!important;
+  display:flex!important;
+  align-items:center!important;
+  justify-content:flex-start!important;
+  color:#5f5a78!important;
+  background:transparent!important;
+  white-space:nowrap!important;
+  overflow:hidden!important;
+  text-overflow:ellipsis!important;
+}
+
+.erp-shell.light-mode .erp-sidebar .erp-sidebar-subitem:hover,
+.erp-shell.light-mode .erp-sidebar .erp-sidebar-subitem.is-active {
+  color:#033500!important;
+  background:#e1f0de!important;
+}
+
+.erp-shell .erp-sidebar-subitem-icon,
+.erp-shell.light-mode .erp-sidebar .erp-sidebar-subitem-icon {
+  width:20px!important;
+  min-width:20px!important;
+  height:20px!important;
+  flex:0 0 20px!important;
+  display:inline-flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  color:currentColor!important;
+}
+
+.erp-shell .erp-sidebar-subitem-icon svg,
+.erp-shell.light-mode .erp-sidebar .erp-sidebar-subitem-icon svg {
+  width:17px!important;
+  height:17px!important;
+  color:currentColor!important;
+  stroke:currentColor!important;
+  opacity:1!important;
 }
 
 .erp-shell.light-mode .erp-sidebar.is-collapsed .erp-sidebar-menu-card > nav.erp-sidebar-nav > button.erp-sidebar-item {
@@ -3961,15 +4025,33 @@ html{color-scheme:dark}::selection{background:rgba(0,255,136,.18);color:#eafff5}
 
 .erp-shell.light-mode .erp-sidebar-theme-switch button.is-active {
   background:#033500!important;
+  background-color:#033500!important;
+  background-image:none!important;
   border-color:#033500!important;
   color:#ffffff!important;
   -webkit-text-fill-color:#ffffff!important;
   box-shadow:0 10px 22px rgba(3,53,0,.18)!important;
 }
 
-.erp-shell.light-mode .erp-sidebar-theme-switch button.is-active svg {
+.erp-shell.light-mode .erp-sidebar-theme-switch > button.is-active,
+.erp-shell.light-mode .erp-sidebar > .erp-sidebar-sticky .erp-sidebar-theme-switch > button.is-active,
+.erp-shell.light-mode .erp-mobile-drawer-theme > button.is-active {
+  background:#033500!important;
+  background-color:#033500!important;
+  background-image:none!important;
+  border-color:#033500!important;
+  color:#ffffff!important;
+  -webkit-text-fill-color:#ffffff!important;
+  box-shadow:0 10px 22px rgba(3,53,0,.18)!important;
+}
+
+.erp-shell.light-mode .erp-sidebar-theme-switch button.is-active svg,
+.erp-shell.light-mode .erp-sidebar-theme-switch button.is-active span,
+.erp-shell.light-mode .erp-mobile-drawer-theme button.is-active svg,
+.erp-shell.light-mode .erp-mobile-drawer-theme button.is-active span {
   color:#ffffff!important;
   stroke:#ffffff!important;
+  -webkit-text-fill-color:#ffffff!important;
 }
 
 .erp-shell.light-mode .erp-sidebar-theme-switch button:not(.is-active):hover {

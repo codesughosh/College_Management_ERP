@@ -74,6 +74,8 @@ const SettingsManagement = lazy(() => import('../settings/SettingsManagement'));
 const TimetableManagement = lazy(() => import('../timetable/TimetableManagement'));
 const UserRoleManagement = lazy(() => import('../userRoles/UserRoleManagement'));
 
+const DEFAULT_ACADEMIC_YEAR = '2025-2026';
+
 function csvValue(value) {
   return `"${String(value ?? '').replace(/"/g, '""')}"`;
 }
@@ -270,7 +272,7 @@ export default function StudentInformationManagement({ user, onLogout }) {
   const [editingStudent, setEditingStudent] = useState(null);
   const [focusedStudentContext, setFocusedStudentContext] = useState(null);
   const [statusFilter, setStatusFilter] = useState('active');
-  const [academicYear, setAcademicYear] = useState('');
+  const [academicYear, setAcademicYear] = useState(DEFAULT_ACADEMIC_YEAR);
   const [institute, setInstitute] = useState({});
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const currentRoleId = user?.roleId || 'admin';
@@ -425,25 +427,7 @@ export default function StudentInformationManagement({ user, onLogout }) {
     loadStudentInformation();
   }, [academicYear]);
 
-  const academicYearOptions = useMemo(() => {
-    const years = new Set(['2025-2026']);
-    if (academicYear) years.add(academicYear);
-    [
-      ...students,
-      ...admissions,
-      ...studentDocuments,
-      ...promotions,
-      ...transfers,
-      ...attendanceRecords,
-      ...marksEntries,
-      ...studentResults,
-      ...feeAssignments,
-      ...studentHealthRecords,
-    ].forEach((record) => {
-      if (record?.academicYear) years.add(record.academicYear);
-    });
-    return [...years].sort().reverse();
-  }, [academicYear, admissions, attendanceRecords, feeAssignments, marksEntries, promotions, studentDocuments, studentHealthRecords, studentResults, students, transfers]);
+  const academicYearOptions = useMemo(() => [DEFAULT_ACADEMIC_YEAR], []);
 
   const recordBelongsToYear = (record) => !academicYear || record.academicYear === academicYear;
   const yearStudents = useMemo(() => (

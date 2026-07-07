@@ -20,7 +20,7 @@ function getArgValue(name, fallback = '') {
   return match ? match.slice(prefix.length) : fallback;
 }
 
-const academicYear = getArgValue('--academic-year', '2026-2027');
+const academicYear = getArgValue('--academic-year', '2025-2026');
 const dueDate = getArgValue('--due-date', '2026-07-31');
 const dryRun = process.argv.includes('--dry-run');
 const seedSource = 'Official 2026-27 Fee Structure';
@@ -133,7 +133,7 @@ function buildFeeStructures() {
       const totalAmount = admissionFee + tuitionFee;
       const id = buildStructureId(variant.courseCode, year, variant.section);
       structures[id] = {
-        name: `${plan.title} ${className} ${variant.section} Fee 2026-27`,
+        name: `${plan.title} ${className} ${variant.section} Fee 2025-26`,
         classKey,
         academicYear,
         admissionFee,

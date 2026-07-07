@@ -277,8 +277,9 @@ export default function Sidebar({ activePage, activeSubmenuId = '', collapsed = 
           <button
             type="button"
             onClick={() => selectTheme('light')}
-            className={themeMode === 'light' ? 'is-active' : ''}
+            className={`erp-theme-mode-button ${themeMode === 'light' ? 'is-active' : ''}`}
             title="Light mode"
+            aria-pressed={themeMode === 'light'}
           >
             <Sun size={18} />
             {!collapsed && <span>Light</span>}
@@ -286,8 +287,9 @@ export default function Sidebar({ activePage, activeSubmenuId = '', collapsed = 
           <button
             type="button"
             onClick={() => selectTheme('dark')}
-            className={themeMode === 'dark' ? 'is-active' : ''}
+            className={`erp-theme-mode-button ${themeMode === 'dark' ? 'is-active' : ''}`}
             title="Dark mode"
+            aria-pressed={themeMode === 'dark'}
           >
             <Moon size={18} />
             {!collapsed && <span>Dark</span>}
@@ -332,7 +334,8 @@ export default function Sidebar({ activePage, activeSubmenuId = '', collapsed = 
           <button
             type="button"
             onClick={() => selectTheme('light')}
-            className={themeMode === 'light' ? 'is-active' : ''}
+            className={`erp-theme-mode-button ${themeMode === 'light' ? 'is-active' : ''}`}
+            aria-pressed={themeMode === 'light'}
           >
             <Sun size={16} />
             Light
@@ -340,7 +343,8 @@ export default function Sidebar({ activePage, activeSubmenuId = '', collapsed = 
           <button
             type="button"
             onClick={() => selectTheme('dark')}
-            className={themeMode === 'dark' ? 'is-active' : ''}
+            className={`erp-theme-mode-button ${themeMode === 'dark' ? 'is-active' : ''}`}
+            aria-pressed={themeMode === 'dark'}
           >
             <Moon size={16} />
             Dark

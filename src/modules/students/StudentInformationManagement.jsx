@@ -426,7 +426,7 @@ export default function StudentInformationManagement({ user, onLogout }) {
   }, [academicYear]);
 
   const academicYearOptions = useMemo(() => {
-    const years = new Set();
+    const years = new Set(['2025-2026']);
     if (academicYear) years.add(academicYear);
     [
       ...students,

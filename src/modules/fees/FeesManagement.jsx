@@ -664,8 +664,8 @@ export default function FeesManagement({
           />
         </div>
       ) : ['create-structure', 'manage-structures'].includes(activeFeeBranch) ? (
-        <div className="max-w-3xl">
-          <FeeStructurePanel structures={courseStructures} canEdit={canSetup || canAssign} onEdit={setEditingStructure} onAssign={assignStructureToStudents} />
+        <div className="w-full">
+          <FeeStructurePanel layout="grid" structures={courseStructures} canEdit={canSetup || canAssign} onEdit={setEditingStructure} onAssign={assignStructureToStudents} />
         </div>
       ) : activeFeeBranch === 'adjustment-history' ? (
         <FeeReportsPanel collections={[]} adjustments={courseAdjustments} />

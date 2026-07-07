@@ -612,6 +612,14 @@ export async function createFeeCollection(data) {
   return createCollectionDocument('feeCollections', data);
 }
 
+export async function updateFeeCollection(id, data) {
+  const store = requireWritableDocId(id, 'Fee collection');
+  await updateDoc(doc(store, 'feeCollections', id), {
+    ...data,
+    updatedAt: serverTimestamp(),
+  });
+}
+
 export async function createFeeAdjustment(data) {
   return createCollectionDocument('feeAdjustments', data);
 }

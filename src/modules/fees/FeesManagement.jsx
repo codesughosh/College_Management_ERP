@@ -8,6 +8,7 @@ import {
   createFeeStructure,
   getFeesManagementData,
   updateFeeAssignment,
+  updateFeeCollection,
   updateFeeStructure,
 } from '../../firebase/db';
 import { isFirebaseConfigured } from '../../firebase/config';
@@ -33,6 +34,15 @@ import FeeStructureModal from './components/FeeStructureModal';
 import FeeStructurePanel from './components/FeeStructurePanel';
 import { filterByCourse, filterStudentScopedRecords, filterStudentsByCourse } from '../shared/courseFilters';
 
+const feeComponentKeys = ['admissionFee', 'tuitionFee', 'libraryFee', 'labFee', 'transportFee'];
+
+function getFeeValues(form = {}) {
+  return feeComponentKeys.reduce((values, key) => ({
+    ...values,
+    [key]: Number(form[key] || 0),
+  }), {});
+}
+
 export default function FeesManagement({
   currentUser,
   academicYear = '',
@@ -53,6 +63,7 @@ export default function FeesManagement({
   const [editingStructure, setEditingStructure] = useState(null);
   const [showCollectionModal, setShowCollectionModal] = useState(false);
   const [collectionAssignmentId, setCollectionAssignmentId] = useState('');
+  const [editingCollection, setEditingCollection] = useState(null);
   const [showAdjustmentModal, setShowAdjustmentModal] = useState(false);
   const [activeFeeTask, setActiveFeeTask] = useState(initialTask || '');
   const [activeFeeBranch, setActiveFeeBranch] = useState(initialBranch || '');
@@ -92,6 +103,7 @@ export default function FeesManagement({
       setShowStructureModal(false);
       setEditingStructure(null);
       setShowCollectionModal(false);
+      setEditingCollection(null);
       setShowAdjustmentModal(false);
       if (!flow) {
         setActiveFeeTask('');
@@ -201,6 +213,7 @@ export default function FeesManagement({
     if (branch.openStructure) setShowStructureModal(true);
     if (branch.openCollection) {
       setCollectionAssignmentId('');
+      setEditingCollection(null);
       setShowCollectionModal(true);
     }
   };
@@ -392,6 +405,147 @@ export default function FeesManagement({
       return;
     }
     const amount = Number(form.amount || 0);
+    if (form.entryMode === 'structure') {
+      const student = courseStudents.find((item) => item.id === form.studentRecordId);
+      const structure = courseStructures.find((item) => item.id === form.feeStructureId);
+      const targetAssignment = form.assignmentId
+        ? courseAssignments.find((item) => item.id === form.assignmentId)
+        : courseAssignments.find((item) => item.studentRecordId === form.studentRecordId && item.feeStructureId === form.feeStructureId);
+      const oldAssignment = editingCollection?.assignmentId
+        ? courseAssignments.find((item) => item.id === editingCollection.assignmentId)
+        : null;
+      const previousCollectionAmount = Number(editingCollection?.amount || 0);
+      const feeValues = getFeeValues(form);
+      const totalAmount = Number(form.totalAmount || 0);
+      const adjustmentAmount = Number(targetAssignment?.adjustmentAmount || 0);
+      const paidBeforeThisPayment = Math.max(
+        0,
+        Number(targetAssignment?.paidAmount || 0) - (
+          editingCollection?.assignmentId && editingCollection.assignmentId === targetAssignment?.id
+            ? previousCollectionAmount
+            : 0
+        )
+      );
+      const dueBeforePayment = calculateDueAmount(totalAmount, paidBeforeThisPayment, adjustmentAmount);
+      if (amount > dueBeforePayment) {
+        toast.error('Collection amount cannot exceed outstanding due.');
+        return;
+      }
+
+      const nowText = formatDisplayDate();
+      const classKey = structure?.classKey || targetAssignment?.classKey || getStudentClassKey(student);
+      const assignmentBase = {
+        feeStructureId: structure?.id || targetAssignment?.feeStructureId || '',
+        studentRecordId: student?.id || targetAssignment?.studentRecordId || '',
+        studentId: student?.studentId || targetAssignment?.studentId || '',
+        studentName: student?.name || targetAssignment?.studentName || '',
+        classKey,
+        academicYear,
+        courseCode: structure?.courseCode || student?.courseCode || targetAssignment?.courseCode || '',
+        courseName: structure?.courseName || student?.courseName || student?.program || targetAssignment?.courseName || '',
+        ...feeValues,
+        totalAmount,
+        dueDate: structure?.dueDate || targetAssignment?.dueDate || '',
+        feeYearLabel: structure?.feeYearLabel || targetAssignment?.feeYearLabel || '',
+        seedSource: structure?.seedSource || targetAssignment?.seedSource || '',
+      };
+      let nextAssignmentId = targetAssignment?.id || '';
+      let nextAssignment = null;
+      const nextPaid = paidBeforeThisPayment + amount;
+      const nextDue = calculateDueAmount(totalAmount, nextPaid, adjustmentAmount);
+      const nextAssignmentUpdates = {
+        ...assignmentBase,
+        paidAmount: nextPaid,
+        adjustmentAmount,
+        dueAmount: nextDue,
+        status: calculateFeeStatus(totalAmount, nextPaid, adjustmentAmount),
+        updatedAtText: nowText,
+      };
+      let oldAssignmentUpdates = null;
+
+      try {
+        if (targetAssignment) {
+          await updateFeeAssignment(targetAssignment.id, nextAssignmentUpdates);
+          nextAssignment = { ...targetAssignment, ...nextAssignmentUpdates };
+        } else {
+          const createPayload = {
+            ...assignmentBase,
+            paidAmount: amount,
+            adjustmentAmount: 0,
+            dueAmount: calculateDueAmount(totalAmount, amount, 0),
+            status: calculateFeeStatus(totalAmount, amount, 0),
+            assignedAtText: nowText,
+          };
+          nextAssignmentId = await createFeeAssignment(createPayload);
+          if (!nextAssignmentId) throw new Error('Live fee assignment was not created.');
+          nextAssignment = { id: nextAssignmentId, ...createPayload };
+        }
+
+        if (editingCollection && oldAssignment && oldAssignment.id !== nextAssignmentId) {
+          const oldPaid = Math.max(0, Number(oldAssignment.paidAmount || 0) - previousCollectionAmount);
+          const oldDue = calculateDueAmount(oldAssignment.totalAmount, oldPaid, oldAssignment.adjustmentAmount);
+          oldAssignmentUpdates = {
+            paidAmount: oldPaid,
+            dueAmount: oldDue,
+            status: calculateFeeStatus(oldAssignment.totalAmount, oldPaid, oldAssignment.adjustmentAmount),
+            updatedAtText: nowText,
+          };
+          await updateFeeAssignment(oldAssignment.id, oldAssignmentUpdates);
+        }
+
+        const collection = {
+          assignmentId: nextAssignmentId,
+          feeStructureId: assignmentBase.feeStructureId,
+          feeStructureName: form.feeStructureName || structure?.name || '',
+          studentRecordId: assignmentBase.studentRecordId,
+          studentId: assignmentBase.studentId,
+          studentName: assignmentBase.studentName,
+          classKey,
+          ...feeValues,
+          totalAmount,
+          dueBeforePayment,
+          dueAfterPayment: calculateDueAmount(totalAmount, nextPaid, adjustmentAmount),
+          amount,
+          academicYear,
+          paymentMode: form.paymentMode,
+          referenceNo: form.referenceNo.trim(),
+          paymentDate: form.paymentDate,
+          collectedBy: form.collectedBy,
+          status: 'Posted',
+          entryMode: 'Fee Structure',
+          ...(editingCollection ? { updatedAtText: nowText } : { createdAtText: nowText }),
+        };
+
+        if (editingCollection) {
+          await updateFeeCollection(editingCollection.id, collection);
+          setCollections((prev) => prev.map((item) => item.id === editingCollection.id ? { ...item, ...collection } : item));
+          toast.success('Fee collection updated');
+        } else {
+          const id = await createFeeCollection(collection);
+          if (!id) throw new Error('Live fee collection was not created.');
+          setCollections((prev) => [{ id, ...collection }, ...prev]);
+          toast.success('Fee collection posted');
+        }
+        setAssignments((prev) => {
+          let next = prev;
+          if (oldAssignmentUpdates) {
+            next = next.map((item) => item.id === oldAssignment.id ? { ...item, ...oldAssignmentUpdates } : item);
+          }
+          const exists = next.some((item) => item.id === nextAssignment.id);
+          return exists
+            ? next.map((item) => item.id === nextAssignment.id ? nextAssignment : item)
+            : [nextAssignment, ...next];
+        });
+      } catch (error) {
+        console.error('Unable to save live fee collection.', error);
+        toast.error('Fee collection was not saved to live data.');
+      } finally {
+        setShowCollectionModal(false);
+        setCollectionAssignmentId('');
+        setEditingCollection(null);
+      }
+      return;
+    }
     if (form.entryMode === 'manual') {
       const student = courseStudents.find((item) => item.id === form.studentRecordId);
       const collection = {
@@ -421,6 +575,7 @@ export default function FeesManagement({
       } finally {
         setShowCollectionModal(false);
         setCollectionAssignmentId('');
+        setEditingCollection(null);
       }
       return;
     }
@@ -460,6 +615,7 @@ export default function FeesManagement({
     } finally {
       setShowCollectionModal(false);
       setCollectionAssignmentId('');
+      setEditingCollection(null);
     }
   };
 
@@ -511,6 +667,7 @@ export default function FeesManagement({
 
   const collectForAssignment = (assignmentId) => {
     setCollectionAssignmentId(assignmentId);
+    setEditingCollection(null);
     setShowCollectionModal(true);
   };
 
@@ -639,9 +796,9 @@ export default function FeesManagement({
               </div>
             </div>
             <button
-              onClick={() => { setCollectionAssignmentId(''); setShowCollectionModal(true); }}
+              onClick={() => { setCollectionAssignmentId(''); setEditingCollection(null); setShowCollectionModal(true); }}
               disabled={!canCollect}
-              className="erp-record-payment-button h-11 px-5 rounded-lg bg-[#033500] text-white font-extrabold text-sm flex items-center justify-center gap-2 shadow-[0_12px_26px_rgba(3,53,0,0.22)] hover:bg-[#022800] disabled:bg-slate-300 disabled:text-slate-600 disabled:shadow-none"
+              className="erp-record-payment-button h-12 px-6 rounded-xl bg-[#026c36] text-white font-extrabold text-sm flex items-center justify-center gap-2 shadow-[0_14px_30px_rgba(2,108,54,0.35)] ring-2 ring-emerald-300/60 hover:bg-[#02552b] disabled:bg-slate-300 disabled:text-slate-600 disabled:shadow-none disabled:ring-0"
             >
               <Plus size={16} /> Record Payment
             </button>
@@ -659,6 +816,7 @@ export default function FeesManagement({
             collections={visibleCollections}
             onEdit={(collection) => {
               setCollectionAssignmentId(collection.assignmentId || '');
+              setEditingCollection(collection);
               setShowCollectionModal(true);
             }}
           />
@@ -720,8 +878,8 @@ export default function FeesManagement({
                   : visibleAssignments.length ? 'Click a student fee row to view details and available actions.' : 'No matching fee records found.'}
               </p>
               {activeFeeBranch === 'collect-fee' && (
-                <button onClick={() => { setCollectionAssignmentId(''); setShowCollectionModal(true); }} disabled={!canCollect} className="mt-5 h-10 px-5 rounded-full bg-[#fb9a5b] text-white font-semibold text-sm disabled:bg-slate-300">
-                  Manual Entry
+                <button onClick={() => { setCollectionAssignmentId(''); setEditingCollection(null); setShowCollectionModal(true); }} disabled={!canCollect} className="mt-5 h-10 px-5 rounded-full bg-[#026c36] text-white font-semibold text-sm shadow-[0_10px_22px_rgba(2,108,54,0.24)] disabled:bg-slate-300 disabled:shadow-none">
+                  Record Payment
                 </button>
               )}
             </div>
@@ -736,11 +894,13 @@ export default function FeesManagement({
       {editingStructure && <FeeStructureModal mode="edit" initialStructure={editingStructure} classOptions={classOptions} onClose={() => setEditingStructure(null)} onSave={saveStructure} />}
       {showCollectionModal && (
         <FeeCollectionModal
-          assignments={payableAssignments}
+          assignments={courseAssignments}
           initialAssignmentId={collectionAssignmentId}
-          onClose={() => setShowCollectionModal(false)}
+          initialCollection={editingCollection}
+          onClose={() => { setShowCollectionModal(false); setEditingCollection(null); setCollectionAssignmentId(''); }}
           onSave={saveCollection}
           students={courseStudents}
+          structures={courseStructures}
         />
       )}
       {showAdjustmentModal && <FeeAdjustmentModal assignments={payableAssignments} initialAssignmentId={collectionAssignmentId} onClose={() => setShowAdjustmentModal(false)} onSave={saveAdjustment} />}

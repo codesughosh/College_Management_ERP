@@ -48,6 +48,20 @@ assert.equal(validateFeeStructure({
 }), '');
 
 assert.equal(validateFeeCollection({}), 'Student fee assignment is required.');
+assert.equal(validateFeeCollection({ entryMode: 'structure' }), 'Student is required.');
+assert.equal(validateFeeCollection({
+  entryMode: 'structure',
+  studentRecordId: 'student-1',
+}), 'Fee structure is required.');
+assert.equal(validateFeeCollection({
+  entryMode: 'structure',
+  studentRecordId: 'student-1',
+  feeStructureId: 'fee-1',
+  totalAmount: 65000,
+  amount: 5000,
+  paymentDate: '2026-06-19',
+  paymentMode: 'Cash',
+}), '');
 assert.equal(validateFeeCollection({
   assignmentId: 'a1',
   amount: 6000,

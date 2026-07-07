@@ -80,6 +80,15 @@ export function validateFeeStructure(form) {
 }
 
 export function validateFeeCollection(form, assignment) {
+  if (form.entryMode === 'structure') {
+    if (!form.studentRecordId) return 'Student is required.';
+    if (!form.feeStructureId) return 'Fee structure is required.';
+    if (Number(form.totalAmount || 0) <= 0) return 'Fee total must be greater than zero.';
+    if (!form.paymentDate) return 'Payment date is required.';
+    if (!form.paymentMode) return 'Payment mode is required.';
+    if (Number(form.amount || 0) <= 0) return 'Collection amount must be greater than zero.';
+    return '';
+  }
   if (form.entryMode === 'manual') {
     if (!form.studentRecordId) return 'Student is required.';
   } else if (!form.assignmentId) {

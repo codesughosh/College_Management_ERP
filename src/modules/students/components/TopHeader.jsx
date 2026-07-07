@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { LogOut, UserRound } from 'lucide-react';
 import { defaultRoles, getRoleById } from '../../userRoles/rolePermissions';
+import mauryaLogo from '../../../../assets/maurya.png';
 
 export default function TopHeader({
   academicYear,
@@ -45,7 +46,10 @@ export default function TopHeader({
   return (
     <header className="erp-header min-h-[72px] bg-white border-b border-slate-200 px-4 lg:px-8 py-3 shrink-0">
       <div className="erp-header-grid">
-        <div className="erp-header-college-title" title={collegeName}>{collegeName}</div>
+        <div className="erp-header-college-title" title={collegeName}>
+          <img src={mauryaLogo} alt="" className="erp-header-logo" />
+          <span className="erp-header-college-name">{collegeName}</span>
+        </div>
         <div className="erp-header-actions">
         <div className="erp-header-filters">
           <label className="text-xs font-semibold text-slate-500">

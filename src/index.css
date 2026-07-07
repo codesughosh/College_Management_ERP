@@ -3085,11 +3085,27 @@ html{color-scheme:dark}::selection{background:rgba(0,255,136,.18);color:#eafff5}
 .erp-header-college-title {
   max-width:min(42vw,520px);
   justify-self:center;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:10px;
+  min-width:0;
   color:var(--erp-text)!important;
   font-size:18px;
   font-weight:850;
   line-height:1.1;
   text-align:center;
+}
+
+.erp-header-logo {
+  width:42px;
+  height:42px;
+  object-fit:contain;
+  flex:0 0 auto;
+}
+
+.erp-header-college-name {
+  min-width:0;
   white-space:nowrap;
   overflow:hidden;
   text-overflow:ellipsis;
@@ -3727,6 +3743,7 @@ html{color-scheme:dark}::selection{background:rgba(0,255,136,.18);color:#eafff5}
 .erp-header-college-title {
   max-width:min(54vw,760px);
   justify-self:start;
+  justify-content:flex-start;
   text-align:left;
   font-size:24px;
   line-height:1.08;
@@ -3834,14 +3851,25 @@ html{color-scheme:dark}::selection{background:rgba(0,255,136,.18);color:#eafff5}
 
   .erp-header-college-title {
     justify-self:start;
+    gap:8px;
     text-align:left;
     font-size:17px;
+  }
+
+  .erp-header-logo {
+    width:34px;
+    height:34px;
   }
 }
 
 @media(max-width:640px) {
   .erp-header-college-title {
     font-size:15px;
+  }
+
+  .erp-header-logo {
+    width:30px;
+    height:30px;
   }
 }
 

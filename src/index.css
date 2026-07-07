@@ -3101,6 +3101,7 @@ html{color-scheme:dark}::selection{background:rgba(0,255,136,.18);color:#eafff5}
   width:42px;
   height:42px;
   object-fit:contain;
+  border-radius:999px;
   flex:0 0 auto;
 }
 

@@ -1,3 +1,4 @@
+import { useMemo, useState } from 'react';
 import StatusBadge from '../../students/components/StatusBadge';
 import { formatCurrency } from '../feeUtils';
 
@@ -90,7 +91,16 @@ function getGroupedStructures(structures = []) {
 
 export default function FeeStructurePanel({ structures, canEdit, onEdit, onAssign, layout = 'inspector' }) {
   const isGrid = layout === 'grid';
-  const groupedStructures = isGrid ? getGroupedStructures(structures) : [];
+  const [selectedCourse, setSelectedCourse] = useState('all');
+  const groupedStructures = useMemo(() => (isGrid ? getGroupedStructures(structures) : []), [isGrid, structures]);
+  const selectedCourseExists = groupedStructures.some((group) => group.label === selectedCourse);
+  const activeCourse = selectedCourse === 'all' || !selectedCourseExists ? 'all' : selectedCourse;
+  const visibleGroups = activeCourse === 'all'
+    ? groupedStructures
+    : groupedStructures.filter((group) => group.label === activeCourse);
+  const visibleStructureCount = activeCourse === 'all'
+    ? structures.length
+    : visibleGroups.reduce((count, group) => count + group.items.length, 0);
 
   const renderStructureCard = (item) => {
     const visibleComponents = feeComponentLabels.filter(([, key]) => Number(item[key] || 0) > 0);
@@ -132,12 +142,29 @@ export default function FeeStructurePanel({ structures, canEdit, onEdit, onAssig
   return (
     <section className={isGrid ? 'w-full space-y-4' : 'xl:w-[32%] erp-sticky-inspector space-y-4'}>
       <div className="bg-white border border-slate-100 rounded-lg p-5">
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="font-bold text-slate-900">Fee Structures</h3>
-          <span className="text-xs text-slate-500">{structures.length} active</span>
+        <div className="flex flex-col gap-3 mb-4 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <h3 className="font-bold text-slate-900">Fee Structures</h3>
+            <span className="text-xs text-slate-500">{visibleStructureCount} active</span>
+          </div>
+          {isGrid && groupedStructures.length > 1 && (
+            <label className="flex items-center gap-2 text-xs font-semibold text-slate-500">
+              Course
+              <select
+                value={activeCourse}
+                onChange={(event) => setSelectedCourse(event.target.value)}
+                className="h-9 min-w-64 max-w-full rounded-lg border border-slate-200 bg-white px-3 text-xs font-semibold text-slate-700 outline-none focus:border-emerald-600 focus:ring-2 focus:ring-emerald-100"
+              >
+                <option value="all">All Courses</option>
+                {groupedStructures.map((group) => (
+                  <option key={group.label} value={group.label}>{group.label}</option>
+                ))}
+              </select>
+            </label>
+          )}
         </div>
         <div className="space-y-6">
-          {isGrid ? groupedStructures.map((group) => (
+          {isGrid ? visibleGroups.map((group) => (
             <div key={group.label} className="space-y-3 border-t border-slate-100 pt-5 first:border-t-0 first:pt-0">
               <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
                 <div>

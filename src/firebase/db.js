@@ -1,6 +1,7 @@
 import {
   addDoc,
   collection,
+  deleteDoc,
   doc,
   getDoc,
   getDocs,
@@ -133,6 +134,7 @@ export async function getStudentInformationData(academicYear = '') {
     marksEntries,
     studentResults,
     feeAssignments,
+    studentHealthRecords,
   ] = await Promise.all([
     listCollection('students', yearConstraints),
     listCollection('studentAdmissions', yearConstraints),
@@ -144,6 +146,7 @@ export async function getStudentInformationData(academicYear = '') {
     listCollectionOptional('marksEntries', yearConstraints),
     listCollectionOptional('studentResults', yearConstraints),
     listCollectionOptional('feeAssignments', yearConstraints),
+    listCollectionOptional('studentHealthRecords', yearConstraints),
   ]);
 
   return {
@@ -157,6 +160,7 @@ export async function getStudentInformationData(academicYear = '') {
     marksEntries,
     studentResults,
     feeAssignments,
+    studentHealthRecords,
   };
 }
 
@@ -186,6 +190,23 @@ export async function updateStudentDocument(id, data) {
     ...data,
     updatedAt: serverTimestamp(),
   });
+}
+
+export async function createStudentHealthRecord(data) {
+  return createCollectionDocument('studentHealthRecords', data);
+}
+
+export async function updateStudentHealthRecord(id, data) {
+  const store = requireWritableDocId(id, 'Student health record');
+  await updateDoc(doc(store, 'studentHealthRecords', id), {
+    ...data,
+    updatedAt: serverTimestamp(),
+  });
+}
+
+export async function deleteStudentHealthRecord(id) {
+  const store = requireWritableDocId(id, 'Student health record');
+  await deleteDoc(doc(store, 'studentHealthRecords', id));
 }
 
 export async function createStudentPromotion(data) {

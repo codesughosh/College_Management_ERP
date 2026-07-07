@@ -6,6 +6,7 @@ import {
   BookOpen,
   Download,
   FileText,
+  HeartPulse,
   Plus,
   Search,
   UserRound,
@@ -17,6 +18,8 @@ import {
   createStudent,
   createStudentAdmission,
   createStudentDocument,
+  createStudentHealthRecord,
+  deleteStudentHealthRecord,
   getInstituteShellData,
   getSettingsData,
   getStudentInformationData,
@@ -24,12 +27,14 @@ import {
   restoreStudent,
   updateStudent,
   updateStudentAdmission,
+  updateStudentHealthRecord,
 } from '../../firebase/db';
 import { isFirebaseConfigured } from '../../firebase/config';
 import { getEnabledModules, getModuleById, getModuleByPath } from '../moduleRegistry';
 import Sidebar from './components/Sidebar';
 import StatusBadge from './components/StatusBadge';
 import StudentModal from './components/StudentModal';
+import StudentHealthRecordTab from './components/StudentHealthRecordTab';
 import StudentProfileCard from './components/StudentProfileCard';
 import StudentTable from './components/StudentTable';
 import TopHeader from './components/TopHeader';
@@ -47,6 +52,7 @@ import {
   statusRequiresSuperAdminApproval,
   validateStudentProfile,
 } from './studentUtils';
+import { isHealthRecordManager } from './studentHealthRecordModel';
 import { canAccess, defaultRoles } from '../userRoles/rolePermissions';
 import { normalizeInstituteSettings } from '../settings/settingsModel';
 import { filterStudentScopedRecords, filterStudentsByCourse } from '../shared/courseFilters';
@@ -258,6 +264,7 @@ export default function StudentInformationManagement({ user, onLogout }) {
   const [marksEntries, setMarksEntries] = useState([]);
   const [studentResults, setStudentResults] = useState([]);
   const [feeAssignments, setFeeAssignments] = useState([]);
+  const [studentHealthRecords, setStudentHealthRecords] = useState([]);
   const [loadError, setLoadError] = useState('');
   const [showModal, setShowModal] = useState(false);
   const [editingStudent, setEditingStudent] = useState(null);
@@ -377,6 +384,7 @@ export default function StudentInformationManagement({ user, onLogout }) {
         const nextMarksEntries = data.marksEntries || [];
         const nextStudentResults = data.studentResults || [];
         const nextFeeAssignments = data.feeAssignments || [];
+        const nextStudentHealthRecords = data.studentHealthRecords || [];
         setStudents(nextStudents);
         setSelectedId('');
         setAdmissions(nextAdmissions);
@@ -387,6 +395,7 @@ export default function StudentInformationManagement({ user, onLogout }) {
         setMarksEntries(nextMarksEntries);
         setStudentResults(nextStudentResults);
         setFeeAssignments(nextFeeAssignments);
+        setStudentHealthRecords(nextStudentHealthRecords);
         setCourses(buildCourseOptionsFromStudents(nextStudents, data.admissionBatches || []));
         if (!academicYear) {
           const liveYears = [
@@ -399,6 +408,7 @@ export default function StudentInformationManagement({ user, onLogout }) {
             ...nextMarksEntries,
             ...nextStudentResults,
             ...nextFeeAssignments,
+            ...nextStudentHealthRecords,
           ]
             .map((record) => record?.academicYear)
             .filter(Boolean)
@@ -428,11 +438,12 @@ export default function StudentInformationManagement({ user, onLogout }) {
       ...marksEntries,
       ...studentResults,
       ...feeAssignments,
+      ...studentHealthRecords,
     ].forEach((record) => {
       if (record?.academicYear) years.add(record.academicYear);
     });
     return [...years].sort().reverse();
-  }, [academicYear, admissions, attendanceRecords, feeAssignments, marksEntries, promotions, studentDocuments, studentResults, students, transfers]);
+  }, [academicYear, admissions, attendanceRecords, feeAssignments, marksEntries, promotions, studentDocuments, studentHealthRecords, studentResults, students, transfers]);
 
   const recordBelongsToYear = (record) => !academicYear || record.academicYear === academicYear;
   const yearStudents = useMemo(() => (
@@ -498,7 +509,9 @@ export default function StudentInformationManagement({ user, onLogout }) {
   const selectedMarksEntries = marksEntries.filter((record) => relationMatches(record, selectedStudent) && recordBelongsToYear(record));
   const selectedResults = studentResults.filter((record) => relationMatches(record, selectedStudent) && recordBelongsToYear(record));
   const selectedFeeAssignments = feeAssignments.filter((record) => relationMatches(record, selectedStudent) && recordBelongsToYear(record));
+  const selectedHealthRecords = studentHealthRecords.filter((record) => relationMatches(record, selectedStudent) && recordBelongsToYear(record));
   const latestAdmission = latestRecord(selectedAdmissions);
+  const selectedHealthRecord = latestRecord(selectedHealthRecords);
 
   const filteredStudents = useMemo(() => {
     const term = search.trim().toLowerCase();
@@ -795,6 +808,79 @@ export default function StudentInformationManagement({ user, onLogout }) {
     }
   };
 
+  const saveStudentHealthRecord = async (form, existingRecord = null) => {
+    if (!selectedStudent) return false;
+    if (!isHealthRecordManager(currentRoleId)) {
+      toast.error('Only Admin and Super Admin can upload or edit health records.');
+      return false;
+    }
+    if (!isFirebaseConfigured) {
+      toast.error('Live Firebase data is not configured.');
+      return false;
+    }
+
+    const savedAtText = formatDisplayDate();
+    const payload = {
+      ...form,
+      studentRecordId: selectedStudent.id,
+      studentId: selectedStudent.studentId,
+      studentName: selectedStudent.name,
+      academicYear: form.identification?.academicYear || academicYear || selectedStudent.academicYear || '',
+      courseCode: selectedStudent.courseCode || '',
+      courseName: selectedStudent.courseName || selectedStudent.program || '',
+      updatedBy: user?.name || 'Admin',
+      updatedAtText: savedAtText,
+    };
+
+    try {
+      if (existingRecord?.id) {
+        await updateStudentHealthRecord(existingRecord.id, payload);
+        setStudentHealthRecords((prev) => prev.map((record) => (
+          record.id === existingRecord.id ? { ...record, ...payload } : record
+        )));
+        toast.success('Student health record updated');
+      } else {
+        const createPayload = {
+          ...payload,
+          uploadedBy: user?.name || 'Admin',
+          uploadedAtText: savedAtText,
+        };
+        const id = await createStudentHealthRecord(createPayload);
+        if (!id) throw new Error('Missing health record id.');
+        setStudentHealthRecords((prev) => [{ id, ...createPayload }, ...prev]);
+        toast.success('Student health record uploaded');
+      }
+      return true;
+    } catch (error) {
+      console.error('Unable to save student health record.', error);
+      toast.error('Student health record was not saved to live data.');
+      return false;
+    }
+  };
+
+  const removeStudentHealthRecord = async (record) => {
+    if (!record?.id) return false;
+    if (!isHealthRecordManager(currentRoleId)) {
+      toast.error('Only Admin and Super Admin can delete health records.');
+      return false;
+    }
+    if (!isFirebaseConfigured) {
+      toast.error('Live Firebase data is not configured.');
+      return false;
+    }
+
+    try {
+      await deleteStudentHealthRecord(record.id);
+      setStudentHealthRecords((prev) => prev.filter((item) => item.id !== record.id));
+      toast.success('Student health record deleted');
+      return true;
+    } catch (error) {
+      console.error('Unable to delete student health record.', error);
+      toast.error('Student health record was not deleted from live data.');
+      return false;
+    }
+  };
+
   return (
     <div className={`erp-shell ${themeMode === 'light' ? 'light-mode' : ''} h-screen overflow-hidden bg-white text-slate-900`}>
         <div className="flex h-screen overflow-hidden">
@@ -838,15 +924,21 @@ export default function StudentInformationManagement({ user, onLogout }) {
                 ) : activePage === 'students' ? (
                 selectedStudent ? (
                   <StudentDetailPage
+                    academicYear={academicYear}
                     attendanceRecords={selectedAttendanceRecords}
                     canApprove={canApproveStudentAdmission(currentRoleId)}
                     canEdit={canEditStudents}
+                    canManageHealthRecord={isHealthRecordManager(currentRoleId)}
+                    currentRoleId={currentRoleId}
                     documents={selectedDocuments}
                     feeAssignments={selectedFeeAssignments}
+                    healthRecord={selectedHealthRecord}
                     latestAdmission={latestAdmission}
                     marksEntries={selectedMarksEntries}
                     onApprove={approveStudentAdmission}
+                    onDeleteHealthRecord={removeStudentHealthRecord}
                     onEdit={setEditingStudent}
+                    onSaveHealthRecord={saveStudentHealthRecord}
                     promotions={selectedPromotions}
                     results={selectedResults}
                     student={selectedStudent}
@@ -1080,17 +1172,23 @@ export default function StudentInformationManagement({ user, onLogout }) {
 }
 
 function StudentDetailPage({
+  academicYear = '',
   attendanceRecords = [],
   canApprove = false,
   canEdit,
+  canManageHealthRecord = false,
+  currentRoleId = '',
   documents = [],
   feeAssignments = [],
+  healthRecord = null,
   latestAdmission,
   marksEntries = [],
   onApprove,
   onBack,
+  onDeleteHealthRecord,
   onEdit,
   onOpenDocuments,
+  onSaveHealthRecord,
   promotions = [],
   results = [],
   student,
@@ -1100,10 +1198,12 @@ function StudentDetailPage({
   const [activeTab, setActiveTab] = useState('profile');
   const verifiedDocs = documents.filter((item) => item.verificationStatus === 'Verified' || item.verificationStatus === 'Source PDF').length;
   const pendingDocs = documents.filter((item) => item.verificationStatus === 'Pending Review').length;
-  const presentRecords = attendanceRecords.filter((item) => item.status === 'Present').length;
-  const absentRecords = attendanceRecords.filter((item) => item.status === 'Absent').length;
-  const leaveRecords = attendanceRecords.filter((item) => ['Leave', 'On Leave'].includes(item.status)).length;
-  const attendancePercentage = attendanceRecords.length ? Math.round((presentRecords / attendanceRecords.length) * 100) : 0;
+  const generalAttendanceRecords = attendanceRecords.filter((item) => !(item.subjectName || item.subject));
+  const subjectAttendanceRecords = attendanceRecords.filter((item) => item.subjectName || item.subject);
+  const generalPresentRecords = generalAttendanceRecords.filter((item) => item.status === 'Present').length;
+  const generalAbsentRecords = generalAttendanceRecords.filter((item) => item.status === 'Absent').length;
+  const generalLeaveRecords = generalAttendanceRecords.filter((item) => ['Leave', 'On Leave'].includes(item.status)).length;
+  const generalAttendancePercentage = generalAttendanceRecords.length ? Math.round((generalPresentRecords / generalAttendanceRecords.length) * 100) : 0;
   const examRecordCount = marksEntries.length + results.length;
   const examPercentages = [...marksEntries, ...results].map((item) => Number(item.percentage || 0)).filter((value) => value > 0);
   const examAverage = examPercentages.length ? Math.round(examPercentages.reduce((sum, value) => sum + value, 0) / examPercentages.length) : 0;
@@ -1119,13 +1219,14 @@ function StudentDetailPage({
     && !statusRequiresSuperAdminApproval(latestAdmission?.status || '');
   const summaryTabs = [
     { id: 'profile', label: 'Profile', icon: <UserRound size={14} />, active: activeTab === 'profile' },
-    { id: 'attendance', label: 'Attendance', value: `${attendancePercentage}%`, icon: <Bell size={14} />, active: activeTab === 'attendance' },
+    { id: 'attendance', label: 'Attendance', value: `${generalAttendancePercentage}%`, icon: <Bell size={14} />, active: activeTab === 'attendance' },
     { id: 'exams', label: 'Exams', value: `${examRecordCount}`, icon: <BookOpen size={14} />, active: activeTab === 'exams' },
     { id: 'payment', label: 'Payment', value: feeDue ? `INR ${feeDue}` : 'No due', icon: <Wallet size={14} />, active: activeTab === 'payment' },
     { id: 'documents', label: 'Docs', value: `${documents.length}`, icon: <FileText size={14} />, active: activeTab === 'documents' },
+    { id: 'health', label: 'Health Record', value: healthRecord ? 'Uploaded' : 'Empty', icon: <HeartPulse size={14} />, active: activeTab === 'health' },
   ];
 
-  const attendanceSubjectRows = Object.values(attendanceRecords.reduce((map, record) => {
+  const attendanceSubjectRows = Object.values(subjectAttendanceRecords.reduce((map, record) => {
     const subject = record.subjectName || record.subject;
     if (!subject) return map;
     const row = map[subject] || { subject, total: 0, present: 0, absent: 0, leave: 0 };
@@ -1200,12 +1301,14 @@ function StudentDetailPage({
   const statDetails = {
     attendance: {
       title: 'Attendance Stats',
-      helper: `${attendancePercentage}% attendance from ${attendanceRecords.length} marked record${attendanceRecords.length === 1 ? '' : 's'}.`,
+      helper: `${generalAttendancePercentage}% general attendance. Subject-wise records remain separate below.`,
       items: [
-        ['Present', presentRecords],
-        ['Absent', absentRecords],
-        ['Leave', leaveRecords],
-        ['Total Records', attendanceRecords.length],
+        ['General Present', generalPresentRecords],
+        ['General Absent', generalAbsentRecords],
+        ['General Leave', generalLeaveRecords],
+        ['General Records', generalAttendanceRecords.length],
+        ['Subject Records', subjectAttendanceRecords.length],
+        ['All Records', attendanceRecords.length],
       ],
     },
     exams: {
@@ -1351,6 +1454,19 @@ function StudentDetailPage({
 
   const renderActiveTabContent = () => {
     if (activeTab === 'profile') return renderProfileContent();
+    if (activeTab === 'health') {
+      return (
+        <StudentHealthRecordTab
+          academicYear={academicYear}
+          canManage={canManageHealthRecord}
+          currentRoleId={currentRoleId}
+          healthRecord={healthRecord}
+          onDelete={onDeleteHealthRecord}
+          onSave={onSaveHealthRecord}
+          student={student}
+        />
+      );
+    }
 
     const selectedStat = statDetails[activeTab] || statDetails.attendance;
 
@@ -1370,15 +1486,20 @@ function StudentDetailPage({
         {activeTab === 'attendance' && (
           <div className="mt-5 grid xl:grid-cols-[.7fr_1.3fr] gap-4">
             <div className="rounded-lg border border-slate-100 bg-white p-5">
-              <div className="text-sm font-bold text-slate-900 mb-4">Overall Attendance</div>
+              <div className="text-sm font-bold text-slate-900 mb-4">General Attendance</div>
               <div
                 className="mx-auto h-36 w-36 rounded-full flex items-center justify-center"
-                style={{ background: `conic-gradient(#00c46f ${attendancePercentage * 3.6}deg, #f5f5f6 0deg)` }}
+                style={{ background: `conic-gradient(#00c46f ${generalAttendancePercentage * 3.6}deg, #f5f5f6 0deg)` }}
               >
                 <div className="h-24 w-24 rounded-full bg-white flex flex-col items-center justify-center">
-                  <span className="text-3xl font-extrabold text-slate-900">{attendancePercentage}%</span>
+                  <span className="text-3xl font-extrabold text-slate-900">{generalAttendancePercentage}%</span>
                   <span className="text-xs font-semibold text-slate-500">Present</span>
                 </div>
+              </div>
+              <div className="mt-4 grid grid-cols-3 gap-2 text-center text-xs">
+                <div className="rounded-lg bg-[#f5f5f6] p-2"><b className="block text-slate-900">{generalPresentRecords}</b>Present</div>
+                <div className="rounded-lg bg-[#f5f5f6] p-2"><b className="block text-slate-900">{generalAbsentRecords}</b>Absent</div>
+                <div className="rounded-lg bg-[#f5f5f6] p-2"><b className="block text-slate-900">{generalLeaveRecords}</b>Leave</div>
               </div>
             </div>
             <div className="space-y-3">

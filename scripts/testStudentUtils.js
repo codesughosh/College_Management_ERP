@@ -11,6 +11,13 @@ import {
   relationMatches,
   validateStudentProfile,
 } from '../src/modules/students/studentUtils.js';
+import {
+  createEmptyHealthRecord,
+  isHealthRecordManager,
+  medicalConditionOptions,
+  monthlyRecordMonths,
+  normalizeHealthRecordForm,
+} from '../src/modules/students/studentHealthRecordModel.js';
 
 const student = { id: 'student-doc-id', studentId: 'STU-10001' };
 
@@ -69,5 +76,17 @@ assert.equal(
   }),
   'Enter a valid phone number.'
 );
+
+const emptyHealthRecord = createEmptyHealthRecord({ name: 'Asha Rao', studentId: 'STU-10001', bloodGroup: 'B+' }, '2026-2027');
+assert.equal(emptyHealthRecord.identification.studentName, 'Asha Rao');
+assert.equal(emptyHealthRecord.identification.academicYear, '2026-2027');
+assert.equal(emptyHealthRecord.personalHistory.bloodGroupType, 'B+');
+assert.equal(emptyHealthRecord.immunizations.length, 12);
+assert.equal(emptyHealthRecord.monthlyRecords.length, monthlyRecordMonths.length);
+assert.ok(medicalConditionOptions.includes('Asthma'));
+assert.equal(isHealthRecordManager('admin'), true);
+assert.equal(isHealthRecordManager('super-admin'), true);
+assert.equal(isHealthRecordManager('faculty'), false);
+assert.equal(normalizeHealthRecordForm({ personalHistory: { medicalConditions: ['Asthma'] } }, student, '2026-2027').personalHistory.medicalConditions[0], 'Asthma');
 
 console.log('Student utility tests passed.');

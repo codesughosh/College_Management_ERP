@@ -31,6 +31,12 @@ function formatInputDate(inputDate) {
   return formatDisplayDate(new Date(`${inputDate}T00:00:00`));
 }
 
+function getStudentAttendanceScope(branchId = '', fallback = 'subject') {
+  if (branchId === 'mark-general-students') return 'general';
+  if (branchId === 'mark-students' || branchId === 'mark-subject-students') return 'subject';
+  return fallback;
+}
+
 export default function AttendanceManagement({
   currentUser,
   academicYear = '',
@@ -54,6 +60,7 @@ export default function AttendanceManagement({
   const [loadError, setLoadError] = useState('');
   const [activeAttendanceTask, setActiveAttendanceTask] = useState(initialTask || '');
   const [activeAttendanceBranch, setActiveAttendanceBranch] = useState(initialBranch || '');
+  const [studentAttendanceScope, setStudentAttendanceScope] = useState(getStudentAttendanceScope(initialBranch, 'subject'));
   const [selectedEntityId, setSelectedEntityId] = useState('');
 
   useEffect(() => {
@@ -89,7 +96,7 @@ export default function AttendanceManagement({
         task: initialTask || '',
         branch: initialBranch || '',
         mode: initialMode || 'students',
-        scope: 'daily',
+        scope: initialMode === 'students' ? getStudentAttendanceScope(initialBranch, 'subject') : 'staff',
       },
     }, '');
 
@@ -104,6 +111,7 @@ export default function AttendanceManagement({
       setActiveAttendanceTask(flow.task || '');
       setActiveAttendanceBranch(flow.branch || '');
       setMode(flow.mode || 'students');
+      setStudentAttendanceScope(flow.scope || getStudentAttendanceScope(flow.branch, 'subject'));
       setSelectedEntityId('');
       setSearch('');
     };
@@ -129,8 +137,15 @@ export default function AttendanceManagement({
   const selectedSubject = subjectOptions.find((subject) => subject.code === selectedSubjectCode) || null;
   const courseStudentAttendance = filterStudentScopedRecords(studentAttendance, courseStudents, selectedCourseCode, selectedCourse);
   const allModeRecords = mode === 'students' ? courseStudentAttendance : staffAttendance;
+  const isSubjectStudentAttendance = mode === 'students' && Boolean(activeAttendanceBranch) && studentAttendanceScope === 'subject';
+  const isGeneralStudentAttendance = mode === 'students' && Boolean(activeAttendanceBranch) && studentAttendanceScope === 'general';
   const activeRecords = mode === 'students'
-    ? allModeRecords.filter((record) => !selectedSubject?.name || (record.subjectName || record.subject || '') === selectedSubject.name)
+    ? allModeRecords.filter((record) => {
+      const recordSubject = record.subjectName || record.subject || '';
+      if (isGeneralStudentAttendance) return !recordSubject;
+      if (isSubjectStudentAttendance) return !selectedSubject?.name || recordSubject === selectedSubject.name;
+      return true;
+    })
     : allModeRecords;
   const selectedDate = formatInputDate(selectedDateInput);
   const selectedDateRecords = activeRecords.filter((record) => record.dateText === selectedDate);
@@ -157,15 +172,19 @@ export default function AttendanceManagement({
     setSelectedEntityId('');
     setSearch('');
     setMode(nextMode);
-    window.history.pushState({ ...(window.history.state || {}), attendanceFlow: { task: taskId, branch: '', mode: nextMode } }, '');
+    const nextScope = nextMode === 'students' ? 'subject' : 'staff';
+    setStudentAttendanceScope(nextScope);
+    window.history.pushState({ ...(window.history.state || {}), attendanceFlow: { task: taskId, branch: '', mode: nextMode, scope: nextScope } }, '');
   };
 
-  const openAttendanceBranch = ({ branchId, nextMode = mode }) => {
+  const openAttendanceBranch = ({ branchId, nextMode = mode, scope = '' }) => {
+    const nextScope = nextMode === 'students' ? (scope || getStudentAttendanceScope(branchId, studentAttendanceScope)) : 'staff';
     setActiveAttendanceBranch(branchId);
     setSelectedEntityId('');
     setSearch('');
     setMode(nextMode);
-    window.history.pushState({ ...(window.history.state || {}), attendanceFlow: { task: activeAttendanceTask, branch: branchId, mode: nextMode } }, '');
+    setStudentAttendanceScope(nextScope);
+    window.history.pushState({ ...(window.history.state || {}), attendanceFlow: { task: activeAttendanceTask, branch: branchId, mode: nextMode, scope: nextScope } }, '');
   };
 
   const goBackOneAttendanceStep = () => {
@@ -203,7 +222,8 @@ export default function AttendanceManagement({
 
   const attendanceBranchOptions = {
     students: [
-      { id: 'mark-students', title: 'Mark Student Attendance', description: 'Select a student, then mark present or absent.', icon: <CheckCircle size={20} />, nextMode: 'students' },
+      { id: 'mark-general-students', title: 'Mark General Attendance', description: 'Mark daily student attendance without selecting a subject.', icon: <CalendarDays size={20} />, nextMode: 'students', scope: 'general' },
+      { id: 'mark-students', title: 'Mark Subject Attendance', description: 'Select a subject, then mark student attendance.', icon: <CheckCircle size={20} />, nextMode: 'students', scope: 'subject' },
     ],
     staff: [
       { id: 'mark-staff', title: 'Mark Staff Attendance', description: 'Select a staff member, then mark attendance.', icon: <UserCheck size={20} />, nextMode: 'staff' },
@@ -215,11 +235,11 @@ export default function AttendanceManagement({
   const activeBranch = activeBranches.find((branch) => branch.id === activeAttendanceBranch);
   const markAttendance = async (entity, status) => {
     const entityId = entity.studentId || entity.employeeId;
-    if (mode === 'students' && !selectedSubject) {
+    if (mode === 'students' && studentAttendanceScope === 'subject' && !selectedSubject) {
       toast.error('Select a live subject before marking student attendance.');
       return;
     }
-    const subjectName = mode === 'students' ? selectedSubject.name : '';
+    const subjectName = mode === 'students' && studentAttendanceScope === 'subject' ? selectedSubject.name : '';
     const key = buildAttendanceKey(entityId, selectedDate, subjectName);
     const exists = allModeRecords.find((record) => buildAttendanceKey(record.entityId, record.dateText, record.subjectName || record.subject || '') === key);
     if (exists) {
@@ -263,7 +283,8 @@ export default function AttendanceManagement({
       department: entity.department || '',
       courseCode: entity.courseCode || selectedCourseCode,
       courseName: entity.courseName || entity.program || selectedCourse?.courseName || '',
-      subjectCode: mode === 'students' ? selectedSubject?.code || '' : '',
+      attendanceScope: mode === 'students' ? studentAttendanceScope : 'staff',
+      subjectCode: mode === 'students' && studentAttendanceScope === 'subject' ? selectedSubject?.code || '' : '',
       subjectName,
       dateText: selectedDate,
       status,
@@ -298,7 +319,12 @@ export default function AttendanceManagement({
           {loadError && <p className="text-xs text-rose-600 mt-2">{loadError}</p>}
         </div>
         <div className="flex items-center gap-3">
-          {mode === 'students' && (
+          {mode === 'students' && activeAttendanceBranch && (
+            <span className="hidden rounded-lg bg-emerald-50 px-3 py-2 text-xs font-bold text-emerald-700 sm:inline-flex">
+              {studentAttendanceScope === 'general' ? 'General Attendance' : 'Subject Attendance'}
+            </span>
+          )}
+          {mode === 'students' && activeAttendanceBranch && studentAttendanceScope === 'subject' && (
             <select
               value={selectedSubject?.code || ''}
               onChange={(event) => setSelectedSubjectCode(event.target.value)}
@@ -369,7 +395,7 @@ export default function AttendanceManagement({
         {activeBranches.map((branch) => (
           <button
             key={branch.id}
-            onClick={() => openAttendanceBranch({ branchId: branch.id, nextMode: branch.nextMode || mode })}
+            onClick={() => openAttendanceBranch({ branchId: branch.id, nextMode: branch.nextMode || mode, scope: branch.scope })}
             className="group min-h-36 text-left rounded-lg border border-slate-100 bg-white p-5 shadow-sm"
           >
             <div className="flex items-start justify-between gap-4">

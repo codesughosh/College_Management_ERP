@@ -4121,3 +4121,51 @@ html{color-scheme:dark}::selection{background:rgba(0,255,136,.18);color:#eafff5}
   color:#033500!important;
   stroke:#033500!important;
 }
+
+/* Final dashboard overflow and theme-toggle contrast fixes. */
+.erp-dashboard-course-card,
+.erp-dashboard-fee-card,
+.erp-dashboard-course-content {
+  min-width:0!important;
+}
+
+.erp-dashboard-course-card .erp-dashboard-donut-hole,
+.erp-dashboard-fee-card .erp-dashboard-donut-hole {
+  background:#08151c!important;
+}
+
+.erp-shell.light-mode .erp-dashboard-course-card .erp-dashboard-donut-hole,
+.erp-shell.light-mode .erp-dashboard-fee-card .erp-dashboard-donut-hole {
+  background:#ffffff!important;
+}
+
+.erp-shell.light-mode .erp-sidebar .erp-sidebar-theme-switch > button.is-active,
+.erp-shell.light-mode .erp-sidebar > .erp-sidebar-sticky .erp-sidebar-theme-switch > button.is-active,
+.erp-shell.light-mode .erp-mobile-drawer-theme > button.is-active {
+  background:#033500!important;
+  background-color:#033500!important;
+  background-image:none!important;
+  border-color:#033500!important;
+  color:#ffffff!important;
+  -webkit-text-fill-color:#ffffff!important;
+  opacity:1!important;
+}
+
+.erp-shell.light-mode .erp-sidebar .erp-sidebar-theme-switch > button.is-active svg,
+.erp-shell.light-mode .erp-sidebar .erp-sidebar-theme-switch > button.is-active span,
+.erp-shell.light-mode .erp-mobile-drawer-theme > button.is-active svg,
+.erp-shell.light-mode .erp-mobile-drawer-theme > button.is-active span {
+  color:#ffffff!important;
+  stroke:#ffffff!important;
+  -webkit-text-fill-color:#ffffff!important;
+  opacity:1!important;
+  visibility:visible!important;
+}
+
+.erp-shell.light-mode .erp-sidebar .erp-sidebar-theme-switch > button:not(.is-active),
+.erp-shell.light-mode .erp-mobile-drawer-theme > button:not(.is-active) {
+  background:#ffffff!important;
+  background-color:#ffffff!important;
+  color:#4f4a64!important;
+  -webkit-text-fill-color:#4f4a64!important;
+}

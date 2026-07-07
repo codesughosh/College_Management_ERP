@@ -308,24 +308,24 @@ export default function DashboardManagement({ academicYear = '', currentUser, on
         </section>
       </div>
 
-      <div className="grid xl:grid-cols-[1fr_1fr] gap-5 mt-5">
+      <div className="grid xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] gap-5 mt-5">
         {canViewStudents && (
-        <section className="min-w-0 rounded-lg border border-slate-100 bg-white p-5 shadow-sm">
-          <div className="flex items-center justify-between gap-3 mb-5">
-            <div>
+        <section className="erp-dashboard-course-card min-w-0 overflow-hidden rounded-lg border border-slate-100 bg-white p-5 shadow-sm">
+          <div className="flex flex-wrap items-center justify-between gap-3 mb-5">
+            <div className="min-w-0">
               <h2 className="font-bold text-slate-900">Course Strength</h2>
               <p className="text-xs text-slate-500 mt-1">Active student distribution and record readiness.</p>
             </div>
-            <span className="rounded-full bg-[#f5f5f6] px-3 py-1 text-xs font-bold text-emerald-600">{loading ? '-' : `${documentReadiness}% docs ready`}</span>
+            <span className="shrink-0 rounded-full bg-[#f5f5f6] px-3 py-1 text-xs font-bold text-emerald-600">{loading ? '-' : `${documentReadiness}% docs ready`}</span>
           </div>
           {courseStrength.length ? (
-          <div className="grid md:grid-cols-[minmax(0,1fr)_minmax(0,.75fr)] gap-5 items-center">
-            <div className="space-y-3">
+          <div className="erp-dashboard-course-content grid md:grid-cols-[minmax(0,1fr)_150px] lg:grid-cols-[minmax(0,1fr)_164px] gap-5 items-center">
+            <div className="min-w-0 space-y-3">
               {courseStrength.map((item, index) => (
-                <div key={item.label}>
-                  <div className="flex items-center justify-between text-sm">
-                    <span className="font-semibold text-slate-700 truncate">{item.label}</span>
-                    <b>{loading ? '-' : item.value}</b>
+                <div key={item.label} className="min-w-0">
+                  <div className="flex min-w-0 items-center justify-between gap-3 text-sm">
+                    <span className="min-w-0 flex-1 truncate font-semibold text-slate-700">{item.label}</span>
+                    <b className="shrink-0">{loading ? '-' : item.value}</b>
                   </div>
                   <div className="mt-2 h-3 rounded-full bg-[#f5f5f6] overflow-hidden">
                     <div
@@ -339,8 +339,8 @@ export default function DashboardManagement({ academicYear = '', currentUser, on
                 </div>
               ))}
             </div>
-            <div className="relative h-40 w-40 mx-auto rounded-full" style={{ background: `conic-gradient(#22c55e 0 ${documentReadiness}%, #f59e0b ${documentReadiness}% 100%)` }}>
-              <div className="absolute inset-7 rounded-full bg-white flex flex-col items-center justify-center">
+            <div className="relative h-36 w-36 lg:h-40 lg:w-40 mx-auto rounded-full shrink-0" style={{ background: `conic-gradient(#22c55e 0 ${documentReadiness}%, #f59e0b ${documentReadiness}% 100%)` }}>
+              <div className="erp-dashboard-donut-hole absolute inset-7 rounded-full flex flex-col items-center justify-center">
                 <span className="text-3xl font-extrabold text-slate-900">{loading ? '-' : `${documentReadiness}%`}</span>
                 <span className="text-xs text-slate-500">Docs ready</span>
               </div>
@@ -355,27 +355,27 @@ export default function DashboardManagement({ academicYear = '', currentUser, on
         )}
 
         {canViewFees && (
-        <section className="rounded-lg border border-slate-100 bg-white p-5 shadow-sm">
-          <div className="flex items-center justify-between gap-3 mb-5">
-            <div>
+        <section className="erp-dashboard-fee-card min-w-0 overflow-hidden rounded-lg border border-slate-100 bg-white p-5 shadow-sm">
+          <div className="flex flex-wrap items-center justify-between gap-3 mb-5">
+            <div className="min-w-0">
               <h2 className="font-bold text-slate-900">Fee Collection</h2>
               <p className="text-xs text-slate-500 mt-1">Collected, pending, and adjusted split.</p>
             </div>
-            <span className="rounded-full bg-[#f5f5f6] px-3 py-1 text-xs font-semibold text-slate-600">{academicYear}</span>
+            <span className="shrink-0 rounded-full bg-[#f5f5f6] px-3 py-1 text-xs font-semibold text-slate-600">{academicYear}</span>
           </div>
-          <div className="grid md:grid-cols-[180px_1fr] gap-6 items-center">
-            <div className="relative h-44 w-44 mx-auto rounded-full" style={{ background: `conic-gradient(${pieGradient})` }}>
+          <div className="grid md:grid-cols-[156px_minmax(0,1fr)] lg:grid-cols-[172px_minmax(0,1fr)] gap-5 items-center">
+            <div className="relative h-40 w-40 lg:h-44 lg:w-44 mx-auto rounded-full shrink-0" style={{ background: `conic-gradient(${pieGradient})` }}>
               <div className="erp-dashboard-donut-hole absolute inset-8 rounded-full flex flex-col items-center justify-center">
                 <span className="text-3xl font-extrabold text-slate-900">{loading ? '-' : `${collectionRate}%`}</span>
                 <span className="text-xs text-slate-500">Collected</span>
               </div>
             </div>
-            <div className="space-y-3">
+            <div className="min-w-0 space-y-3">
               {paymentSplit.map((item) => (
-                <div key={item.label} className="flex items-center gap-3 text-sm">
-                  <span className="h-3 w-3 rounded-sm" style={{ background: item.color }} />
-                  <span className="text-slate-600">{item.label}</span>
-                  <b className="ml-auto text-slate-900">{loading ? '-' : formatCurrency(item.value)}</b>
+                <div key={item.label} className="flex min-w-0 items-center gap-3 text-sm">
+                  <span className="h-3 w-3 shrink-0 rounded-sm" style={{ background: item.color }} />
+                  <span className="min-w-0 flex-1 truncate text-slate-600">{item.label}</span>
+                  <b className="shrink-0 text-slate-900">{loading ? '-' : formatCurrency(item.value)}</b>
                 </div>
               ))}
             </div>

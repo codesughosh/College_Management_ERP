@@ -166,11 +166,11 @@ const collections = {
   },
   feeStructures: {
     purpose: 'Class-wise fee structure setup',
-    fields: ['name', 'classKey', 'academicYear', 'tuitionFee', 'libraryFee', 'labFee', 'transportFee', 'totalAmount', 'dueDate', 'status', 'createdAtText', 'updatedAtText'],
+    fields: ['name', 'classKey', 'academicYear', 'admissionFee', 'tuitionFee', 'libraryFee', 'labFee', 'transportFee', 'totalAmount', 'dueDate', 'status', 'courseCode', 'courseName', 'feeYearLabel', 'courseTotalAmount', 'extraChargesNote', 'seedSource', 'createdAtText', 'updatedAtText'],
   },
   feeAssignments: {
     purpose: 'Student fee assignment and due tracking',
-    fields: ['feeStructureId', 'studentRecordId', 'studentId', 'studentName', 'classKey', 'academicYear', 'totalAmount', 'paidAmount', 'adjustmentAmount', 'dueAmount', 'dueDate', 'status', 'assignedAtText', 'updatedAtText'],
+    fields: ['feeStructureId', 'studentRecordId', 'studentId', 'studentName', 'classKey', 'academicYear', 'courseCode', 'courseName', 'admissionFee', 'tuitionFee', 'libraryFee', 'labFee', 'transportFee', 'totalAmount', 'paidAmount', 'adjustmentAmount', 'dueAmount', 'dueDate', 'status', 'feeYearLabel', 'seedSource', 'assignedAtText', 'updatedAtText'],
   },
   feeCollections: {
     purpose: 'Manual/offline fee collection records',

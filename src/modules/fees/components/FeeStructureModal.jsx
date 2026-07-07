@@ -6,6 +6,7 @@ export default function FeeStructureModal({ classOptions, initialStructure = nul
     name: initialStructure?.name || '',
     classKey: initialStructure?.classKey || classOptions[0] || '',
     academicYear: initialStructure?.academicYear || '',
+    admissionFee: initialStructure?.admissionFee || 0,
     tuitionFee: initialStructure?.tuitionFee || 0,
     libraryFee: initialStructure?.libraryFee || 0,
     labFee: initialStructure?.labFee || 0,
@@ -14,7 +15,7 @@ export default function FeeStructureModal({ classOptions, initialStructure = nul
     status: initialStructure?.status || 'Active',
   });
 
-  const totalAmount = ['tuitionFee', 'libraryFee', 'labFee', 'transportFee']
+  const totalAmount = ['admissionFee', 'tuitionFee', 'libraryFee', 'labFee', 'transportFee']
     .reduce((sum, key) => sum + Number(form[key] || 0), 0);
 
   const submit = (event) => {
@@ -54,7 +55,11 @@ export default function FeeStructureModal({ classOptions, initialStructure = nul
             <input type="date" value={form.dueDate} onChange={(event) => setForm((prev) => ({ ...prev, dueDate: event.target.value }))} className="w-full h-11 rounded-lg border border-slate-200 px-3 text-sm" />
           </label>
           <label>
-            <span className="block text-xs font-semibold text-slate-500 mb-1.5">Tuition Fee</span>
+            <span className="block text-xs font-semibold text-slate-500 mb-1.5">Admission Fee</span>
+            <input type="number" value={form.admissionFee} onChange={(event) => setNumber('admissionFee', event.target.value)} className="w-full h-11 rounded-lg border border-slate-200 px-3 text-sm" />
+          </label>
+          <label>
+            <span className="block text-xs font-semibold text-slate-500 mb-1.5">Year Fee</span>
             <input type="number" value={form.tuitionFee} onChange={(event) => setNumber('tuitionFee', event.target.value)} className="w-full h-11 rounded-lg border border-slate-200 px-3 text-sm" />
           </label>
           <label>

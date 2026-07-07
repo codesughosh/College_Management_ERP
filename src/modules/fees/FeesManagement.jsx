@@ -284,6 +284,7 @@ export default function FeesManagement({
       ...form,
       name: form.name.trim(),
       academicYear: form.academicYear.trim(),
+      admissionFee: Number(form.admissionFee || 0),
       tuitionFee: Number(form.tuitionFee || 0),
       libraryFee: Number(form.libraryFee || 0),
       labFee: Number(form.labFee || 0),
@@ -326,7 +327,13 @@ export default function FeesManagement({
       toast.error('You do not have permission to assign fees.');
       return;
     }
-    const targetStudents = courseStudents.filter((student) => getStudentClassKey(student) === structure.classKey);
+    const structureCourse = structure.courseCode
+      ? { courseCode: structure.courseCode, courseName: structure.courseName }
+      : selectedCourse;
+    const structureStudents = structure.courseCode
+      ? filterStudentsByCourse(courseStudents, structure.courseCode, structureCourse)
+      : courseStudents;
+    const targetStudents = structureStudents.filter((student) => getStudentClassKey(student) === structure.classKey);
     if (!targetStudents.length) {
       toast.error('No active students found for this class.');
       return;
@@ -341,6 +348,13 @@ export default function FeesManagement({
         studentName: student.name,
         classKey: structure.classKey,
         academicYear: structure.academicYear,
+        courseCode: structure.courseCode || student.courseCode || '',
+        courseName: structure.courseName || student.courseName || student.program || '',
+        admissionFee: Number(structure.admissionFee || 0),
+        tuitionFee: Number(structure.tuitionFee || 0),
+        libraryFee: Number(structure.libraryFee || 0),
+        labFee: Number(structure.labFee || 0),
+        transportFee: Number(structure.transportFee || 0),
         totalAmount: Number(structure.totalAmount || 0),
         paidAmount: 0,
         adjustmentAmount: 0,
@@ -348,6 +362,8 @@ export default function FeesManagement({
         dueDate: structure.dueDate,
         status: 'Due',
         assignedAtText: formatDisplayDate(),
+        feeYearLabel: structure.feeYearLabel || '',
+        seedSource: structure.seedSource || '',
       }));
     if (!payloads.length) {
       toast.success('This structure is already assigned to all matching students.');

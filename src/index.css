@@ -4221,3 +4221,306 @@ html{color-scheme:dark}::selection{background:rgba(0,255,136,.18);color:#eafff5}
   opacity:1!important;
   visibility:visible!important;
 }
+
+/* Fee collection modal: scoped theme authority for the fee grid and due picker. */
+.erp-shell .erp-fee-modal-overlay {
+  background:rgba(0,0,0,.70)!important;
+  backdrop-filter:blur(8px)!important;
+}
+
+.erp-shell.light-mode .erp-fee-modal-overlay {
+  background:rgba(15,23,42,.38)!important;
+  backdrop-filter:blur(8px)!important;
+}
+
+.erp-shell .erp-fee-modal {
+  background:#08151c!important;
+  border:1px solid rgba(125,211,252,.32)!important;
+  border-radius:14px!important;
+  box-shadow:0 28px 80px rgba(0,0,0,.52),0 0 0 1px rgba(0,255,136,.05)!important;
+}
+
+.erp-shell.light-mode .erp-fee-modal {
+  background:#ffffff!important;
+  border-color:#d8e1ee!important;
+  box-shadow:0 30px 90px rgba(15,23,42,.22)!important;
+}
+
+.erp-shell .erp-fee-modal-header,
+.erp-shell .erp-fee-modal-footer {
+  background:#0a1820!important;
+  border-color:rgba(255,255,255,.10)!important;
+}
+
+.erp-shell.light-mode .erp-fee-modal-header,
+.erp-shell.light-mode .erp-fee-modal-footer {
+  background:#f8fafc!important;
+  border-color:#e4eaf3!important;
+}
+
+.erp-shell .erp-fee-modal-body {
+  background:#08151c!important;
+  gap:14px!important;
+  scrollbar-gutter:stable;
+}
+
+.erp-shell.light-mode .erp-fee-modal-body {
+  background:#ffffff!important;
+}
+
+.erp-shell .erp-fee-close-button {
+  display:inline-flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  flex:0 0 auto!important;
+  background:rgba(255,255,255,.055)!important;
+  border:1px solid rgba(255,255,255,.10)!important;
+  color:#b8c4cb!important;
+  box-shadow:none!important;
+}
+
+.erp-shell .erp-fee-close-button:hover {
+  background:rgba(255,255,255,.09)!important;
+  color:#ffffff!important;
+}
+
+.erp-shell.light-mode .erp-fee-close-button {
+  background:#ffffff!important;
+  border-color:#d8e1ee!important;
+  color:#64748b!important;
+  box-shadow:0 8px 18px rgba(15,23,42,.08)!important;
+}
+
+.erp-shell.light-mode .erp-fee-close-button:hover {
+  background:#eef7eb!important;
+  color:#033500!important;
+}
+
+.erp-shell .erp-fee-selected-structure {
+  background:rgba(0,255,136,.09)!important;
+  border-color:rgba(0,255,136,.26)!important;
+}
+
+.erp-shell.light-mode .erp-fee-selected-structure {
+  background:#f0f9f2!important;
+  border-color:#b8d4b0!important;
+}
+
+.erp-shell .erp-fee-component-grid,
+.erp-shell .erp-fee-summary-card {
+  background:rgba(255,255,255,.035)!important;
+  border-color:rgba(255,255,255,.10)!important;
+}
+
+.erp-shell.light-mode .erp-fee-component-grid,
+.erp-shell.light-mode .erp-fee-summary-card {
+  background:#f8fafc!important;
+  border-color:#dde6ef!important;
+}
+
+.erp-shell .erp-fee-field {
+  min-width:0;
+}
+
+.erp-shell .erp-fee-field span,
+.erp-shell .erp-due-picker-title,
+.erp-shell .erp-fee-summary-card > div:first-child,
+.erp-shell .erp-fee-total-card > div:first-child {
+  line-height:1.25;
+}
+
+.erp-shell .erp-fee-total-card {
+  min-height:70px;
+  display:flex!important;
+  flex-direction:column;
+  justify-content:center;
+  background:rgba(255,255,255,.045)!important;
+  border:1px solid rgba(255,255,255,.10)!important;
+}
+
+.erp-shell.light-mode .erp-fee-total-card {
+  background:#ffffff!important;
+  border-color:#dde6ef!important;
+}
+
+.erp-shell .erp-due-picker {
+  background:rgba(245,158,11,.08)!important;
+  border-color:rgba(245,158,11,.24)!important;
+}
+
+.erp-shell.light-mode .erp-due-picker {
+  background:#fffaf0!important;
+  border-color:#f4d79a!important;
+}
+
+.erp-shell .erp-due-picker-title {
+  color:#fbbf24!important;
+}
+
+.erp-shell.light-mode .erp-due-picker-title {
+  color:#a16207!important;
+}
+
+.erp-shell .erp-due-chip {
+  cursor:pointer;
+  min-width:0;
+  min-height:38px!important;
+  background:rgba(8,21,28,.82)!important;
+  border-color:rgba(255,255,255,.12)!important;
+  color:#dce7eb!important;
+  box-shadow:none!important;
+  transition:background-color .12s ease,border-color .12s ease,color .12s ease!important;
+}
+
+.erp-shell .erp-due-chip:hover {
+  background:rgba(255,255,255,.065)!important;
+  border-color:rgba(0,255,136,.32)!important;
+}
+
+.erp-shell .erp-due-chip.is-selected {
+  background:rgba(0,255,136,.13)!important;
+  border-color:rgba(0,255,136,.46)!important;
+  color:#b9ffd9!important;
+}
+
+.erp-shell.light-mode .erp-due-chip {
+  background:#ffffff!important;
+  border-color:#e4eaf3!important;
+  color:#334155!important;
+}
+
+.erp-shell.light-mode .erp-due-chip:hover {
+  background:#f7fbf5!important;
+  border-color:#b8d4b0!important;
+  color:#033500!important;
+}
+
+.erp-shell.light-mode .erp-due-chip.is-selected {
+  background:#eaf7e7!important;
+  border-color:#7fb574!important;
+  color:#033500!important;
+}
+
+.erp-shell .erp-due-chip input[type="checkbox"] {
+  width:15px!important;
+  height:15px!important;
+  flex:0 0 auto;
+  accent-color:#026c36;
+  box-shadow:none!important;
+}
+
+.erp-shell.light-mode .erp-due-chip input[type="checkbox"] {
+  border-color:#94a3b8!important;
+}
+
+.erp-shell .erp-due-chip span {
+  min-width:0;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
+
+.erp-shell .erp-fee-summary-card {
+  min-height:64px;
+}
+
+.erp-shell .erp-fee-modal-footer button[type="button"] {
+  background:rgba(255,255,255,.06)!important;
+  border:1px solid rgba(255,255,255,.11)!important;
+  color:#e2e8f0!important;
+  box-shadow:none!important;
+}
+
+.erp-shell.light-mode .erp-fee-modal-footer button[type="button"] {
+  background:#ffffff!important;
+  border-color:#d8e1ee!important;
+  color:#475569!important;
+}
+
+.erp-shell .erp-fee-modal-footer button[type="submit"] {
+  background:#026c36!important;
+  background-image:none!important;
+  border:1px solid #026c36!important;
+  color:#ffffff!important;
+  box-shadow:0 12px 24px rgba(2,108,54,.22)!important;
+}
+
+.erp-shell .erp-fee-modal-footer button[type="submit"]:hover:not(:disabled) {
+  background:#038044!important;
+  border-color:#038044!important;
+  color:#ffffff!important;
+}
+
+.erp-shell.light-mode .erp-fee-modal-footer button[type="submit"] {
+  background:#033500!important;
+  border-color:#033500!important;
+  box-shadow:0 12px 24px rgba(3,53,0,.20)!important;
+}
+
+@media(max-width:640px) {
+  .erp-shell .erp-fee-modal-overlay {
+    padding:10px!important;
+    align-items:flex-start!important;
+  }
+
+  .erp-shell .erp-fee-modal {
+    max-height:calc(100vh - 20px)!important;
+  }
+
+  .erp-shell .erp-fee-modal-header,
+  .erp-shell .erp-fee-modal-body,
+  .erp-shell .erp-fee-modal-footer {
+    padding-left:16px!important;
+    padding-right:16px!important;
+  }
+
+  .erp-shell .erp-fee-modal-footer {
+    flex-wrap:wrap;
+  }
+
+  .erp-shell .erp-fee-modal-footer button {
+    flex:1 1 140px;
+  }
+}
+
+.erp-shell .erp-fee-modal-overlay.fixed.inset-0 {
+  background:rgba(0,0,0,.70)!important;
+  backdrop-filter:blur(8px)!important;
+}
+
+.erp-shell.light-mode .erp-fee-modal-overlay.fixed.inset-0.z-50 {
+  background:rgba(15,23,42,.38)!important;
+  backdrop-filter:blur(8px)!important;
+}
+
+.erp-shell .erp-fee-modal-overlay > form.erp-fee-modal {
+  background:#08151c!important;
+  border-color:rgba(125,211,252,.32)!important;
+  box-shadow:0 28px 80px rgba(0,0,0,.52),0 0 0 1px rgba(0,255,136,.05)!important;
+}
+
+.erp-shell.light-mode .erp-fee-modal-overlay > form.erp-fee-modal {
+  background:#ffffff!important;
+  border-color:#d8e1ee!important;
+  box-shadow:0 30px 90px rgba(15,23,42,.22)!important;
+}
+
+.erp-shell .erp-fee-modal-overlay > form.erp-fee-modal > .erp-fee-modal-header,
+.erp-shell .erp-fee-modal-overlay > form.erp-fee-modal > .erp-fee-modal-footer {
+  background:#0a1820!important;
+  border-color:rgba(255,255,255,.10)!important;
+}
+
+.erp-shell.light-mode .erp-fee-modal-overlay > form.erp-fee-modal > .erp-fee-modal-header,
+.erp-shell.light-mode .erp-fee-modal-overlay > form.erp-fee-modal > .erp-fee-modal-footer {
+  background:#f8fafc!important;
+  border-color:#e4eaf3!important;
+}
+
+.erp-shell .erp-fee-modal-overlay > form.erp-fee-modal > .erp-fee-modal-body {
+  background:#08151c!important;
+}
+
+.erp-shell.light-mode .erp-fee-modal-overlay > form.erp-fee-modal > .erp-fee-modal-body {
+  background:#ffffff!important;
+}

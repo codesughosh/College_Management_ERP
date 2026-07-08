@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import { X } from 'lucide-react';
 import SearchSelect from '../../../components/SearchSelect';
 import {
   calculateDueAmount,
@@ -58,6 +59,7 @@ export default function FeeCollectionModal({
     (item.studentRecordId === form.studentRecordId && item.feeStructureId === form.feeStructureId)
   ));
   const editedTotal = totalFromForm(form);
+  const selectedManualDueItems = normalizeManualDueItems(form.manualDueItems);
   const paidBeforeThisPayment = Math.max(
     0,
     Number(matchingAssignment?.paidAmount || 0) - (
@@ -126,16 +128,18 @@ export default function FeeCollectionModal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-slate-950/50 backdrop-blur-sm flex items-center justify-center p-4">
-      <form onSubmit={submit} className="w-full max-w-4xl max-h-[92vh] overflow-hidden bg-white rounded-xl shadow-2xl border border-slate-200 flex flex-col">
-        <div className="px-6 py-5 border-b border-slate-100 flex items-center justify-between">
+    <div className="erp-fee-modal-overlay fixed inset-0 z-50 bg-slate-950/50 backdrop-blur-sm flex items-center justify-center p-4">
+      <form onSubmit={submit} className="erp-fee-modal w-full max-w-4xl max-h-[90vh] overflow-hidden bg-white rounded-xl shadow-2xl border border-slate-200 flex flex-col">
+        <div className="erp-fee-modal-header px-6 py-5 border-b border-slate-100 flex items-center justify-between gap-4">
           <div>
             <h2 className="text-lg font-bold text-slate-900">{initialCollection ? 'Edit Fee Collection' : 'Record Fee Collection'}</h2>
             <p className="text-sm text-slate-500">Select a student and fee structure, then edit fees if needed.</p>
           </div>
-          <button type="button" onClick={onClose} className="h-9 w-9 rounded-full hover:bg-slate-100 text-slate-500">x</button>
+          <button type="button" onClick={onClose} className="erp-fee-close-button h-9 w-9 rounded-full hover:bg-slate-100 text-slate-500" aria-label="Close">
+            <X size={16} strokeWidth={2.4} />
+          </button>
         </div>
-        <div className="p-6 grid sm:grid-cols-2 gap-4 overflow-y-auto">
+        <div className="erp-fee-modal-body p-6 grid sm:grid-cols-2 gap-4 overflow-y-auto">
           <label className="sm:col-span-2">
             <span className="block text-xs font-semibold text-slate-500 mb-1.5">Student</span>
             <SearchSelect
@@ -156,7 +160,7 @@ export default function FeeCollectionModal({
           </label>
 
           {selectedStructure && (
-            <div className="sm:col-span-2 rounded-lg border border-emerald-100 bg-emerald-50/60 p-4">
+            <div className="erp-fee-selected-structure sm:col-span-2 rounded-lg border border-emerald-100 bg-emerald-50/60 p-4">
               <div className="flex flex-col gap-1 sm:flex-row sm:items-start sm:justify-between">
                 <div>
                   <div className="text-xs font-bold uppercase text-emerald-700">Selected Structure</div>
@@ -168,9 +172,9 @@ export default function FeeCollectionModal({
             </div>
           )}
 
-          <div className="sm:col-span-2 grid sm:grid-cols-2 md:grid-cols-3 gap-3 rounded-lg border border-slate-100 bg-[#f5f5f6] p-4">
+          <div className="erp-fee-component-grid sm:col-span-2 grid sm:grid-cols-2 md:grid-cols-3 gap-3 rounded-lg border border-slate-100 bg-[#f5f5f6] p-4">
             {feeComponentFields.map(({ label, key }) => (
-              <label key={key}>
+              <label key={key} className="erp-fee-field">
                 <span className="block text-xs font-semibold text-slate-500 mb-1.5">{label}</span>
                 <input
                   type="number"
@@ -181,19 +185,34 @@ export default function FeeCollectionModal({
                 />
               </label>
             ))}
-            <div className="rounded-lg bg-white p-3">
+            <div className="erp-fee-total-card rounded-lg bg-white p-3">
               <div className="text-xs font-semibold text-slate-500">Edited Total</div>
               <div className="text-lg font-extrabold text-slate-900">{formatCurrency(editedTotal)}</div>
             </div>
           </div>
 
-          <div className="sm:col-span-2 rounded-lg border border-amber-100 bg-amber-50/60 p-4">
-            <div className="text-xs font-bold uppercase text-amber-700 mb-3">Pending Due Items</div>
+          <div className="sm:col-span-2 grid sm:grid-cols-3 gap-3 text-sm">
+            <div className="erp-fee-summary-card rounded-lg bg-[#f5f5f6] p-3">
+              <div className="text-xs font-semibold text-slate-500">Paid Before</div>
+              <div className="font-bold text-slate-900">{formatCurrency(paidBeforeThisPayment)}</div>
+            </div>
+            <div className="erp-fee-summary-card rounded-lg bg-[#f5f5f6] p-3">
+              <div className="text-xs font-semibold text-slate-500">Due Before</div>
+              <div className="font-bold text-rose-700">{formatCurrency(dueBeforeThisPayment)}</div>
+            </div>
+            <div className="erp-fee-summary-card rounded-lg bg-[#f5f5f6] p-3">
+              <div className="text-xs font-semibold text-slate-500">Due After</div>
+              <div className="font-bold text-emerald-700">{formatCurrency(dueAfterThisPayment)}</div>
+            </div>
+          </div>
+
+          <div className="erp-due-picker sm:col-span-2 rounded-lg border border-amber-100 bg-amber-50/60 p-4">
+            <div className="erp-due-picker-title text-xs font-bold uppercase text-amber-700 mb-3">Pending Due Items</div>
             <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-2">
               {manualDueItemOptions.map((item) => {
-                const checked = normalizeManualDueItems(form.manualDueItems).some((currentItem) => currentItem.id === item.id);
+                const checked = selectedManualDueItems.some((currentItem) => currentItem.id === item.id);
                 return (
-                  <label key={item.id} className="min-h-10 rounded-lg bg-white border border-amber-100 px-3 py-2 text-xs font-semibold text-slate-700 flex items-center gap-2">
+                  <label key={item.id} className={`erp-due-chip min-h-10 rounded-lg bg-white border border-amber-100 px-3 py-2 text-xs font-semibold text-slate-700 flex items-center gap-2 ${checked ? 'is-selected' : ''}`}>
                     <input
                       type="checkbox"
                       checked={checked}
@@ -204,21 +223,6 @@ export default function FeeCollectionModal({
                   </label>
                 );
               })}
-            </div>
-          </div>
-
-          <div className="sm:col-span-2 grid sm:grid-cols-3 gap-3 text-sm">
-            <div className="rounded-lg bg-[#f5f5f6] p-3">
-              <div className="text-xs font-semibold text-slate-500">Paid Before</div>
-              <div className="font-bold text-slate-900">{formatCurrency(paidBeforeThisPayment)}</div>
-            </div>
-            <div className="rounded-lg bg-[#f5f5f6] p-3">
-              <div className="text-xs font-semibold text-slate-500">Due Before</div>
-              <div className="font-bold text-rose-700">{formatCurrency(dueBeforeThisPayment)}</div>
-            </div>
-            <div className="rounded-lg bg-[#f5f5f6] p-3">
-              <div className="text-xs font-semibold text-slate-500">Due After</div>
-              <div className="font-bold text-emerald-700">{formatCurrency(dueAfterThisPayment)}</div>
             </div>
           </div>
 
@@ -248,7 +252,7 @@ export default function FeeCollectionModal({
             <input value={form.referenceNo} onChange={(event) => setForm((prev) => ({ ...prev, referenceNo: event.target.value }))} className="w-full h-11 rounded-lg border border-slate-200 px-3 text-sm" />
           </label>
         </div>
-        <div className="px-6 py-4 border-t border-slate-100 flex justify-end gap-3">
+        <div className="erp-fee-modal-footer px-6 py-4 border-t border-slate-100 flex justify-end gap-3">
           <button type="button" onClick={onClose} className="h-10 px-5 rounded-lg bg-slate-100 text-slate-700 font-semibold text-sm">Cancel</button>
           <button type="submit" className="h-10 px-5 rounded-lg bg-[#033500] text-white font-bold text-sm shadow-[0_10px_22px_rgba(3,53,0,0.25)]">
             {initialCollection ? 'Save Changes' : 'Post Collection'}

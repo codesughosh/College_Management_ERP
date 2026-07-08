@@ -4524,3 +4524,33 @@ html{color-scheme:dark}::selection{background:rgba(0,255,136,.18);color:#eafff5}
 .erp-shell.light-mode .erp-fee-modal-overlay > form.erp-fee-modal > .erp-fee-modal-body {
   background:#ffffff!important;
 }
+
+.erp-shell.light-mode .erp-fee-modal-overlay > form.erp-fee-modal .erp-fee-total-card {
+  background:#ffffff!important;
+  background-image:none!important;
+  border-color:#dde6ef!important;
+  color:#1e2533!important;
+}
+
+.erp-shell.light-mode .erp-fee-modal-overlay > form.erp-fee-modal .erp-fee-total-card > div:last-child {
+  color:#1e2533!important;
+}
+
+.erp-shell.light-mode .erp-fee-modal-overlay > form.erp-fee-modal .erp-due-chip {
+  background:#ffffff!important;
+  background-image:none!important;
+  border-color:#e4eaf3!important;
+  color:#334155!important;
+}
+
+.erp-shell.light-mode .erp-fee-modal-overlay > form.erp-fee-modal .erp-due-chip:hover {
+  background:#f7fbf5!important;
+  border-color:#b8d4b0!important;
+  color:#033500!important;
+}
+
+.erp-shell.light-mode .erp-fee-modal-overlay > form.erp-fee-modal .erp-due-chip.is-selected {
+  background:#eaf7e7!important;
+  border-color:#7fb574!important;
+  color:#033500!important;
+}

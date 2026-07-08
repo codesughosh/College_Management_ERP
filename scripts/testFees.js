@@ -2,12 +2,37 @@ import assert from 'node:assert/strict';
 import {
   calculateDueAmount,
   calculateFeeStatus,
+  formatManualDueItems,
+  getFeeComponentValues,
   getDueBucket,
+  normalizeManualDueItems,
   summarizeFees,
+  totalFeeComponents,
   validateFeeAdjustment,
   validateFeeCollection,
   validateFeeStructure,
 } from '../src/modules/fees/feeUtils.js';
+
+assert.deepEqual(getFeeComponentValues({
+  admissionFee: 1000,
+  applicationFee: 500,
+  pocketArticleFee: 750,
+  tuitionFee: 2000,
+}), {
+  admissionFee: 1000,
+  applicationFee: 500,
+  pocketArticleFee: 750,
+  tuitionFee: 2000,
+  libraryFee: 0,
+  labFee: 0,
+  transportFee: 0,
+});
+assert.equal(totalFeeComponents({ applicationFee: 500, pocketArticleFee: 750, tuitionFee: 2000 }), 3250);
+assert.deepEqual(normalizeManualDueItems(['application-fee', { id: 'pocket-article-fee' }, 'application-fee']), [
+  { id: 'application-fee', label: 'Application Fee' },
+  { id: 'pocket-article-fee', label: 'Pocket Article Fee' },
+]);
+assert.equal(formatManualDueItems(['application-fee', 'pocket-article-fee']), 'Application Fee, Pocket Article Fee');
 
 assert.equal(calculateDueAmount(10000, 4000, 1000), 5000);
 assert.equal(calculateDueAmount(10000, 12000, 0), 0);

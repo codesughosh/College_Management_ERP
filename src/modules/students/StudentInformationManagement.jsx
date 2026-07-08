@@ -57,6 +57,7 @@ import { canAccess, defaultRoles } from '../userRoles/rolePermissions';
 import { normalizeInstituteSettings } from '../settings/settingsModel';
 import { filterStudentScopedRecords, filterStudentsByCourse } from '../shared/courseFilters';
 import { getParentLinkedStudents } from '../parentPortal/parentPortalUtils';
+import { formatCurrency, formatManualDueItems } from '../fees/feeUtils';
 
 const AcademicsManagement = lazy(() => import('../academics/AcademicsManagement'));
 const AttendanceManagement = lazy(() => import('../attendance/AttendanceManagement'));
@@ -266,6 +267,7 @@ export default function StudentInformationManagement({ user, onLogout }) {
   const [marksEntries, setMarksEntries] = useState([]);
   const [studentResults, setStudentResults] = useState([]);
   const [feeAssignments, setFeeAssignments] = useState([]);
+  const [feeCollections, setFeeCollections] = useState([]);
   const [studentHealthRecords, setStudentHealthRecords] = useState([]);
   const [loadError, setLoadError] = useState('');
   const [showModal, setShowModal] = useState(false);
@@ -386,6 +388,7 @@ export default function StudentInformationManagement({ user, onLogout }) {
         const nextMarksEntries = data.marksEntries || [];
         const nextStudentResults = data.studentResults || [];
         const nextFeeAssignments = data.feeAssignments || [];
+        const nextFeeCollections = data.feeCollections || [];
         const nextStudentHealthRecords = data.studentHealthRecords || [];
         setStudents(nextStudents);
         setSelectedId('');
@@ -397,6 +400,7 @@ export default function StudentInformationManagement({ user, onLogout }) {
         setMarksEntries(nextMarksEntries);
         setStudentResults(nextStudentResults);
         setFeeAssignments(nextFeeAssignments);
+        setFeeCollections(nextFeeCollections);
         setStudentHealthRecords(nextStudentHealthRecords);
         setCourses(buildCourseOptionsFromStudents(nextStudents, data.admissionBatches || []));
         if (!academicYear) {
@@ -410,6 +414,7 @@ export default function StudentInformationManagement({ user, onLogout }) {
             ...nextMarksEntries,
             ...nextStudentResults,
             ...nextFeeAssignments,
+            ...nextFeeCollections,
             ...nextStudentHealthRecords,
           ]
             .map((record) => record?.academicYear)
@@ -493,6 +498,7 @@ export default function StudentInformationManagement({ user, onLogout }) {
   const selectedMarksEntries = marksEntries.filter((record) => relationMatches(record, selectedStudent) && recordBelongsToYear(record));
   const selectedResults = studentResults.filter((record) => relationMatches(record, selectedStudent) && recordBelongsToYear(record));
   const selectedFeeAssignments = feeAssignments.filter((record) => relationMatches(record, selectedStudent) && recordBelongsToYear(record));
+  const selectedFeeCollections = feeCollections.filter((record) => relationMatches(record, selectedStudent) && recordBelongsToYear(record));
   const selectedHealthRecords = studentHealthRecords.filter((record) => relationMatches(record, selectedStudent) && recordBelongsToYear(record));
   const latestAdmission = latestRecord(selectedAdmissions);
   const selectedHealthRecord = latestRecord(selectedHealthRecords);
@@ -916,6 +922,7 @@ export default function StudentInformationManagement({ user, onLogout }) {
                     currentRoleId={currentRoleId}
                     documents={selectedDocuments}
                     feeAssignments={selectedFeeAssignments}
+                    feeCollections={selectedFeeCollections}
                     healthRecord={selectedHealthRecord}
                     latestAdmission={latestAdmission}
                     marksEntries={selectedMarksEntries}
@@ -1164,6 +1171,7 @@ function StudentDetailPage({
   currentRoleId = '',
   documents = [],
   feeAssignments = [],
+  feeCollections = [],
   healthRecord = null,
   latestAdmission,
   marksEntries = [],
@@ -1195,6 +1203,7 @@ function StudentDetailPage({
   const feePaid = feeAssignments.reduce((sum, item) => sum + Number(item.paidAmount || 0), 0);
   const feeAdjusted = feeAssignments.reduce((sum, item) => sum + Number(item.adjustmentAmount || 0), 0);
   const feeDue = feeAssignments.reduce((sum, item) => sum + Number(item.dueAmount || 0), 0);
+  const feeCollected = feeCollections.reduce((sum, item) => sum + Number(item.amount || 0), 0);
   const feeCompletion = feeAssigned ? Math.min(100, Math.round(((feePaid + feeAdjusted) / feeAssigned) * 100)) : 0;
   const admissionStatus = latestAdmission?.status || student.status || PENDING_ADMISSION_STATUS;
   const canShowApproval = canApprove
@@ -1205,7 +1214,7 @@ function StudentDetailPage({
     { id: 'profile', label: 'Profile', icon: <UserRound size={14} />, active: activeTab === 'profile' },
     { id: 'attendance', label: 'Attendance', value: `${generalAttendancePercentage}%`, icon: <Bell size={14} />, active: activeTab === 'attendance' },
     { id: 'exams', label: 'Exams', value: `${examRecordCount}`, icon: <BookOpen size={14} />, active: activeTab === 'exams' },
-    { id: 'payment', label: 'Payment', value: feeDue ? `INR ${feeDue}` : 'No due', icon: <Wallet size={14} />, active: activeTab === 'payment' },
+    { id: 'payment', label: 'Payment', value: feeDue ? formatCurrency(feeDue) : 'No due', icon: <Wallet size={14} />, active: activeTab === 'payment' },
     { id: 'documents', label: 'Docs', value: `${documents.length}`, icon: <FileText size={14} />, active: activeTab === 'documents' },
     { id: 'health', label: 'Health Record', value: healthRecord ? 'Uploaded' : 'Empty', icon: <HeartPulse size={14} />, active: activeTab === 'health' },
   ];
@@ -1262,8 +1271,11 @@ function StudentDetailPage({
     return {
       id: item.id || `fee-${index}`,
       label: item.feeStructureName || item.structureName || item.classKey || `Fee Assignment ${index + 1}`,
-      helper: item.dueDate ? `Due date: ${item.dueDate}` : item.academicYear || 'Fee assignment',
-      value: `INR ${due}`,
+      helper: [
+        item.dueDate ? `Due date: ${item.dueDate}` : item.academicYear || 'Fee assignment',
+        formatManualDueItems(item.manualDueItems) ? `Pending: ${formatManualDueItems(item.manualDueItems)}` : '',
+      ].filter(Boolean).join(' | '),
+      value: formatCurrency(due),
       percentage: total ? Math.min(100, Math.round(((paid + adjusted) / total) * 100)) : 0,
       status: item.status || (due > 0 ? 'Due' : 'Paid'),
       total,
@@ -1272,6 +1284,21 @@ function StudentDetailPage({
       due,
     };
   });
+
+  const paymentHistoryRows = [...feeCollections]
+    .sort((first, second) => String(second.paymentDate || second.createdAtText || '').localeCompare(String(first.paymentDate || first.createdAtText || '')))
+    .map((item, index) => ({
+      id: item.id || `collection-${index}`,
+      label: item.feeStructureName || item.entryMode || `Payment ${index + 1}`,
+      helper: [
+        item.paymentDate || item.createdAtText || 'Payment record',
+        item.paymentMode || '',
+        item.referenceNo ? `Ref: ${item.referenceNo}` : '',
+        formatManualDueItems(item.manualDueItems) ? `Pending: ${formatManualDueItems(item.manualDueItems)}` : '',
+      ].filter(Boolean).join(' | '),
+      value: formatCurrency(item.amount),
+      status: item.status || 'Posted',
+    }));
 
   const documentRows = documents.map((item, index) => ({
     id: item.id || `document-${index}`,
@@ -1307,12 +1334,13 @@ function StudentDetailPage({
     },
     payment: {
       title: 'Payment Stats',
-      helper: feeDue ? `INR ${feeDue} due across ${feeAssignments.length} assignment${feeAssignments.length === 1 ? '' : 's'}.` : 'No fee due recorded.',
+      helper: feeDue ? `${formatCurrency(feeDue)} due across ${feeAssignments.length} assignment${feeAssignments.length === 1 ? '' : 's'}.` : 'No fee due recorded.',
       items: [
-        ['Assigned', `INR ${feeAssigned}`],
-        ['Paid', `INR ${feePaid}`],
-        ['Adjusted', `INR ${feeAdjusted}`],
-        ['Due', `INR ${feeDue}`],
+        ['Assigned', formatCurrency(feeAssigned)],
+        ['Paid', formatCurrency(feePaid)],
+        ['Adjusted', formatCurrency(feeAdjusted)],
+        ['Collected', formatCurrency(feeCollected)],
+        ['Due', formatCurrency(feeDue)],
       ],
     },
     documents: {
@@ -1512,23 +1540,44 @@ function StudentDetailPage({
         )}
 
         {activeTab === 'payment' && (
-          <div className="mt-5 grid xl:grid-cols-[.7fr_1.3fr] gap-4">
-            <div className="rounded-lg border border-slate-100 bg-white p-5">
-              <div className="text-sm font-bold text-slate-900 mb-4">Payment Progress</div>
-              <div className="h-3 rounded-full bg-[#f5f5f6] overflow-hidden">
-                <div className="h-full rounded-full bg-[#00c46f]" style={{ width: `${feeCompletion}%` }} />
+          <div className="mt-5 space-y-4">
+            <div className="grid xl:grid-cols-[.7fr_1.3fr] gap-4">
+              <div className="rounded-lg border border-slate-100 bg-white p-5">
+                <div className="text-sm font-bold text-slate-900 mb-4">Payment Progress</div>
+                <div className="h-3 rounded-full bg-[#f5f5f6] overflow-hidden">
+                  <div className="h-full rounded-full bg-[#00c46f]" style={{ width: `${feeCompletion}%` }} />
+                </div>
+                <div className="mt-3 text-3xl font-extrabold text-slate-900">{feeCompletion}%</div>
+                <div className="text-sm text-slate-500">Paid or adjusted against assigned fees.</div>
               </div>
-              <div className="mt-3 text-3xl font-extrabold text-slate-900">{feeCompletion}%</div>
-              <div className="text-sm text-slate-500">Paid or adjusted against assigned fees.</div>
+              <div className="space-y-3">
+                <div className="text-sm font-bold text-slate-900">Fee Assignments</div>
+                {paymentRows.length
+                  ? paymentRows.map((row) => renderProgressRow({
+                    ...row,
+                    helper: `${row.helper} | Total ${formatCurrency(row.total)} | Paid ${formatCurrency(row.paid)} | Adjusted ${formatCurrency(row.adjusted)}`,
+                  }, row.due > 0 ? '#f59e0b' : '#00c46f'))
+                  : renderEmptyState('No fee assignment records available.')}
+              </div>
             </div>
             <div className="space-y-3">
-              <div className="text-sm font-bold text-slate-900">Fee Assignments</div>
-              {paymentRows.length
-                ? paymentRows.map((row) => renderProgressRow({
-                  ...row,
-                  helper: `${row.helper} | Total INR ${row.total} | Paid INR ${row.paid} | Adjusted INR ${row.adjusted}`,
-                }, row.due > 0 ? '#f59e0b' : '#00c46f'))
-                : renderEmptyState('No fee assignment records available.')}
+              <div className="text-sm font-bold text-slate-900">Payment Records</div>
+              {paymentHistoryRows.length
+                ? paymentHistoryRows.map((row) => (
+                  <div key={row.id || row.label} className="rounded-lg border border-slate-100 bg-white p-4">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                      <div>
+                        <div className="font-bold text-slate-900">{row.label}</div>
+                        <div className="text-xs text-slate-500 mt-1">{row.helper}</div>
+                      </div>
+                      <div className="flex items-center gap-3 text-sm">
+                        <span className="font-extrabold text-emerald-700">{row.value}</span>
+                        <span className="rounded-full bg-[#f5f5f6] px-3 py-1 text-xs font-bold text-slate-600">{row.status}</span>
+                      </div>
+                    </div>
+                  </div>
+                ))
+                : renderEmptyState('No payment records available.')}
             </div>
           </div>
         )}

@@ -17,9 +17,12 @@ import { getClassOptions } from '../timetable/timetableUtils';
 import {
   calculateDueAmount,
   calculateFeeStatus,
+  formatManualDueItems,
   formatCurrency,
   formatDisplayDate,
+  getFeeComponentValues,
   getStudentClassKey,
+  normalizeManualDueItems,
   summarizeFees,
   validateFeeAdjustment,
   validateFeeCollection,
@@ -34,13 +37,8 @@ import FeeStructureModal from './components/FeeStructureModal';
 import FeeStructurePanel from './components/FeeStructurePanel';
 import { filterByCourse, filterStudentScopedRecords, filterStudentsByCourse } from '../shared/courseFilters';
 
-const feeComponentKeys = ['admissionFee', 'tuitionFee', 'libraryFee', 'labFee', 'transportFee'];
-
 function getFeeValues(form = {}) {
-  return feeComponentKeys.reduce((values, key) => ({
-    ...values,
-    [key]: Number(form[key] || 0),
-  }), {});
+  return getFeeComponentValues(form);
 }
 
 export default function FeesManagement({
@@ -297,11 +295,7 @@ export default function FeesManagement({
       ...form,
       name: form.name.trim(),
       academicYear: form.academicYear.trim(),
-      admissionFee: Number(form.admissionFee || 0),
-      tuitionFee: Number(form.tuitionFee || 0),
-      libraryFee: Number(form.libraryFee || 0),
-      labFee: Number(form.labFee || 0),
-      transportFee: Number(form.transportFee || 0),
+      ...getFeeValues(form),
       totalAmount: Number(form.totalAmount || 0),
       status: form.status || 'Active',
     };
@@ -363,11 +357,7 @@ export default function FeesManagement({
         academicYear: structure.academicYear,
         courseCode: structure.courseCode || student.courseCode || '',
         courseName: structure.courseName || student.courseName || student.program || '',
-        admissionFee: Number(structure.admissionFee || 0),
-        tuitionFee: Number(structure.tuitionFee || 0),
-        libraryFee: Number(structure.libraryFee || 0),
-        labFee: Number(structure.labFee || 0),
-        transportFee: Number(structure.transportFee || 0),
+        ...getFeeValues(structure),
         totalAmount: Number(structure.totalAmount || 0),
         paidAmount: 0,
         adjustmentAmount: 0,
@@ -405,6 +395,7 @@ export default function FeesManagement({
       return;
     }
     const amount = Number(form.amount || 0);
+    const manualDueItems = normalizeManualDueItems(form.manualDueItems);
     if (form.entryMode === 'structure') {
       const student = courseStudents.find((item) => item.id === form.studentRecordId);
       const structure = courseStructures.find((item) => item.id === form.feeStructureId);
@@ -458,6 +449,7 @@ export default function FeesManagement({
         paidAmount: nextPaid,
         adjustmentAmount,
         dueAmount: nextDue,
+        manualDueItems,
         status: calculateFeeStatus(totalAmount, nextPaid, adjustmentAmount),
         updatedAtText: nowText,
       };
@@ -473,6 +465,7 @@ export default function FeesManagement({
             paidAmount: amount,
             adjustmentAmount: 0,
             dueAmount: calculateDueAmount(totalAmount, amount, 0),
+            manualDueItems,
             status: calculateFeeStatus(totalAmount, amount, 0),
             assignedAtText: nowText,
           };
@@ -505,6 +498,7 @@ export default function FeesManagement({
           totalAmount,
           dueBeforePayment,
           dueAfterPayment: calculateDueAmount(totalAmount, nextPaid, adjustmentAmount),
+          manualDueItems,
           amount,
           academicYear,
           paymentMode: form.paymentMode,
@@ -563,6 +557,7 @@ export default function FeesManagement({
         status: 'Posted',
         createdAtText: formatDisplayDate(),
         entryMode: 'Manual',
+        manualDueItems,
       };
       try {
         const id = await createFeeCollection(collection);
@@ -584,6 +579,7 @@ export default function FeesManagement({
     const assignmentUpdates = {
       paidAmount: nextPaid,
       dueAmount: nextDue,
+      manualDueItems,
       status: calculateFeeStatus(assignment.totalAmount, nextPaid, assignment.adjustmentAmount),
       updatedAtText: formatDisplayDate(),
     };
@@ -601,6 +597,7 @@ export default function FeesManagement({
       collectedBy: form.collectedBy,
       status: 'Posted',
       createdAtText: formatDisplayDate(),
+      manualDueItems,
     };
     try {
       const id = await createFeeCollection(collection);
@@ -682,10 +679,12 @@ export default function FeesManagement({
       return;
     }
     const parentName = student?.guardianName || 'Parent';
+    const manualDueSummary = formatManualDueItems(assignment.manualDueItems);
     const message = [
       `Dear ${parentName},`,
       `This is a fee reminder for ${assignment.studentName}.`,
       `Outstanding due: ${formatCurrency(assignment.dueAmount)}.`,
+      ...(manualDueSummary ? [`Pending due items: ${manualDueSummary}.`] : []),
       `Due date: ${assignment.dueDate || 'Not specified'}.`,
       'Please complete the payment at the earliest.',
     ].join('\n');
@@ -856,6 +855,12 @@ export default function FeesManagement({
                 <div className="rounded-lg bg-[#f5f5f6] p-3"><div className="text-xs text-slate-500">Due</div><b>{formatCurrency(selectedAssignment.dueAmount)}</b></div>
                 <div className="rounded-lg bg-[#f5f5f6] p-3"><div className="text-xs text-slate-500">Due Date</div><b>{selectedAssignment.dueDate || '-'}</b></div>
               </div>
+              {formatManualDueItems(selectedAssignment.manualDueItems) && (
+                <div className="mt-3 rounded-lg bg-amber-50 border border-amber-100 p-3 text-sm">
+                  <div className="text-xs font-semibold text-amber-700">Pending Due Items</div>
+                  <div className="mt-1 font-semibold text-slate-800">{formatManualDueItems(selectedAssignment.manualDueItems)}</div>
+                </div>
+              )}
               {activeFeeBranch === 'collect-fee' && (
                 <button onClick={() => collectForAssignment(selectedAssignment.id)} disabled={!canCollect || selectedAssignment.dueAmount <= 0} className="mt-5 w-full h-10 rounded-full bg-[#fb9a5b] text-white font-semibold text-sm disabled:bg-slate-300">Post Against This Fee</button>
               )}

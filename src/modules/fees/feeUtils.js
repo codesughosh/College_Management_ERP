@@ -1,3 +1,57 @@
+export const feeComponentFields = [
+  { label: 'Admission Fee', shortLabel: 'Admission', key: 'admissionFee' },
+  { label: 'Application Fee', shortLabel: 'Application', key: 'applicationFee' },
+  { label: 'Pocket Article Fee', shortLabel: 'Pocket Article', key: 'pocketArticleFee' },
+  { label: 'Year Fee', shortLabel: 'Year Fee', key: 'tuitionFee' },
+  { label: 'Library Fee', shortLabel: 'Library', key: 'libraryFee' },
+  { label: 'Lab Fee', shortLabel: 'Lab', key: 'labFee' },
+  { label: 'Transport Fee', shortLabel: 'Transport', key: 'transportFee' },
+];
+
+export const feeComponentKeys = feeComponentFields.map((field) => field.key);
+
+export const manualDueItemOptions = [
+  { id: 'application-fee', label: 'Application Fee' },
+  { id: 'pocket-article-fee', label: 'Pocket Article Fee' },
+  { id: 'admission-fee', label: 'Admission Fee' },
+  { id: 'year-fee', label: 'Year Fee' },
+  { id: 'library-fee', label: 'Library Fee' },
+  { id: 'lab-fee', label: 'Lab Fee' },
+  { id: 'transport-fee', label: 'Transport Fee' },
+  { id: 'other-due', label: 'Other Due' },
+];
+
+export function getFeeComponentValues(source = {}) {
+  return feeComponentKeys.reduce((values, key) => ({
+    ...values,
+    [key]: Number(source[key] || 0),
+  }), {});
+}
+
+export function totalFeeComponents(source = {}) {
+  return feeComponentKeys.reduce((total, key) => total + Number(source[key] || 0), 0);
+}
+
+export function normalizeManualDueItems(items = []) {
+  if (!Array.isArray(items)) return [];
+  const optionsById = manualDueItemOptions.reduce((map, item) => ({ ...map, [item.id]: item }), {});
+  const seen = new Set();
+
+  return items.reduce((normalized, item) => {
+    const rawId = typeof item === 'string' ? item : item?.id;
+    const option = optionsById[rawId];
+    const label = option?.label || (typeof item === 'string' ? item : item?.label);
+    const id = option?.id || rawId || String(label || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+    if (!id || !label || seen.has(id)) return normalized;
+    seen.add(id);
+    return [...normalized, { id, label }];
+  }, []);
+}
+
+export function formatManualDueItems(items = []) {
+  return normalizeManualDueItems(items).map((item) => item.label).join(', ');
+}
+
 export function formatCurrency(value) {
   return new Intl.NumberFormat('en-IN', {
     style: 'currency',

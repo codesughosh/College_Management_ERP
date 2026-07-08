@@ -134,6 +134,7 @@ export async function getStudentInformationData(academicYear = '') {
     marksEntries,
     studentResults,
     feeAssignments,
+    feeCollections,
     studentHealthRecords,
   ] = await Promise.all([
     listCollection('students', yearConstraints),
@@ -146,6 +147,7 @@ export async function getStudentInformationData(academicYear = '') {
     listCollectionOptional('marksEntries', yearConstraints),
     listCollectionOptional('studentResults', yearConstraints),
     listCollectionOptional('feeAssignments', yearConstraints),
+    listCollectionOptional('feeCollections', yearConstraints),
     listCollectionOptional('studentHealthRecords', yearConstraints),
   ]);
 
@@ -160,6 +162,7 @@ export async function getStudentInformationData(academicYear = '') {
     marksEntries,
     studentResults,
     feeAssignments,
+    feeCollections,
     studentHealthRecords,
   };
 }

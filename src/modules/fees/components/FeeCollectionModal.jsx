@@ -1,35 +1,24 @@
 import { useMemo, useState } from 'react';
 import SearchSelect from '../../../components/SearchSelect';
-import { calculateDueAmount, formatCurrency } from '../feeUtils';
-
-const feeComponentFields = [
-  ['Admission Fee', 'admissionFee'],
-  ['Year Fee', 'tuitionFee'],
-  ['Library Fee', 'libraryFee'],
-  ['Lab Fee', 'labFee'],
-  ['Transport Fee', 'transportFee'],
-];
-
-function toAmount(value) {
-  return Number(value || 0);
-}
+import {
+  calculateDueAmount,
+  feeComponentFields,
+  formatCurrency,
+  getFeeComponentValues,
+  manualDueItemOptions,
+  normalizeManualDueItems,
+  totalFeeComponents,
+} from '../feeUtils';
 
 function totalFromForm(form = {}) {
-  return feeComponentFields.reduce((total, [, key]) => total + toAmount(form[key]), 0);
-}
-
-function getFeeValues(source = {}) {
-  return feeComponentFields.reduce((values, [, key]) => ({
-    ...values,
-    [key]: Number(source[key] || 0),
-  }), {});
+  return totalFeeComponents(form);
 }
 
 function getInitialFeeValues({ assignment, collection, structure }) {
-  if (collection?.feeStructureId || collection?.totalAmount) return getFeeValues(collection);
-  if (assignment) return getFeeValues(assignment);
-  if (structure) return getFeeValues(structure);
-  return getFeeValues({});
+  if (collection?.feeStructureId || collection?.totalAmount) return getFeeComponentValues(collection);
+  if (assignment) return getFeeComponentValues(assignment);
+  if (structure) return getFeeComponentValues(structure);
+  return getFeeComponentValues({});
 }
 
 export default function FeeCollectionModal({
@@ -60,6 +49,7 @@ export default function FeeCollectionModal({
     referenceNo: initialCollection?.referenceNo || '',
     paymentDate: initialCollection?.paymentDate || new Date().toISOString().slice(0, 10),
     collectedBy: initialCollection?.collectedBy || 'Admin Office',
+    manualDueItems: normalizeManualDueItems(initialCollection?.manualDueItems || initialAssignment?.manualDueItems || []),
   });
 
   const selectedStructure = structures.find((item) => item.id === form.feeStructureId);
@@ -96,6 +86,7 @@ export default function FeeCollectionModal({
       ...nextForm,
       assignmentId: nextAssignment?.id || '',
       ...feeValues,
+      manualDueItems: normalizeManualDueItems(nextAssignment?.manualDueItems || []),
     };
   };
 
@@ -111,18 +102,32 @@ export default function FeeCollectionModal({
     setForm((prev) => ({ ...prev, [key]: value }));
   };
 
+  const toggleManualDueItem = (item) => {
+    setForm((prev) => {
+      const currentItems = normalizeManualDueItems(prev.manualDueItems);
+      const exists = currentItems.some((currentItem) => currentItem.id === item.id);
+      return {
+        ...prev,
+        manualDueItems: exists
+          ? currentItems.filter((currentItem) => currentItem.id !== item.id)
+          : [...currentItems, item],
+      };
+    });
+  };
+
   const submit = (event) => {
     event.preventDefault();
     onSave({
       ...form,
       totalAmount: editedTotal,
       feeStructureName: selectedStructure?.name || '',
+      manualDueItems: normalizeManualDueItems(form.manualDueItems),
     });
   };
 
   return (
     <div className="fixed inset-0 z-50 bg-slate-950/50 backdrop-blur-sm flex items-center justify-center p-4">
-      <form onSubmit={submit} className="w-full max-w-3xl max-h-[92vh] overflow-hidden bg-white rounded-xl shadow-2xl border border-slate-200 flex flex-col">
+      <form onSubmit={submit} className="w-full max-w-4xl max-h-[92vh] overflow-hidden bg-white rounded-xl shadow-2xl border border-slate-200 flex flex-col">
         <div className="px-6 py-5 border-b border-slate-100 flex items-center justify-between">
           <div>
             <h2 className="text-lg font-bold text-slate-900">{initialCollection ? 'Edit Fee Collection' : 'Record Fee Collection'}</h2>
@@ -163,8 +168,8 @@ export default function FeeCollectionModal({
             </div>
           )}
 
-          <div className="sm:col-span-2 grid sm:grid-cols-3 gap-3 rounded-lg border border-slate-100 bg-[#f5f5f6] p-4">
-            {feeComponentFields.map(([label, key]) => (
+          <div className="sm:col-span-2 grid sm:grid-cols-2 md:grid-cols-3 gap-3 rounded-lg border border-slate-100 bg-[#f5f5f6] p-4">
+            {feeComponentFields.map(({ label, key }) => (
               <label key={key}>
                 <span className="block text-xs font-semibold text-slate-500 mb-1.5">{label}</span>
                 <input
@@ -179,6 +184,26 @@ export default function FeeCollectionModal({
             <div className="rounded-lg bg-white p-3">
               <div className="text-xs font-semibold text-slate-500">Edited Total</div>
               <div className="text-lg font-extrabold text-slate-900">{formatCurrency(editedTotal)}</div>
+            </div>
+          </div>
+
+          <div className="sm:col-span-2 rounded-lg border border-amber-100 bg-amber-50/60 p-4">
+            <div className="text-xs font-bold uppercase text-amber-700 mb-3">Pending Due Items</div>
+            <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-2">
+              {manualDueItemOptions.map((item) => {
+                const checked = normalizeManualDueItems(form.manualDueItems).some((currentItem) => currentItem.id === item.id);
+                return (
+                  <label key={item.id} className="min-h-10 rounded-lg bg-white border border-amber-100 px-3 py-2 text-xs font-semibold text-slate-700 flex items-center gap-2">
+                    <input
+                      type="checkbox"
+                      checked={checked}
+                      onChange={() => toggleManualDueItem(item)}
+                      className="h-4 w-4 rounded border-slate-300 accent-[#026c36]"
+                    />
+                    <span>{item.label}</span>
+                  </label>
+                );
+              })}
             </div>
           </div>
 

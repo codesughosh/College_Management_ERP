@@ -1,14 +1,6 @@
 import { useMemo, useState } from 'react';
 import StatusBadge from '../../students/components/StatusBadge';
-import { formatCurrency } from '../feeUtils';
-
-const feeComponentLabels = [
-  ['Admission', 'admissionFee'],
-  ['Year Fee', 'tuitionFee'],
-  ['Library', 'libraryFee'],
-  ['Lab', 'labFee'],
-  ['Transport', 'transportFee'],
-];
+import { feeComponentFields, formatCurrency } from '../feeUtils';
 
 function getCourseLabel(item = {}) {
   return item.programName || item.courseName || 'Unassigned Course';
@@ -103,7 +95,7 @@ export default function FeeStructurePanel({ structures, canEdit, onEdit, onAssig
     : visibleGroups.reduce((count, group) => count + group.items.length, 0);
 
   const renderStructureCard = (item) => {
-    const visibleComponents = feeComponentLabels.filter(([, key]) => Number(item[key] || 0) > 0);
+    const visibleComponents = feeComponentFields.filter(({ key }) => Number(item[key] || 0) > 0);
     const extraChargesSummary = getExtraChargesSummary(item.extraChargesNote);
     const structureTitle = getStructureTitle(item, isGrid);
 
@@ -118,8 +110,8 @@ export default function FeeStructurePanel({ structures, canEdit, onEdit, onAssig
           <span className="shrink-0"><StatusBadge value={item.status} /></span>
         </div>
         <div className={isGrid ? 'grid grid-cols-2 xl:grid-cols-3 gap-2 mt-4 text-xs text-slate-600' : 'grid grid-cols-2 gap-2 mt-4 text-xs text-slate-600'}>
-          {visibleComponents.map(([label, key]) => (
-            <div key={key} className="rounded-md bg-white p-2">{label}<br /><b>{formatCurrency(item[key])}</b></div>
+          {visibleComponents.map(({ key, shortLabel }) => (
+            <div key={key} className="rounded-md bg-white p-2">{shortLabel}<br /><b>{formatCurrency(item[key])}</b></div>
           ))}
         </div>
         {extraChargesSummary && (

@@ -799,7 +799,7 @@ export default function FeesManagement({
               disabled={!canCollect}
               className="erp-record-payment-button h-12 px-6 rounded-xl bg-[#026c36] text-white font-extrabold text-sm flex items-center justify-center gap-2 shadow-[0_14px_30px_rgba(2,108,54,0.35)] ring-2 ring-emerald-300/60 hover:bg-[#02552b] disabled:bg-slate-300 disabled:text-slate-600 disabled:shadow-none disabled:ring-0"
             >
-              <Plus size={16} /> Record Payment
+              <Plus className="erp-record-payment-icon" size={16} /> Record Payment
             </button>
           </div>
           <div className="relative mb-4 max-w-xl">
@@ -883,8 +883,8 @@ export default function FeesManagement({
                   : visibleAssignments.length ? 'Click a student fee row to view details and available actions.' : 'No matching fee records found.'}
               </p>
               {activeFeeBranch === 'collect-fee' && (
-                <button onClick={() => { setCollectionAssignmentId(''); setEditingCollection(null); setShowCollectionModal(true); }} disabled={!canCollect} className="mt-5 h-10 px-5 rounded-full bg-[#026c36] text-white font-semibold text-sm shadow-[0_10px_22px_rgba(2,108,54,0.24)] disabled:bg-slate-300 disabled:shadow-none">
-                  Record Payment
+                <button onClick={() => { setCollectionAssignmentId(''); setEditingCollection(null); setShowCollectionModal(true); }} disabled={!canCollect} className="erp-record-payment-button mt-5 h-10 px-5 rounded-full bg-[#026c36] text-white font-semibold text-sm shadow-[0_10px_22px_rgba(2,108,54,0.24)] disabled:bg-slate-300 disabled:shadow-none inline-flex items-center justify-center gap-2">
+                  <Plus className="erp-record-payment-icon" size={15} /> Record Payment
                 </button>
               )}
             </div>
